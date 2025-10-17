@@ -1,0 +1,48 @@
+<div class="tab-header-container">
+  <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="tab-list">
+    @for (tab of tabs; track trackByTab($index, tab)) {
+    <div
+      cdkDrag
+      class="tab-item"
+      [class.active]="isActive(tab.id)"
+      [class.comparable]="tab.isComparable"
+      [class.unsaved]="tab.hasUnsavedChanges"
+      (click)="onTabClick(tab.id)"
+    >
+      <div class="tab-content">
+        <i class="tab-icon" [class]="tab.icon || getTabIcon(tab)"></i>
+        <span class="tab-title">{{ tab.title }}</span>
+
+        @if (tab.hasUnsavedChanges) {
+        <span class="unsaved-indicator">*</span>
+        }
+      </div>
+
+      <div class="tab-actions">
+        @if (tab.isComparable && compareMode !== 'none') {
+        <button
+          class="compare-btn"
+          [class.active]="isTabInCompare(tab.id)"
+          (click)="onCompareToggle(tab.id, $event)"
+          title="Toggle compare mode"
+        >
+          <i class="fa fa-columns"></i>
+        </button>
+        } @if (tab.isClosable) {
+        <button
+          class="close-btn"
+          (click)="onCloseTab(tab.id, $event)"
+          title="Close tab"
+        >
+          <i class="fa fa-times"></i>
+        </button>
+        }
+      </div>
+    </div>
+    } @if (canCreateNewTab) {
+    <button class="new-tab-btn" (click)="onNewTab()">
+      <i class="fa fa-plus"></i>
+    </button>
+    }
+  </div>
+</div>

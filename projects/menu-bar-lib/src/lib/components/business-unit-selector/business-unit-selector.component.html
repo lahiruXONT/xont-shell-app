@@ -1,0 +1,43 @@
+<div class="business-unit-selector">
+  <label class="selector-label">Select Business Unit</label>
+  <select
+    class="business-unit-select"
+    [(ngModel)]="selectedBusinessUnitCodeSignal"
+    (ngModelChange)="onBusinessUnitChange()"
+  >
+    <option value="">-- Select Business Unit --</option>
+    <option
+      *ngFor="let bu of availableBusinessUnits()"
+      [value]="bu.businessUnitCode"
+      [disabled]="!bu.isActive"
+    >
+      {{ bu.businessUnitName }}
+    </option>
+  </select>
+
+  <div class="business-unit-list" *ngIf="showBusinessUnitList">
+    <div
+      class="business-unit-item"
+      *ngFor="let bu of availableBusinessUnits(); trackBy: trackByBusinessUnit"
+      [class.selected]="
+        bu.businessUnitCode === selectedBusinessUnitSignal()?.businessUnitCode
+      "
+      [class.disabled]="!bu.isActive"
+      (click)="selectBusinessUnit(bu)"
+    >
+      <div class="business-unit-info">
+        <div class="business-unit-name">{{ bu.businessUnitName }}</div>
+        <div class="business-unit-code">{{ bu.businessUnitCode }}</div>
+        <div class="business-unit-parent" *ngIf="bu.parentBusinessUnit">
+          Parent: {{ bu.parentBusinessUnit }}
+        </div>
+      </div>
+      <i
+        class="fa fa-check"
+        *ngIf="
+          bu.businessUnitCode === selectedBusinessUnitSignal()?.businessUnitCode
+        "
+      ></i>
+    </div>
+  </div>
+</div>

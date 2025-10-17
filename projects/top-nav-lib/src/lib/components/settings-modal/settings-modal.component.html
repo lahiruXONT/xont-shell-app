@@ -1,0 +1,120 @@
+<div class="modal-overlay" (click)="onClose()">
+  <div class="settings-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>User Settings</h2>
+      <button type="button" class="close-btn" (click)="onClose()">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <form #settingsForm="ngForm">
+        <div class="form-group">
+          <label for="theme">Theme</label>
+          <select
+            id="theme"
+            [(ngModel)]="settings.theme"
+            name="theme"
+            class="form-control"
+          >
+            <option value="blue">Blue Theme</option>
+            <option value="green">Green Theme</option>
+            <option value="purple">Purple Theme</option>
+            <option value="gray">Gray Theme</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="language">Language</label>
+          <select
+            id="language"
+            [(ngModel)]="settings.language"
+            name="language"
+            class="form-control"
+          >
+            <option *ngFor="let lang of languages" [value]="lang">
+              {{ lang }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="fontName">Font Name</label>
+          <input
+            type="text"
+            id="fontName"
+            [(ngModel)]="settings.fontName"
+            name="fontName"
+            class="form-control"
+            placeholder="Enter font name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="fontSize"
+            >Font Size: {{ settings.fontSize || 14 }}px</label
+          >
+          <input
+            type="range"
+            id="fontSize"
+            [(ngModel)]="settings.fontSize"
+            name="fontSize"
+            class="form-control-range"
+            min="10"
+            max="24"
+            step="1"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="fontColor">Font Color</label>
+          <input
+            type="color"
+            id="fontColor"
+            [(ngModel)]="settings.fontColor"
+            name="fontColor"
+            class="form-control-color"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="dateFormat">Date Format</label>
+          <input
+            type="text"
+            id="dateFormat"
+            [(ngModel)]="settings.dateFormat"
+            name="dateFormat"
+            class="form-control"
+            placeholder="e.g., MM/DD/YYYY"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="timeFormat">Time Format</label>
+          <select
+            id="timeFormat"
+            [(ngModel)]="settings.timeFormat"
+            name="timeFormat"
+            class="form-control"
+          >
+            <option *ngFor="let format of timeFormats" [value]="format">
+              {{ format }}
+            </option>
+          </select>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="onReset()">
+        Reset to Defaults
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-primary" (click)="onSave()">
+        Save Settings
+      </button>
+    </div>
+  </div>
+</div>

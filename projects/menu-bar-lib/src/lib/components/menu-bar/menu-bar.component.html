@@ -1,0 +1,225 @@
+<aside
+  class="menu-sidebar"
+  [class.collapsed]="isCollapsedSignal()"
+  [class.graphical-view]="isGraphicalViewSignal()"
+  [attr.data-theme]="theme"
+>
+  <!-- Sidebar Header -->
+  <div class="sidebar-header">
+    <div class="sidebar-title" *ngIf="!isCollapsedSignal()">
+      <i class="fa fa-user"></i>
+      <span class="user-name">{{ userName }}</span>
+    </div>
+
+    <!-- Toggle Button -->
+    <button
+      type="button"
+      class="sidebar-toggle"
+      (click)="onMenuToggle()"
+      title="Toggle Menu"
+    >
+      <i
+        [class]="
+          isCollapsedSignal() ? 'fa fa-chevron-right' : 'fa fa-chevron-left'
+        "
+      ></i>
+    </button>
+  </div>
+
+  <!-- Role Selector -->
+  <div
+    class="selector-section"
+    *ngIf="showRoleSelector && !isCollapsedSignal()"
+  >
+    <lib-role-selector
+      [userRoles]="userRoles"
+      [selectedRole]="selectedRoleSignal()"
+      (roleSelected)="onRoleChanged($event)"
+    >
+    </lib-role-selector>
+  </div>
+
+  <!-- Business Unit Selector -->
+  <div
+    class="selector-section"
+    *ngIf="showBusinessUnitSelector && !isCollapsedSignal()"
+  >
+    <lib-business-unit-selector
+      [businessUnits]="businessUnits"
+      [selectedBusinessUnit]="selectedBusinessUnitSignal()"
+      (businessUnitSelected)="onBusinessUnitChanged($event)"
+    >
+    </lib-business-unit-selector>
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section" *ngIf="showSearch && !isCollapsedSignal()">
+    <div class="search-input-container">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search menu items..."
+        [(ngModel)]="searchTerm"
+        (input)="onSearchChanged(searchTerm)"
+        autocomplete="off"
+      />
+      <button
+        type="button"
+        class="search-clear"
+        *ngIf="isSearchActive()"
+        (click)="clearSearch()"
+        title="Clear search"
+      >
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menu Controls -->
+  <div class="menu-controls" *ngIf="!isCollapsedSignal()">
+    <div class="control-buttons">
+      <button
+        type="button"
+        class="control-btn"
+        (click)="expandAllGroups()"
+        title="Expand All"
+      >
+        <i class="fa fa-expand"></i>
+      </button>
+
+      <button
+        type="button"
+        class="control-btn"
+        (click)="collapseAllGroups()"
+        title="Collapse All"
+      >
+        <i class="fa fa-compress"></i>
+      </button>
+
+      <button
+        type="button"
+        class="control-btn"
+        [class.active]="isGraphicalViewSignal()"
+        (click)="toggleGraphicalView()"
+        title="Toggle View"
+      >
+        <i class="fa fa-th-large"></i>
+      </button>
+
+      <button
+        type="button"
+        class="control-btn"
+        [class.active]="showTaskCodes"
+        (click)="toggleTaskCodes()"
+        title="Show Task Codes"
+      >
+        <i class="fa fa-code"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menu Content -->
+  <div class="menu-content" [class.collapsed]="isCollapsedSignal()">
+    <!-- Standard List View -->
+    <div class="menu-list-view" *ngIf="!isGraphicalViewSignal()">
+      <div
+        class="menu-group"
+        *ngFor="let group of filteredMenuGroups(); trackBy: trackByMenuGroup"
+        [class.expanded]="isGroupExpanded(group.menuCode)"
+        [class.has-results]="hasSearchResults() && group.tasks.length > 0"
+      >
+        <!-- Group Header -->
+        <div class="group-header" (click)="toggleGroup(group.menuCode)">
+          <i [class]="getGroupIcon(group)" class="group-icon"></i>
+          <span class="group-name" *ngIf="!isCollapsedSignal()">{{
+            group.menuName
+          }}</span>
+          <i
+            class="expand-icon fa"
+            [class.fa-chevron-down]="isGroupExpanded(group.menuCode)"
+            [class.fa-chevron-right]="!isGroupExpanded(group.menuCode)"
+            *ngIf="!isCollapsedSignal()"
+          ></i>
+        </div>
+
+        <!-- Group Tasks -->
+        <div
+          class="group-tasks"
+          *ngIf="isGroupExpanded(group.menuCode) || isSearchActive()"
+        >
+          <div
+            class="menu-task"
+            *ngFor="let task of group.tasks; trackBy: trackByTask"
+            (click)="onTaskSelected(task)"
+            [title]="task.description"
+          >
+            <i [class]="getTaskIcon(task)" class="task-icon"></i>
+            <div class="task-content" *ngIf="!isCollapsedSignal()">
+              <div class="task-caption">{{ task.caption }}</div>
+              <div class="task-code" *ngIf="showTaskCodes">
+                {{ task.taskCode }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Graphical Grid View -->
+    <div
+      class="menu-grid-view"
+      *ngIf="isGraphicalViewSignal() && !isCollapsedSignal()"
+    >
+      <div class="grid-container">
+        <div
+          class="grid-group-title"
+          *ngFor="let group of filteredMenuGroups(); trackBy: trackByMenuGroup"
+        >
+          <div class="grid-group-title">{{ group.menuName }}</div>
+
+          <div class="grid-tasks">
+            <div
+              class="grid-task-item"
+              *ngFor="let task of group.tasks; trackBy: trackByTask"
+              (click)="onTaskSelected(task)"
+              [title]="task.description"
+            >
+              <div class="grid-task-icon">
+                <i [class]="getTaskIcon(task)"></i>
+              </div>
+              <div class="grid-task-caption">{{ task.caption }}</div>
+              <div class="grid-task-code" *ngIf="showTaskCodes">
+                {{ task.taskCode }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredMenuGroups().length === 0">
+      <div class="empty-icon">
+        <i class="fa fa-search" *ngIf="isSearchActive()"></i>
+        <i class="fa fa-menu" *ngIf="!isSearchActive()"></i>
+      </div>
+      <div class="empty-message" *ngIf="!isCollapsedSignal()">
+        <span *ngIf="isSearchActive()"
+          >No menu items found for "{{ searchTerm }}"</span
+        >
+        <span *ngIf="!isSearchActive()">No menu items available</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collapsed Menu Items (Icons Only) -->
+  <div class="collapsed-menu" *ngIf="isCollapsedSignal()">
+    <div
+      class="collapsed-item"
+      *ngFor="let group of menuGroups; trackBy: trackByMenuGroup"
+      [title]="group.menuName"
+    >
+      <i [class]="getGroupIcon(group)"></i>
+    </div>
+  </div>
+</aside>

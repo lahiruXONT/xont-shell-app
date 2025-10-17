@@ -1,0 +1,36 @@
+<div class="role-selector">
+  <label class="selector-label">Select Role</label>
+  <select
+    class="role-select"
+    [(ngModel)]="selectedRoleCodeSignal"
+    (ngModelChange)="onRoleChange()"
+  >
+    <option value="">-- Select Role --</option>
+    <option
+      *ngFor="let role of availableRoles()"
+      [value]="role.roleCode"
+      [disabled]="!role.isActive"
+    >
+      {{ role.description }}
+    </option>
+  </select>
+
+  <div class="role-list" *ngIf="showRoleList">
+    <div
+      class="role-item"
+      *ngFor="let role of availableRoles(); trackBy: trackByRole"
+      [class.selected]="role.roleCode === selectedRoleSignal()?.roleCode"
+      [class.disabled]="!role.isActive"
+      (click)="selectRole(role)"
+    >
+      <div class="role-info">
+        <div class="role-name">{{ role.description }}</div>
+        <div class="role-code">{{ role.roleCode }}</div>
+      </div>
+      <i
+        class="fa fa-check"
+        *ngIf="role.roleCode === selectedRoleSignal()?.roleCode"
+      ></i>
+    </div>
+  </div>
+</div>

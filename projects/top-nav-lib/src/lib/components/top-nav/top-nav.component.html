@@ -1,0 +1,131 @@
+<nav class="top-navigation" [class]="getThemeClass()">
+  <div class="nav-container">
+    <!-- Left Section -->
+    <div class="nav-left">
+      <!-- Menu Toggle -->
+      <button
+        type="button"
+        class="menu-toggle-btn"
+        (click)="onMenuToggle()"
+        title="Toggle Menu"
+      >
+        <i class="fa fa-bars"></i>
+      </button>
+
+      <!-- Logo & Title -->
+      <div class="app-brand">
+        <img
+          [src]="appLogo"
+          [alt]="appTitle"
+          class="app-logo"
+          *ngIf="appLogo"
+        />
+        <span class="app-title">{{ appTitle }}</span>
+      </div>
+
+      <!-- Business Unit Info -->
+      <div
+        class="business-unit-info"
+        *ngIf="showBusinessUnitInfo && currentBusinessUnit"
+      >
+        <span class="business-unit-label">Business Unit:</span>
+        <strong class="business-unit-name">{{ currentBusinessUnit }}</strong>
+      </div>
+    </div>
+
+    <!-- Center Section -->
+    <div class="nav-center">
+      <!-- DateTime Display -->
+      <div class="datetime-display">
+        <div class="current-time">{{ formatTime(currentTime) }}</div>
+        <div class="current-date">{{ formatDate(currentTime) }}</div>
+      </div>
+    </div>
+
+    <!-- Right Section -->
+    <div class="nav-right">
+      <!-- Notifications -->
+      <div class="nav-item notifications-item" *ngIf="showNotifications">
+        <button
+          type="button"
+          class="notifications-trigger"
+          [class.active]="showNotificationsPanelSignal()"
+          (click)="onNotificationsToggle()"
+          title="Notifications"
+        >
+          <i class="fa fa-bell"></i>
+          <span
+            class="notification-badge"
+            [class]="getNotificationBadgeClass()"
+            *ngIf="hasUnreadNotifications()"
+          >
+            {{ unreadNotificationsCount() }}
+          </span>
+        </button>
+
+        <!-- Notifications Panel -->
+        <lib-notifications
+          *ngIf="showNotificationsPanelSignal()"
+          class="notifications-panel"
+          (notificationClicked)="onNotificationClick($event)"
+          (markAllRead)="onMarkAllNotificationsRead()"
+          (clearAll)="onClearAllNotifications()"
+        >
+        </lib-notifications>
+      </div>
+
+      <!-- Settings -->
+      <div class="nav-item settings-item" *ngIf="showSettings">
+        <button
+          type="button"
+          class="settings-btn"
+          (click)="onSettingsClick()"
+          title="Settings"
+        >
+          <i class="fa fa-cog"></i>
+        </button>
+      </div>
+
+      <!-- User Menu -->
+      <div class="nav-item user-item" *ngIf="showUserMenu">
+        <button
+          type="button"
+          class="user-trigger"
+          [class.active]="showUserDropdownSignal()"
+          (click)="onUserMenuToggle()"
+          title="User Menu"
+        >
+          <img
+            [src]="userProfileImage()"
+            [alt]="userDisplayName()"
+            class="user-avatar"
+            (error)="setDefaultImage($event)"
+          />
+          <span class="user-name">{{ userDisplayName() }}</span>
+          <i class="fa fa-chevron-down dropdown-icon"></i>
+        </button>
+
+        <!-- User Dropdown -->
+        <lib-user-dropdown
+          *ngIf="showUserDropdownSignal()"
+          class="user-dropdown"
+          [user]="currentUser()"
+          (profileClick)="onProfileClick()"
+          (settingsClick)="onSettingsClick()"
+          (themeChange)="onThemeChange($event)"
+          (logout)="onLogout()"
+        >
+        </lib-user-dropdown>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <lib-settings-modal
+    *ngIf="showSettingsModalSignal()"
+    [user]="currentUser()"
+    (close)="onSettingsModalClose()"
+    (save)="onSettingsModalSave($event)"
+  >
+  </lib-settings-modal>
+</nav>

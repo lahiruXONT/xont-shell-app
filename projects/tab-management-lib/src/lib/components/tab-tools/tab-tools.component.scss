@@ -1,0 +1,93 @@
+.tab-tools-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #343a40;
+  color: white;
+  border-bottom: 1px solid #495057;
+
+  .tools-left,
+  .tools-center,
+  .tools-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+
+    .user-name {
+      font-weight: bold;
+    }
+
+    .business-unit {
+      opacity: 0.7;
+    }
+  }
+
+  .tool-btn {
+    background: #495057;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #6c757d;
+    }
+
+    &.active {
+      background: #007bff;
+    }
+
+    i {
+      font-size: 14px;
+    }
+  }
+
+  .dropdown {
+    position: relative;
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      min-width: 160px;
+      z-index: 1000;
+      display: none;
+    }
+
+    &:hover .dropdown-menu {
+      display: block;
+    }
+  }
+
+  .dropdown-item {
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &:hover {
+      background: #f8f9fa;
+    }
+  }
+}

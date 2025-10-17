@@ -1,0 +1,43 @@
+<div class="tab-manager-container" [class.fullscreen]="isFullscreen()">
+  <!-- Tab Tools Bar -->
+  <lib-tab-tools
+    [toolsConfig]="toolsConfig"
+    [showCompareTools]="showCompareTools()"
+    [compareMode]="compareMode()"
+    [userName]="userName"
+    [businessUnit]="businessUnit"
+    (homeClick)="onHomeClick()"
+    (fullscreenClick)="toggleFullscreen()"
+    (compareClick)="toggleCompareMode('horizontal')"
+    (printClick)="onPrintClick()"
+    (mailClick)="onMailClick()"
+    (helpClick)="onHelpClick()"
+  >
+  </lib-tab-tools>
+
+  <!-- Tab Header -->
+  <lib-tab-header
+    [tabs]="visibleTabs()"
+    [activeTabId]="activeTab()?.id ?? ''"
+    [compareMode]="compareMode()"
+    [canCreateNewTab]="canCreateNewTab()"
+    (tabActivated)="activateTab($event)"
+    (tabClosed)="closeTab($event)"
+    (tabDrop)="onTabDrop($event)"
+    (compareToggle)="toggleTabInCompare($event)"
+  >
+  </lib-tab-header>
+
+  <!-- Tab Content -->
+  <lib-tab-content
+    [tabs]="visibleTabs()"
+    [activeTab]="activeTab()"
+    [compareMode]="compareMode()"
+    [compareTabs]="compareTabs()"
+    class="tab-content-wrapper"
+  >
+  </lib-tab-content>
+
+  <!-- Dynamic Content Container -->
+  <div #dynamicContent class="dynamic-content-container"></div>
+</div>
