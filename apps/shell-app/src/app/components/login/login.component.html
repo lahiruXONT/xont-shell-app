@@ -10,7 +10,8 @@
         <label>Username</label>
         <input
           type="text"
-          [(ngModel)]="username"
+          [value]="username()"
+          (input)="username.set($any($event.target).value)"
           name="username"
           placeholder="Enter username"
           required
@@ -21,7 +22,8 @@
         <label>Password</label>
         <input
           type="password"
-          [(ngModel)]="password"
+          [value]="password()"
+          (input)="password.set($any($event.target).value)"
           name="password"
           placeholder="Enter password"
           required

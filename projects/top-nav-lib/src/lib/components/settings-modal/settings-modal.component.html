@@ -70,7 +70,11 @@
 
           <div class="form-group">
             <label>Font Family</label>
-            <select [(ngModel)]="selectedFont" class="form-control">
+            <select
+              [value]="selectedFont()"
+              (change)="selectedFont.set($any($event.target).value)"
+              class="form-control"
+            >
               <option
                 *ngFor="let font of fontOptions.availableFonts"
                 [value]="font.name"
@@ -82,7 +86,11 @@
 
           <div class="form-group">
             <label>Font Size</label>
-            <select [(ngModel)]="selectedFontSize" class="form-control">
+            <select
+              [value]="selectedFontSize()"
+              (change)="selectedFontSize.set($any($event.target).value)"
+              class="form-control"
+            >
               <option
                 *ngFor="let size of fontOptions.availableSizes"
                 [value]="size.value"
@@ -96,7 +104,8 @@
             <label>Font Color</label>
             <input
               type="color"
-              [(ngModel)]="selectedFontColor"
+              [value]="selectedFontColor()"
+              (input)="selectedFontColor.set($any($event.target).value)"
               class="color-picker"
             />
             <span class="color-value">{{ selectedFontColor() }}</span>
@@ -124,7 +133,8 @@
             <label>Current Password</label>
             <input
               type="password"
-              [(ngModel)]="passwordChange().currentPassword"
+              [value]="currentPassword()"
+              (input)="currentPassword.set($any($event.target).value)"
               class="form-control"
               placeholder="Enter current password"
             />
@@ -134,7 +144,8 @@
             <label>New Password</label>
             <input
               type="password"
-              [(ngModel)]="passwordChange().newPassword"
+              [value]="newPassword()"
+              (input)="newPassword.set($any($event.target).value)"
               class="form-control"
               placeholder="Enter new password"
             />
@@ -144,7 +155,8 @@
             <label>Confirm New Password</label>
             <input
               type="password"
-              [(ngModel)]="passwordChange().confirmNewPassword"
+              [value]="confirmNewPassword()"
+              (input)="confirmNewPassword.set($any($event.target).value)"
               class="form-control"
               placeholder="Confirm new password"
             />

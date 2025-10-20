@@ -30,7 +30,7 @@
         <input
           *ngIf="allowMultiple"
           type="checkbox"
-          [(ngModel)]="role.isSelected"
+          [value]="role.isSelected"
           (click)="$event.stopPropagation()"
         />
         <div class="role-info">

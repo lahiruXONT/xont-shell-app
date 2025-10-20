@@ -38,11 +38,9 @@ export class SettingsModalComponent implements OnInit {
   selectedFontColor = signal<string>('#000000');
 
   // Password change
-  passwordChange = signal<PasswordChangeRequest>({
-    currentPassword: '',
-    newPassword: '',
-    confirmNewPassword: '',
-  });
+  currentPassword = signal<string>('');
+  newPassword = signal<string>('');
+  confirmNewPassword = signal<string>('');
 
   // Profile image
   selectedImage = signal<File | null>(null);
@@ -156,15 +154,19 @@ export class SettingsModalComponent implements OnInit {
     this.saveMessage.set('');
 
     try {
-      await this.settingsService.changePassword(this.passwordChange());
+      const passwordChangeData: PasswordChangeRequest = {
+        currentPassword: this.currentPassword(),
+        newPassword: this.newPassword(),
+        confirmNewPassword: this.confirmNewPassword(),
+      };
+
+      await this.settingsService.changePassword(passwordChangeData);
       this.saveMessage.set('Password changed successfully!');
 
       // Reset password fields
-      this.passwordChange.set({
-        currentPassword: '',
-        newPassword: '',
-        confirmNewPassword: '',
-      });
+      this.currentPassword.set('');
+      this.newPassword.set('');
+      this.confirmNewPassword.set('');
 
       setTimeout(() => this.saveMessage.set(''), 3000);
     } catch (error: any) {
@@ -227,11 +229,9 @@ export class SettingsModalComponent implements OnInit {
    */
   private resetForm(): void {
     this.activeTab.set('theme');
-    this.passwordChange.set({
-      currentPassword: '',
-      newPassword: '',
-      confirmNewPassword: '',
-    });
+    this.currentPassword.set('');
+    this.newPassword.set('');
+    this.confirmNewPassword.set('');
     this.selectedImage.set(null);
     this.imagePreview.set(null);
     this.saveMessage.set('');

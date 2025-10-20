@@ -39,8 +39,9 @@
     <div class="search-box" *ngIf="showSearch()">
       <input
         type="text"
-        [(ngModel)]="searchText"
+        [value]="searchText()"
         (input)="onSearch()"
+        name="searchText"
         placeholder="Search tasks..."
         class="search-input"
       />
