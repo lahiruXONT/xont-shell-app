@@ -1,120 +1,213 @@
-<div class="modal-overlay" (click)="onClose()">
-  <div class="settings-modal" (click)="$event.stopPropagation()">
+<div class="modal-overlay" [class.active]="isOpen()" (click)="close()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
     <div class="modal-header">
-      <h2>User Settings</h2>
-      <button type="button" class="close-btn" (click)="onClose()">
+      <h2 class="modal-title">
+        <i class="fa fa-cog"></i>
+        Settings
+      </h2>
+      <button class="close-btn" (click)="close()">
         <i class="fa fa-times"></i>
       </button>
     </div>
 
-    <div class="modal-body">
-      <form #settingsForm="ngForm">
-        <div class="form-group">
-          <label for="theme">Theme</label>
-          <select
-            id="theme"
-            [(ngModel)]="settings.theme"
-            name="theme"
-            class="form-control"
-          >
-            <option value="blue">Blue Theme</option>
-            <option value="green">Green Theme</option>
-            <option value="purple">Purple Theme</option>
-            <option value="gray">Gray Theme</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="language">Language</label>
-          <select
-            id="language"
-            [(ngModel)]="settings.language"
-            name="language"
-            class="form-control"
-          >
-            <option *ngFor="let lang of languages" [value]="lang">
-              {{ lang }}
-            </option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="fontName">Font Name</label>
-          <input
-            type="text"
-            id="fontName"
-            [(ngModel)]="settings.fontName"
-            name="fontName"
-            class="form-control"
-            placeholder="Enter font name"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="fontSize"
-            >Font Size: {{ settings.fontSize || 14 }}px</label
-          >
-          <input
-            type="range"
-            id="fontSize"
-            [(ngModel)]="settings.fontSize"
-            name="fontSize"
-            class="form-control-range"
-            min="10"
-            max="24"
-            step="1"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="fontColor">Font Color</label>
-          <input
-            type="color"
-            id="fontColor"
-            [(ngModel)]="settings.fontColor"
-            name="fontColor"
-            class="form-control-color"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="dateFormat">Date Format</label>
-          <input
-            type="text"
-            id="dateFormat"
-            [(ngModel)]="settings.dateFormat"
-            name="dateFormat"
-            class="form-control"
-            placeholder="e.g., MM/DD/YYYY"
-          />
-        </div>
-
-        <div class="form-group">
-          <label for="timeFormat">Time Format</label>
-          <select
-            id="timeFormat"
-            [(ngModel)]="settings.timeFormat"
-            name="timeFormat"
-            class="form-control"
-          >
-            <option *ngFor="let format of timeFormats" [value]="format">
-              {{ format }}
-            </option>
-          </select>
-        </div>
-      </form>
+    <!-- Tabs -->
+    <div class="modal-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'theme'"
+        (click)="switchTab('theme')"
+      >
+        <i class="fa fa-palette"></i>
+        Theme & Appearance
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'account'"
+        (click)="switchTab('account')"
+      >
+        <i class="fa fa-user"></i>
+        Account
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'profile'"
+        (click)="switchTab('profile')"
+      >
+        <i class="fa fa-id-card"></i>
+        Profile
+      </button>
     </div>
 
-    <div class="modal-footer">
-      <button type="button" class="btn btn-secondary" (click)="onReset()">
-        Reset to Defaults
-      </button>
-      <button type="button" class="btn btn-secondary" (click)="onCancel()">
-        Cancel
-      </button>
-      <button type="button" class="btn btn-primary" (click)="onSave()">
-        Save Settings
-      </button>
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <!-- Theme Tab -->
+      <div class="tab-content" *ngIf="activeTab() === 'theme'">
+        <div class="form-section">
+          <h3 class="section-title">Theme Selection</h3>
+          <div class="theme-grid">
+            <div
+              *ngFor="let theme of availableThemes"
+              class="theme-card"
+              [class.selected]="selectedTheme() === theme.name"
+              (click)="selectedTheme.set(theme.name); onThemeChange()"
+            >
+              <div
+                class="theme-preview"
+                [style.background]="theme.primaryColor"
+              ></div>
+              <div class="theme-name">{{ theme.displayName }}</div>
+              <i
+                class="fa fa-check-circle theme-check"
+                *ngIf="selectedTheme() === theme.name"
+              ></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3 class="section-title">Font Settings</h3>
+
+          <div class="form-group">
+            <label>Font Family</label>
+            <select [(ngModel)]="selectedFont" class="form-control">
+              <option
+                *ngFor="let font of fontOptions.availableFonts"
+                [value]="font.name"
+              >
+                {{ font.displayName }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Font Size</label>
+            <select [(ngModel)]="selectedFontSize" class="form-control">
+              <option
+                *ngFor="let size of fontOptions.availableSizes"
+                [value]="size.value"
+              >
+                {{ size.label }}
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Font Color</label>
+            <input
+              type="color"
+              [(ngModel)]="selectedFontColor"
+              class="color-picker"
+            />
+            <span class="color-value">{{ selectedFontColor() }}</span>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button
+            class="btn btn-primary"
+            (click)="saveSettings()"
+            [disabled]="isSaving()"
+          >
+            <i class="fa fa-save"></i>
+            {{ isSaving() ? "Saving..." : "Save Theme Settings" }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Account Tab -->
+      <div class="tab-content" *ngIf="activeTab() === 'account'">
+        <div class="form-section">
+          <h3 class="section-title">Change Password</h3>
+
+          <div class="form-group">
+            <label>Current Password</label>
+            <input
+              type="password"
+              [(ngModel)]="passwordChange().currentPassword"
+              class="form-control"
+              placeholder="Enter current password"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>New Password</label>
+            <input
+              type="password"
+              [(ngModel)]="passwordChange().newPassword"
+              class="form-control"
+              placeholder="Enter new password"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input
+              type="password"
+              [(ngModel)]="passwordChange().confirmNewPassword"
+              class="form-control"
+              placeholder="Confirm new password"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button
+              class="btn btn-primary"
+              (click)="changePassword()"
+              [disabled]="isSaving()"
+            >
+              <i class="fa fa-key"></i>
+              {{ isSaving() ? "Changing..." : "Change Password" }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Tab -->
+      <div class="tab-content" *ngIf="activeTab() === 'profile'">
+        <div class="form-section">
+          <h3 class="section-title">Profile Picture</h3>
+
+          <div class="image-upload-container">
+            <div class="image-preview">
+              <img
+                [src]="imagePreview() || 'assets/images/default-user.png'"
+                alt="Profile"
+              />
+            </div>
+
+            <div class="upload-actions">
+              <label class="file-input-label">
+                <i class="fa fa-upload"></i>
+                Choose Image
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png"
+                  (change)="onImageSelected($event)"
+                  class="file-input"
+                />
+              </label>
+
+              <button
+                class="btn btn-primary"
+                (click)="uploadImage()"
+                [disabled]="!selectedImage() || isSaving()"
+              >
+                <i class="fa fa-check"></i>
+                {{ isSaving() ? "Uploading..." : "Upload Image" }}
+              </button>
+
+              <p class="upload-hint">Max size: 300KB. Formats: JPG, PNG</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Message -->
+      <div class="save-message" *ngIf="saveMessage()">
+        <i class="fa fa-check-circle"></i>
+        {{ saveMessage() }}
+      </div>
     </div>
   </div>
 </div>

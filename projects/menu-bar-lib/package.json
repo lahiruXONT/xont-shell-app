@@ -1,9 +1,11 @@
 {
   "name": "menu-bar-lib",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "description": "Menu Bar Library for XONT Ventura CRM",
   "peerDependencies": {
-    "@angular/common": "^19.2.0",
-    "@angular/core": "^19.2.0"
+    "@angular/common": "^19.0.0",
+    "@angular/core": "^19.0.0",
+    "@angular/forms": "^19.0.0"
   },
   "dependencies": {
     "tslib": "^2.3.0"

@@ -1,64 +1,122 @@
 <div class="tab-tools-container">
-  <div class="tools-left">
-    <div class="user-info">
-      <span class="user-name">{{ userName }}</span>
-      <span class="business-unit">{{ businessUnit }}</span>
-    </div>
-  </div>
-
-  <div class="tools-center">
-    @if (toolsConfig.showHomeButton) {
-    <button class="tool-btn" (click)="onHomeClick()" title="Home">
-      <i class="fa fa-home"></i>
-    </button>
-    } @if (toolsConfig.showCompareButton && showCompareTools) {
+  <div class="tools-group tools-left">
+    <!-- Refresh -->
     <button
-      class="tool-btn compare-btn"
-      [class.active]="compareMode !== 'none'"
-      (click)="onCompareClick()"
-      title="{{ getCompareModeLabel() }}"
+      class="tool-btn"
+      [disabled]="!activeTabId"
+      (click)="onRefresh()"
+      title="Refresh Active Tab"
     >
-      <i [class]="getCompareIcon()"></i>
+      <i class="fa fa-refresh"></i>
+      <span class="tool-label">Refresh</span>
     </button>
-    }
+
+    <!-- Save All -->
+    <button
+      class="tool-btn save-btn"
+      [disabled]="!hasUnsavedTabs"
+      [class.highlight]="hasUnsavedTabs"
+      (click)="onSaveAll()"
+      title="Save All Changes"
+    >
+      <i class="fa fa-save"></i>
+      <span class="tool-label">Save All</span>
+      <span class="badge" *ngIf="hasUnsavedTabs">!</span>
+    </button>
+
+    <div class="tool-divider"></div>
+
+    <!-- Minimize -->
+    <button
+      class="tool-btn"
+      [disabled]="!activeTabId"
+      (click)="onMinimize()"
+      title="Minimize Tab"
+    >
+      <i class="fa fa-minus"></i>
+      <span class="tool-label">Minimize</span>
+    </button>
+
+    <!-- Maximize/Restore -->
+    <button
+      class="tool-btn"
+      [disabled]="!activeTabId"
+      (click)="onMaximize()"
+      [title]="isMaximized ? 'Restore' : 'Maximize'"
+    >
+      <i
+        class="fa"
+        [class.fa-window-maximize]="!isMaximized"
+        [class.fa-window-restore]="isMaximized"
+      ></i>
+      <span class="tool-label">{{ isMaximized ? "Restore" : "Maximize" }}</span>
+    </button>
+
+    <!-- Fullscreen -->
+    <button
+      class="tool-btn"
+      [disabled]="!activeTabId"
+      (click)="onFullscreen()"
+      title="Toggle Fullscreen"
+    >
+      <i class="fa fa-expand"></i>
+      <span class="tool-label">Fullscreen</span>
+    </button>
   </div>
 
-  <div class="tools-right">
-    @if (toolsConfig.showPrintButton) {
-    <button class="tool-btn" (click)="onPrintClick()" title="Print">
-      <i class="fa fa-print"></i>
-    </button>
-    } @if (toolsConfig.showMailButton) {
-    <button class="tool-btn" (click)="onMailClick()" title="Email">
-      <i class="fa fa-envelope"></i>
-    </button>
-    } @if (toolsConfig.showFullscreenButton) {
-    <button class="tool-btn" (click)="onFullscreenClick()" title="Fullscreen">
-      <i class="fa fa-expand"></i>
-    </button>
-    } @if (toolsConfig.showHelpButton) {
-    <button class="tool-btn" (click)="onHelpClick()" title="Help">
-      <i class="fa fa-question-circle"></i>
-    </button>
-    } @if (toolsConfig.showToolsDropdown) {
-    <div class="dropdown">
-      <button class="tool-btn dropdown-btn" title="More tools">
-        <i class="fa fa-ellipsis-v"></i>
-      </button>
-      <div class="dropdown-menu">
-        @if (toolsConfig.showFavoritesButton) {
-        <button class="dropdown-item">
-          <i class="fa fa-star"></i>
-          <span>Favorites</span>
-        </button>
-        } @if (toolsConfig.showNotesButton) {
-        <button class="dropdown-item">
-          <i class="fa fa-sticky-note"></i>
-          <span>Notes</span>
-        </button>
-        }
-      </div>
+  <div class="tools-group tools-center">
+    <!-- Tab Count -->
+    <div class="tab-count-badge">
+      <i class="fa fa-folder-open"></i>
+      <span>{{ tabCount }} tab{{ tabCount !== 1 ? "s" : "" }}</span>
     </div>
-    }
+  </div>
+
+  <div class="tools-group tools-right">
+    <!-- Close Active -->
+    <button
+      class="tool-btn close-btn"
+      [disabled]="!activeTabId"
+      (click)="onCloseActive()"
+      title="Close Active Tab"
+    >
+      <i class="fa fa-times"></i>
+      <span class="tool-label">Close</span>
+    </button>
+
+    <!-- Close Others -->
+    <button
+      class="tool-btn close-btn"
+      [disabled]="!activeTabId || tabCount <= 1"
+      (click)="onCloseOthers()"
+      title="Close Other Tabs"
+    >
+      <i class="fa fa-times-circle"></i>
+      <span class="tool-label">Close Others</span>
+    </button>
+
+    <!-- Close All -->
+    <button
+      class="tool-btn close-btn"
+      [disabled]="tabCount === 0"
+      (click)="onCloseAll()"
+      title="Close All Tabs"
+    >
+      <i class="fa fa-times-circle"></i>
+      <span class="tool-label">Close All</span>
+    </button>
+
+    <div class="tool-divider"></div>
+
+    <!-- New Tab -->
+    <button
+      class="tool-btn new-tab-btn"
+      [disabled]="!canAddTab"
+      (click)="onNewTab()"
+      title="New Tab"
+    >
+      <i class="fa fa-plus"></i>
+      <span class="tool-label">New Tab</span>
+    </button>
   </div>
 </div>

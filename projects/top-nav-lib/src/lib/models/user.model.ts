@@ -1,30 +1,80 @@
+/**
+ * Represents a user in the system
+ * Legacy equivalent: User class in Common.Data
+ */
 export interface User {
+  // Core identification
   userId: string;
   userName: string;
   fullName: string;
-  email?: string;
-  profilePicture?: string;
+  email: string;
+
+  // Profile information
+  profileImage?: string; // URL to profile picture
+  phoneNumber?: string;
+
+  // User context
+  businessUnit: string; // Current BU
+  distributorCode?: string; // Distributor code
+  roles: UserRole[]; // All user roles
+  currentRole: UserRole | null; // Active role
+  defaultRole?: string; // Default role code
+  priorityRole?: string; // PRTROLE if exists
+
+  // User settings
+  theme: string; // green, blue, red, gray, purple
+  fontSize: string; // Font size setting
+  fontName: string; // Font family
+  fontColor?: string; // Custom font color
+  language: string; // Language preference
+
+  // Status flags
   isActive: boolean;
-  lastLogin?: Date;
-  preferences?: UserPreferences;
+  isPowerUser: boolean;
+  isLocked: boolean;
+
+  // Timestamps
+  lastLoginDate?: Date;
+  passwordChangedDate?: Date;
+  createdDate?: Date;
 }
 
-export interface UserPreferences {
-  theme: 'blue' | 'green' | 'purple' | 'gray';
-  language: 'English' | 'Sinhala' | 'Tamil';
-  fontName: string;
-  fontSize: number;
-  fontColor: string;
-  dateFormat: string;
-  timeFormat: '12h' | '24h';
-}
-
-export interface UserSession {
-  sessionId: string;
-  user: User;
-  loginTime: Date;
-  lastActivity: Date;
-  businessUnit: string;
-  currentRole: string;
+/**
+ * User role information
+ */
+export interface UserRole {
+  roleCode: string;
+  roleName: string;
+  description: string;
+  isActive: boolean;
+  isPriority: boolean; // Is this a PRTROLE
+  isDefault: boolean;
   permissions: string[];
+}
+
+/**
+ * User profile for display
+ */
+export interface UserProfile {
+  userName: string;
+  fullName: string;
+  email: string;
+  profileImage: string;
+  currentBusinessUnit: string;
+  currentRole: string;
+  theme: string;
+}
+
+/**
+ * User preferences/settings
+ */
+export interface UserPreferences {
+  theme: string;
+  fontSize: string;
+  fontName: string;
+  fontColor: string;
+  language: string;
+  autoSave: boolean;
+  notificationsEnabled: boolean;
+  soundEnabled: boolean;
 }

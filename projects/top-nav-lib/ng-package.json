@@ -3,5 +3,6 @@
   "dest": "../../dist/top-nav-lib",
   "lib": {
     "entryFile": "src/public-api.ts"
-  }
+  },
+  "allowedNonPeerDependencies": ["@angular/cdk", "@microsoft/signalr"]
 }

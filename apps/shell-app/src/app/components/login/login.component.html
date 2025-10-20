@@ -1,0 +1,40 @@
+<div class="login-container" backgroundImage="/images/i10.jpg">
+  <div class="login-card">
+    <div class="logo">
+      <img src="/images/logo.jpg" alt="Logo" />
+      <h1>XONT Ventura CRM</h1>
+    </div>
+
+    <form (submit)="onLogin()">
+      <div class="form-group">
+        <label>Username</label>
+        <input
+          type="text"
+          [(ngModel)]="username"
+          name="username"
+          placeholder="Enter username"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="Enter password"
+          required
+        />
+      </div>
+
+      <div class="error-message" *ngIf="errorMessage()">
+        {{ errorMessage() }}
+      </div>
+
+      <button type="submit" class="login-btn" [disabled]="isLoading()">
+        {{ isLoading() ? "Logging in..." : "Login" }}
+      </button>
+    </form>
+  </div>
+</div>

@@ -1,74 +1,50 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  signal,
-  computed,
-  effect,
-  WritableSignal,
-} from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserRole } from '../../models/user-role.model';
+
+/**
+ * Role Selector Component
+ * Allows selecting multiple roles with checkboxes
+ * Legacy: Role selection from Main.aspx
+ */
 @Component({
   selector: 'lib-role-selector',
-  imports: [CommonModule, FormsModule],
   standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './role-selector.component.html',
   styleUrl: './role-selector.component.scss',
 })
 export class RoleSelectorComponent {
-  @Input() userRoles: UserRole[] = [];
-  @Input() selectedRole: UserRole | null = null;
-  @Input() showRoleList = true;
+  @Input() roles: UserRole[] = [];
+  @Input() currentRole: UserRole | null = null;
+  @Input() allowMultiple = false;
 
   @Output() roleSelected = new EventEmitter<UserRole>();
+  @Output() rolesChanged = new EventEmitter<UserRole[]>();
 
-  public selectedRoleCodeSignal: WritableSignal<string> = signal('');
-  public selectedRoleSignal: WritableSignal<UserRole | null> = signal(null);
+  showDropdown = signal<boolean>(false);
 
-  readonly availableRoles = computed(() =>
-    this.userRoles.filter((role) => role.isActive)
-  );
-
-  constructor() {
-    // Initialize signals
-    effect(() => {
-      if (this.selectedRole) {
-        this.selectedRoleSignal.set(this.selectedRole);
-        this.selectedRoleCodeSignal.set(this.selectedRole.roleCode);
-      } else {
-        this.selectedRoleSignal.set(null);
-        this.selectedRoleCodeSignal.set('');
-      }
-    });
+  toggleDropdown(): void {
+    this.showDropdown.update((show) => !show);
   }
 
-  ngOnChanges(): void {
-    if (this.selectedRole) {
-      this.selectedRoleCodeSignal.set(this.selectedRole.roleCode);
-    } else {
-      this.selectedRoleCodeSignal.set('');
-    }
-  }
-
-  onRoleChange(): void {
-    const selectedCode = this.selectedRoleCodeSignal();
-    const role = this.userRoles.find((r) => r.roleCode === selectedCode);
-    if (role) {
-      this.roleSelected.emit(role);
-    }
+  closeDropdown(): void {
+    this.showDropdown.set(false);
   }
 
   selectRole(role: UserRole): void {
-    if (role.isActive) {
-      this.selectedRoleCodeSignal.set(role.roleCode);
+    if (!this.allowMultiple) {
       this.roleSelected.emit(role);
+      this.closeDropdown();
+    } else {
+      role.isSelected = !role.isSelected;
+      const selectedRoles = this.roles.filter((r) => r.isSelected);
+      this.rolesChanged.emit(selectedRoles);
     }
   }
 
-  trackByRole(index: number, role: UserRole): string {
+  trackByRoleCode(index: number, role: UserRole): string {
     return role.roleCode;
   }
 }

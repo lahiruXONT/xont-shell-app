@@ -1,30 +1,29 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  OnInit,
-  OnDestroy,
-  signal,
-  computed,
-} from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Router, RouterOutlet } from '@angular/router';
 
-// Import all the library components
+// Import all 3 libraries
+import {
+  TopNavComponent,
+  NotificationsPanelComponent,
+  SettingsModalComponent,
+  NotificationService,
+  ThemeService,
+  UserProfile,
+} from 'top-nav-lib';
 import {
   MenuBarComponent,
-  UserRole,
-  BusinessUnit,
-  MenuGroup,
+  MenuBarService,
+  FavoritesService,
 } from 'menu-bar-lib';
-import { TopNavComponent } from 'top-nav-lib';
-import { TabManagerComponent } from 'tab-management-lib';
+import {
+  TabManagerComponent,
+  TabManagerService,
+  TabType,
+} from 'tab-management-lib';
 
-import { GlobalStateService } from '../../services/global-state.service';
-import { DataService } from '../../services/data.service';
+import { AuthenticationService } from '../../services/authentication.service';
+import { environment } from '../../environments/environment.dev';
 
 @Component({
   selector: 'app-main-layout',
@@ -32,182 +31,125 @@ import { DataService } from '../../services/data.service';
   imports: [
     CommonModule,
     RouterOutlet,
-    MenuBarComponent,
     TopNavComponent,
+    NotificationsPanelComponent,
+    SettingsModalComponent,
+    MenuBarComponent,
     TabManagerComponent,
   ],
   templateUrl: './main-layout.component.html',
-  styleUrls: ['./main-layout.component.scss'],
+  styleUrl: './main-layout.component.scss',
 })
-export class MainLayoutComponent implements OnInit, OnDestroy {
-  private destroy$ = new Subject<void>();
+export class MainLayoutComponent implements OnInit {
+  // User data
+  readonly currentUser = computed(() => this.authService.currentUser);
 
-  @Input() currentUser: any = null;
-  @Output() userLogout = new EventEmitter<void>();
-  @Output() themeChanged = new EventEmitter<string>();
-  @Output() businessUnitChanged = new EventEmitter<string>();
+  // User profile for top nav
+  readonly userProfile = computed<UserProfile | null>(() => {
+    const user = this.currentUser();
+    if (!user) return null;
 
-  // Component signals
-  private userRolesSignal = signal<UserRole[]>([]);
-  private businessUnitsSignal = signal<BusinessUnit[]>([]);
-  private menuGroupsSignal = signal<MenuGroup[]>([]);
-  private isMenuCollapsedSignal = signal<boolean>(false);
-
-  // Computed properties
-  readonly currentTheme = computed(() => this.globalState.currentTheme());
-  readonly currentBusinessUnit = computed(() =>
-    this.globalState.currentBusinessUnit()
-  );
-  readonly userDisplayName = computed(() => this.globalState.userDisplayName());
-
-  // Template properties
-  readonly appTitle = 'VENTURA CRM';
-  readonly appLogo = 'assets/img/ventura-logo.png';
+    return {
+      userName: user()?.userName ?? '',
+      fullName: user()?.fullName ?? '',
+      email: user()?.email ?? '',
+      profileImage: user()?.profileImage ?? 'assets/images/default-user.png',
+      currentBusinessUnit: user()?.currentBusinessUnit ?? '',
+      currentRole: user()?.currentRole ?? '',
+      theme: String(this.themeService.currentTheme()),
+    };
+  });
+  router = inject(Router);
 
   constructor(
-    private globalState: GlobalStateService,
-    private dataService: DataService
+    private authService: AuthenticationService,
+    private notificationService: NotificationService,
+    private themeService: ThemeService,
+    private menuBarService: MenuBarService,
+    private favoritesService: FavoritesService,
+    public tabManagerService: TabManagerService
   ) {}
 
-  ngOnInit(): void {
-    this.loadInitialData();
-    this.setupSubscriptions();
+  async ngOnInit(): Promise<void> {
+    const user = this.currentUser();
+    if (!user) return;
+
+    // Initialize SignalR for notifications
+    await this.initializeNotifications();
+
+    // Load user theme
+    await this.loadUserTheme();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-  }
-
-  private async loadInitialData(): Promise<void> {
+  /**
+   * Initialize SignalR notifications
+   */
+  private async initializeNotifications(): Promise<void> {
     try {
-      // Load user roles
-      const roles = await this.dataService.getUserRoles();
-      this.userRolesSignal.set(roles);
-
-      // Load business units
-      const businessUnits = await this.dataService.getBusinessUnits();
-      this.businessUnitsSignal.set(businessUnits);
-
-      // Load menu structure
-      const menuGroups = await this.dataService.getMenuStructure();
-      this.menuGroupsSignal.set(menuGroups);
-    } catch (error) {
-      console.error('Failed to load initial data:', error);
-    }
-  }
-
-  private setupSubscriptions(): void {
-    // Subscribe to global state changes
-    this.globalState.currentTheme$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((theme) => {
-        // Theme is already applied in app component
-      });
-  }
-
-  // Menu bar event handlers
-  onTaskSelected(task: any): void {
-    console.log('Task selected:', task);
-
-    // Create a new tab for the selected task
-    // This would typically integrate with the tab manager service
-    // For now, we'll just log it
-  }
-
-  onRoleChanged(role: UserRole): void {
-    console.log('Role changed:', role);
-    this.globalState.setCurrentRole(role.roleCode);
-
-    // Reload menu structure for new role
-    this.loadMenuForRole(role.roleCode);
-  }
-
-  onBusinessUnitChanged(businessUnit: BusinessUnit): void {
-    console.log('Business unit changed:', businessUnit);
-    this.globalState.setCurrentBusinessUnit(businessUnit.businessUnitCode);
-    this.businessUnitChanged.emit(businessUnit.businessUnitCode);
-  }
-  onBusinessUnitChangedNav(businessUnitCode: string): void {
-    console.log('Business unit changed:', businessUnitCode);
-    this.globalState.setCurrentBusinessUnit(businessUnitCode);
-    this.businessUnitChanged.emit(businessUnitCode);
-  }
-
-  onMenuToggled(collapsed: boolean): void {
-    this.isMenuCollapsedSignal.set(collapsed);
-  }
-
-  // Top navigation event handlers
-  onLogout(): void {
-    this.userLogout.emit();
-  }
-
-  onProfileClicked(user: any): void {
-    console.log('Profile clicked:', user);
-    // Navigate to profile page or show profile modal
-  }
-
-  onSettingsClicked(): void {
-    console.log('Settings clicked');
-    // Navigate to settings page or show settings modal
-  }
-
-  onThemeChanged(theme: string): void {
-    this.globalState.setCurrentTheme(theme);
-    this.themeChanged.emit(theme);
-  }
-
-  // Tab management event handlers
-  onTabCreated(tab: any): void {
-    console.log('Tab created:', tab);
-  }
-
-  onTabClosed(tab: any): void {
-    console.log('Tab closed:', tab);
-  }
-
-  onTabActivated(tab: any): void {
-    console.log('Tab activated:', tab);
-  }
-
-  onFullscreenToggled(isFullscreen: boolean): void {
-    console.log('Fullscreen toggled:', isFullscreen);
-
-    // Apply fullscreen styles to layout
-    if (isFullscreen) {
-      document.body.classList.add('fullscreen-mode');
-    } else {
-      document.body.classList.remove('fullscreen-mode');
-    }
-  }
-
-  // Private methods
-  private async loadMenuForRole(roleCode: string): Promise<void> {
-    try {
-      const menuGroups = await this.dataService.getMenuStructureForRole(
-        roleCode
+      await this.notificationService.connectToHub(
+        `${environment.signalRUrl}/hubs/notification`,
+        () => this.authService.getToken() || ''
       );
-      this.menuGroupsSignal.set(menuGroups);
+
+      await this.notificationService.loadNotifications();
     } catch (error) {
-      console.error('Failed to load menu for role:', error);
+      console.error('Failed to initialize notifications:', error);
     }
   }
 
-  // Getters for template
-  get userRoles(): UserRole[] {
-    return this.userRolesSignal();
+  /**
+   * Load user theme
+   */
+  private async loadUserTheme(): Promise<void> {
+    // Theme service will load from localStorage/API
+    const theme = this.themeService.currentTheme();
+    console.log('Current theme:', theme);
   }
 
-  get businessUnits(): BusinessUnit[] {
-    return this.businessUnitsSignal();
+  /**
+   * Handle task selected from menu
+   */
+  onTaskSelected(task: any): void {
+    this.tabManagerService.openTab(task.taskCode, task.caption, task.url, {
+      icon: task.icon,
+      type: TabType.IFRAME,
+      metadata: {
+        menuCode: task.menuCode,
+        description: task.description,
+        applicationCode: task.applicationCode,
+      },
+    });
   }
 
-  get menuGroups(): MenuGroup[] {
-    return this.menuGroupsSignal();
+  /**
+   * Handle task favorited
+   */
+  onTaskFavorited(event: any): void {
+    console.log('Task favorited:', event);
   }
 
-  get isMenuCollapsed(): boolean {
-    return this.isMenuCollapsedSignal();
+  /**
+   * Handle notification clicked
+   */
+  onNotificationClicked(): void {
+    this.notificationService.togglePanel();
+  }
+
+  /**
+   * Handle settings clicked
+   */
+  onSettingsClicked(): void {
+    // Open settings modal
+    console.log('Settings clicked');
+  }
+
+  /**
+   * Handle logout
+   */
+  onLogout(): void {
+    this.authService.logout();
+  }
+  navigateToDashboard(): void {
+    this.router.navigate(['/app']);
   }
 }

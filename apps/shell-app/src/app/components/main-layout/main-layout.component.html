@@ -1,79 +1,29 @@
-<div class="main-layout" [class.menu-collapsed]="isMenuCollapsed">
-  <!-- Top Navigation -->
-  <lib-top-nav
-    class="top-navigation"
-    [userName]="userDisplayName()"
-    [currentBusinessUnit]="currentBusinessUnit()"
-    [appTitle]="appTitle"
-    [appLogo]="appLogo"
-    [showNotifications]="true"
-    [showUserMenu]="true"
-    [showSettings]="true"
-    [showBusinessUnitInfo]="true"
-    (logout)="onLogout()"
-    (profileClicked)="onProfileClicked($event)"
-    (settingsClicked)="onSettingsClicked()"
-    (businessUnitChanged)="onBusinessUnitChangedNav($event)"
-    (menuToggled)="onMenuToggled($event)"
-  >
-  </lib-top-nav>
+<!-- Top Navigation Bar -->
+<lib-top-nav
+  [user]="userProfile()"
+  (logoClicked)="navigateToDashboard()"
+  (notificationClicked)="onNotificationClicked()"
+  (settingsClicked)="onSettingsClicked()"
+  (logoutClicked)="onLogout()"
+></lib-top-nav>
 
-  <!-- Content Area -->
-  <div class="content-area">
-    <!-- Sidebar Menu -->
-    <lib-menu-bar
-      class="sidebar-menu"
-      [userName]="userDisplayName()"
-      [currentBusinessUnit]="currentBusinessUnit()"
-      [userRoles]="userRoles"
-      [businessUnits]="businessUnits"
-      [menuGroups]="menuGroups"
-      [collapseSidebar]="isMenuCollapsed"
-      [showSearch]="true"
-      [showRoleSelector]="true"
-      [showBusinessUnitSelector]="true"
-      [theme]="currentTheme()"
-      (taskSelected)="onTaskSelected($event)"
-      (roleChanged)="onRoleChanged($event)"
-      (businessUnitChanged)="onBusinessUnitChanged($event)"
-      (menuToggled)="onMenuToggled($event)"
-    >
-    </lib-menu-bar>
+<!-- Notifications Panel (slides from right) -->
+<lib-notifications-panel></lib-notifications-panel>
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <!-- Tab Manager -->
-      <lib-tab-manager
-        class="tab-manager"
-        [config]="{
-          maxTabs: 10,
-          enableTabReordering: true,
-          enableCompareMode: true,
-          enableFullscreen: true,
-          tabCloseConfirmation: true
-        }"
-        [toolsConfig]="{
-          showHomeButton: true,
-          showFullscreenButton: true,
-          showCompareButton: true,
-          showToolsDropdown: true,
-          showPrintButton: true,
-          showMailButton: true,
-          showFavoritesButton: true,
-          showNotesButton: true,
-          showHelpButton: true
-        }"
-        [userName]="userDisplayName()"
-        [businessUnit]="currentBusinessUnit()"
-        (tabCreated)="onTabCreated($event)"
-        (tabClosed)="onTabClosed($event)"
-        (tabActivated)="onTabActivated($event)"
-        (fullscreenToggled)="onFullscreenToggled($event)"
-      >
-      </lib-tab-manager>
+<!-- Settings Modal -->
+<lib-settings-modal></lib-settings-modal>
 
-      <!-- Router outlet for additional routes -->
-      <router-outlet></router-outlet>
-    </div>
-  </div>
+<!-- Menu Sidebar -->
+<lib-menu-bar
+  [userName]="userProfile()?.userName || ''"
+  [businessUnit]="userProfile()?.currentBusinessUnit || ''"
+  [roleCode]="userProfile()?.currentRole || ''"
+  (taskSelected)="onTaskSelected($event)"
+  (taskFavorited)="onTaskFavorited($event)"
+></lib-menu-bar>
+
+<div class="main-content">
+  <lib-tab-manager [maxTabs]="5"></lib-tab-manager>
+
+  <router-outlet></router-outlet>
 </div>

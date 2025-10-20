@@ -1,48 +1,101 @@
 <div class="tab-header-container">
-  <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="tab-list">
-    @for (tab of tabs; track trackByTab($index, tab)) {
+  <!-- Main Tab Bar -->
+  <div class="tab-bar">
+    <!-- Visible Tabs (with drag-drop if enabled) -->
     <div
-      cdkDrag
-      class="tab-item"
-      [class.active]="isActive(tab.id)"
-      [class.comparable]="tab.isComparable"
-      [class.unsaved]="tab.hasUnsavedChanges"
-      (click)="onTabClick(tab.id)"
+      class="tabs-list"
+      cdkDropList
+      [cdkDropListDisabled]="!enableSorting"
+      (cdkDropListDropped)="onTabDrop($event)"
     >
-      <div class="tab-content">
-        <i class="tab-icon" [class]="tab.icon || getTabIcon(tab)"></i>
-        <span class="tab-title">{{ tab.title }}</span>
+      <div
+        *ngFor="let tab of visibleTabs(); trackBy: trackByTab"
+        class="tab-item"
+        [class.active]="isTabActive(tab.id)"
+        [class.loading]="tab.state === 'loading'"
+        [class.error]="tab.state === 'error'"
+        [class.pinned]="tab.isPinned"
+        cdkDrag
+        [cdkDragDisabled]="!enableSorting || tab.isPinned"
+        (click)="onTabClick(tab.id)"
+      >
+        <!-- Tab Icon -->
+        <i class="tab-icon fa {{ tab.icon }}"></i>
 
-        @if (tab.hasUnsavedChanges) {
-        <span class="unsaved-indicator">*</span>
-        }
-      </div>
+        <!-- Tab Title -->
+        <span class="tab-title" [title]="tab.title">
+          {{ tab.title }}
+        </span>
 
-      <div class="tab-actions">
-        @if (tab.isComparable && compareMode !== 'none') {
-        <button
-          class="compare-btn"
-          [class.active]="isTabInCompare(tab.id)"
-          (click)="onCompareToggle(tab.id, $event)"
-          title="Toggle compare mode"
+        <!-- Tab Task Code (if available) -->
+        <span class="tab-code" *ngIf="tab.taskCode">
+          [{{ tab.taskCode }}]
+        </span>
+
+        <!-- Loading Indicator -->
+        <span class="tab-loading" *ngIf="tab.state === 'loading'">
+          <i class="fa fa-spinner fa-spin"></i>
+        </span>
+
+        <!-- Pin Indicator -->
+        <i class="tab-pin fa fa-thumb-tack" *ngIf="tab.isPinned"></i>
+
+        <!-- Tab Actions -->
+        <div class="tab-actions" (click)="$event.stopPropagation()">
+          <!-- Minimize Button (Legacy feature) -->
+          <button
+            class="tab-action-btn minimize-btn"
+            (click)="onTabMinimize($event, tab.id)"
+            title="Minimize"
+          >
+            <i class="fa fa-minus"></i>
+          </button>
+
+          <!-- Close Button -->
+          <button
+            class="tab-action-btn close-btn"
+            (click)="onTabClose($event, tab.id)"
+            [disabled]="tab.isPinned"
+            title="Close"
+          >
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+
+        <!-- Drag Handle (if sorting enabled) -->
+        <div
+          class="drag-handle"
+          *ngIf="enableSorting && !tab.isPinned"
+          cdkDragHandle
         >
-          <i class="fa fa-columns"></i>
-        </button>
-        } @if (tab.isClosable) {
-        <button
-          class="close-btn"
-          (click)="onCloseTab(tab.id, $event)"
-          title="Close tab"
-        >
-          <i class="fa fa-times"></i>
-        </button>
-        }
+          <i class="fa fa-grip-vertical"></i>
+        </div>
       </div>
     </div>
-    } @if (canCreateNewTab) {
-    <button class="new-tab-btn" (click)="onNewTab()">
+
+    <!-- New Tab Button -->
+    <button class="new-tab-btn" title="New Tab">
       <i class="fa fa-plus"></i>
     </button>
-    }
+  </div>
+
+  <!-- Minimized Tabs Bar (Legacy feature) -->
+  <div class="minimized-tabs-bar" *ngIf="minimizedTabsList().length > 0">
+    <div class="minimized-tabs-label">
+      <i class="fa fa-window-minimize"></i>
+      Minimized Tabs:
+    </div>
+    <div
+      *ngFor="let tab of minimizedTabsList(); trackBy: trackByTab"
+      class="minimized-tab-item"
+      (click)="onTabRestore($event, tab.id)"
+      [title]="tab.title"
+    >
+      <i class="fa {{ tab.icon }}"></i>
+      <span class="minimized-tab-title">{{ tab.title }}</span>
+      <button class="minimized-close-btn" (click)="onTabClose($event, tab.id)">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
   </div>
 </div>

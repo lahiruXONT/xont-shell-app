@@ -1,41 +1,48 @@
-export interface UserSession {
-  sessionId: string;
-  userId: string;
-  userName: string;
-  businessUnit: string;
-  role: string;
-  loginTime: Date;
-  lastActivity: Date;
-  isActive: boolean;
-  tabs: SessionTab[];
-  preferences: SessionPreferences;
+import { Tab } from './tab.model';
+
+/**
+ * Represents a user's tab session
+ * Legacy equivalent: Session management in Main.aspx.cs
+ */
+export interface TabSession {
+  sessionId: string; // Session.SessionID
+  userId: string; // User.UserName
+  businessUnit: string; // User.BusinessUnit
+  roleCode: string; // Current role
+  tabs: Tab[]; // All open tabs
+  activeTabId: string | null; // Current active tab (like Session["TaskCode"])
+  minimizedTabs: string[]; // IDs of minimized tabs
   createdAt: Date;
   updatedAt: Date;
+  expiresAt: Date;
 }
 
-export interface SessionTab {
-  tabId: string;
-  taskCode: string;
-  title: string;
-  url: string;
-  isActive: boolean;
-  state: string;
-  createdAt: Date;
-  lastAccessedAt: Date;
-  order: number;
+/**
+ * Session state for persistence
+ */
+export interface SessionState {
+  currentSession: TabSession | null;
+  previousSessions: TabSession[];
+  maxSessionHistory: number;
 }
 
-export interface SessionPreferences {
-  maxTabs: number;
-  tabPersistence: boolean;
-  tabCloseConfirmation: boolean;
-  autoSaveInterval: number;
-  theme: string;
+/**
+ * Session storage configuration
+ */
+export interface SessionStorageConfig {
+  storageKey: string; // Key for localStorage
+  storage: 'localStorage' | 'sessionStorage';
+  compress: boolean;
+  encrypt: boolean;
+  autoSave: boolean;
+  saveInterval: number; // ms
 }
 
-export interface SessionStorage {
-  save(session: UserSession): Promise<boolean>;
-  load(sessionId: string): Promise<UserSession | null>;
-  remove(sessionId: string): Promise<boolean>;
-  cleanup(olderThanDays: number): Promise<number>;
+/**
+ * Session recovery options
+ */
+export interface SessionRecoveryOptions {
+  enabled: boolean;
+  maxAge: number; // hours
+  confirmBeforeRestore: boolean;
 }

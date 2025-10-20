@@ -1,131 +1,103 @@
-<nav class="top-navigation" [class]="getThemeClass()">
+<nav class="top-navigation">
   <div class="nav-container">
-    <!-- Left Section -->
-    <div class="nav-left">
-      <!-- Menu Toggle -->
-      <button
-        type="button"
-        class="menu-toggle-btn"
-        (click)="onMenuToggle()"
-        title="Toggle Menu"
-      >
-        <i class="fa fa-bars"></i>
-      </button>
-
-      <!-- Logo & Title -->
-      <div class="app-brand">
-        <img
-          [src]="appLogo"
-          [alt]="appTitle"
-          class="app-logo"
-          *ngIf="appLogo"
-        />
-        <span class="app-title">{{ appTitle }}</span>
-      </div>
-
-      <!-- Business Unit Info -->
-      <div
-        class="business-unit-info"
-        *ngIf="showBusinessUnitInfo && currentBusinessUnit"
-      >
-        <span class="business-unit-label">Business Unit:</span>
-        <strong class="business-unit-name">{{ currentBusinessUnit }}</strong>
-      </div>
+    <!-- Logo Section -->
+    <div class="nav-logo" (click)="onLogoClick()">
+      <img src="assets/images/logo.png" alt="Logo" class="logo-image" />
+      <span class="logo-text">XONT Ventura CRM</span>
     </div>
 
-    <!-- Center Section -->
-    <div class="nav-center">
-      <!-- DateTime Display -->
-      <div class="datetime-display">
-        <div class="current-time">{{ formatTime(currentTime) }}</div>
-        <div class="current-date">{{ formatDate(currentTime) }}</div>
-      </div>
+    <!-- Center Section - Business Unit Display -->
+    <div class="nav-center" *ngIf="user">
+      <i class="fa fa-database bu-icon"></i>
+      <span class="bu-name">{{ user.currentBusinessUnit }}</span>
     </div>
 
-    <!-- Right Section -->
+    <!-- Right Section - User Controls -->
     <div class="nav-right">
       <!-- Notifications -->
-      <div class="nav-item notifications-item" *ngIf="showNotifications">
-        <button
-          type="button"
-          class="notifications-trigger"
-          [class.active]="showNotificationsPanelSignal()"
-          (click)="onNotificationsToggle()"
-          title="Notifications"
-        >
-          <i class="fa fa-bell"></i>
-          <span
-            class="notification-badge"
-            [class]="getNotificationBadgeClass()"
-            *ngIf="hasUnreadNotifications()"
-          >
-            {{ unreadNotificationsCount() }}
-          </span>
-        </button>
-
-        <!-- Notifications Panel -->
-        <lib-notifications
-          *ngIf="showNotificationsPanelSignal()"
-          class="notifications-panel"
-          (notificationClicked)="onNotificationClick($event)"
-          (markAllRead)="onMarkAllNotificationsRead()"
-          (clearAll)="onClearAllNotifications()"
-        >
-        </lib-notifications>
+      <div
+        class="nav-item nav-notifications"
+        *ngIf="showNotifications"
+        (click)="onNotificationClick()"
+        [title]="'Notifications'"
+      >
+        <i class="fa fa-bell"></i>
+        <span class="notification-badge" *ngIf="unreadCount() > 0">
+          {{ unreadCount() > 99 ? "99+" : unreadCount() }}
+        </span>
       </div>
 
       <!-- Settings -->
-      <div class="nav-item settings-item" *ngIf="showSettings">
-        <button
-          type="button"
-          class="settings-btn"
-          (click)="onSettingsClick()"
-          title="Settings"
-        >
-          <i class="fa fa-cog"></i>
-        </button>
+      <div
+        class="nav-item nav-settings"
+        *ngIf="showSettings"
+        (click)="onSettingsClick()"
+        [title]="'Settings'"
+      >
+        <i class="fa fa-cog"></i>
       </div>
 
-      <!-- User Menu -->
-      <div class="nav-item user-item" *ngIf="showUserMenu">
-        <button
-          type="button"
-          class="user-trigger"
-          [class.active]="showUserDropdownSignal()"
-          (click)="onUserMenuToggle()"
-          title="User Menu"
-        >
-          <img
-            [src]="userProfileImage()"
-            [alt]="userDisplayName()"
-            class="user-avatar"
-            (error)="setDefaultImage($event)"
-          />
-          <span class="user-name">{{ userDisplayName() }}</span>
-          <i class="fa fa-chevron-down dropdown-icon"></i>
-        </button>
+      <!-- Help -->
+      <div
+        class="nav-item nav-help"
+        *ngIf="showHelp"
+        (click)="onHelpClick()"
+        [title]="'Help'"
+      >
+        <i class="fa fa-question-circle"></i>
+      </div>
 
-        <!-- User Dropdown -->
-        <lib-user-dropdown
-          *ngIf="showUserDropdownSignal()"
-          class="user-dropdown"
-          [user]="currentUser()"
-          (profileClick)="onProfileClick()"
-          (settingsClick)="onSettingsClick()"
-          (themeChange)="onThemeChange($event)"
-          (logout)="onLogout()"
-        >
-        </lib-user-dropdown>
+      <!-- User Profile -->
+      <div
+        class="nav-item nav-user"
+        *ngIf="user"
+        (click)="toggleUserDropdown()"
+      >
+        <img
+          [src]="user.profileImage || 'assets/images/default-user.png'"
+          alt="User"
+          class="user-avatar"
+        />
+        <span class="user-name">{{ user.fullName }}</span>
+        <i class="fa fa-chevron-down dropdown-icon"></i>
+
+        <!-- User Dropdown Menu -->
+        <div class="user-dropdown" *ngIf="showUserDropdown()">
+          <div class="dropdown-header">
+            <img
+              [src]="user.profileImage || 'assets/images/default-user.png'"
+              alt="User"
+              class="dropdown-avatar"
+            />
+            <div class="dropdown-user-info">
+              <div class="dropdown-name">{{ user.fullName }}</div>
+              <div class="dropdown-email">{{ user.email }}</div>
+            </div>
+          </div>
+
+          <div class="dropdown-divider"></div>
+
+          <div class="dropdown-menu">
+            <a class="dropdown-item" (click)="onSettingsClick()">
+              <i class="fa fa-cog"></i>
+              Settings
+            </a>
+            <a class="dropdown-item">
+              <i class="fa fa-user"></i>
+              Profile
+            </a>
+            <a class="dropdown-item">
+              <i class="fa fa-key"></i>
+              Change Password
+            </a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item logout-item" (click)="onLogout()">
+              <i class="fa fa-sign-out-alt"></i>
+              Logout
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-
-  <!-- Settings Modal -->
-  <lib-settings-modal
-    *ngIf="showSettingsModalSignal()"
-    [user]="currentUser()"
-    (close)="onSettingsModalClose()"
-    (save)="onSettingsModalSave($event)"
-  >
-  </lib-settings-modal>
 </nav>

@@ -1,0 +1,23 @@
+#testdiv_1, #testdiv_3 {
+	width: 84px;
+	height: 413px;
+	border: 0px;
+	padding: 0px;
+	top: 200px;
+	left: 250px;
+	position: absolute;
+
+}
+
+#testdiv_3 {
+ left: 10px;
+}
+
+#testdiv_2 {
+ width: 295px;
+ height: 394px;
+ right: 10px;
+ top: 160px;
+ border: 1px solid #aaa;
+ position: absolute;
+}

@@ -1,0 +1,346 @@
+*{
+ padding: 0;
+ margin: 0;
+ border: 0;
+}
+
+body {
+ margin: 5px 0 5px 0;
+ font-family: Verdana, Arial, Sans-Serif;
+ font-size: 11px;
+}
+
+a {
+ text-decoration: none;
+}
+
+a:hover {
+ color:#FF9834;
+}
+
+p {
+ padding: 10px;
+}
+
+pre {
+border-left: 5px solid;
+padding: 10px;
+margin: 5px 0 20px 0;
+background: #eee;
+}
+
+#sbody {
+ width: 100%;
+ margin: auto;
+ padding: 0;
+}
+ 
+#shead {
+ width: 100%;
+ border: 1px #99C solid;
+ margin: -2px;
+ padding: 10px 0 0 0;
+} 
+ 
+#headline {
+ padding: 0 5px 0 10px;
+ border-style: solid none;
+ margin: 0;
+ line-height:normal;
+ float:left;
+}
+
+h1,h2,h3 {
+ font-family: Verdana, Arial, Sans-Serif;
+ font-weight: normal;
+ margin: 0px;
+}
+
+h1 {font-size: 22px;}
+h2 {font-size: 17px;}
+h3 {font-size: 11px;}
+
+#headline h1, #headline h2, #headline h3 {
+ display: inline;
+}
+
+#headline ul {
+ margin:0;
+ padding:10px 10px 0 50px;
+ list-style:none;
+}
+
+#headline li {
+ display:inline;
+ margin:0;
+ padding:0;
+}
+
+#headline a {
+ float:left;
+ background:url('tab_space.gif') no-repeat left top;
+ margin:0;
+ padding:0 0 0 4px;
+ text-decoration:none;
+}
+
+#headline a span {
+ float:left;
+ display:block;
+ background:url('tab.gif') no-repeat right top;
+ padding:5px 15px 4px 6px;
+}
+
+#headline a:hover {
+ background-position:0% -42px;
+}
+
+#headline a:hover span {
+ background-position:100% -42px;
+}
+
+#scontent {
+ width: 100%;
+ margin: auto;
+}
+
+#content {
+ padding: 10px;
+ min-height: 400px;
+}
+
+#copyright {
+ padding: 10px;
+ border-top: 1px dotted;
+}
+
+.clearer {
+ width: 0;
+ height: 0;
+ margin: 0;
+ padding: 0;
+ clear: both;
+}
+
+.overview_projekte {
+ list-style-type:none;
+ padding: 10px;
+}
+
+.overview_projekte li {
+ padding-bottom: 20px;
+ font-weight: bold;
+}
+
+.overview_projekte li ul {
+ border-top: 1px dotted #ccc;
+}
+
+.overview_projekte a {
+ text-decoration: none;
+ color: #000;
+}
+
+.overview_projekte a:hover {
+ font-weight: bold;
+}
+
+.list_projekte {
+ width: 400px;
+ list-style-type:none;
+ margin: 0;
+ padding: 5px;
+}
+
+.list_projekte li {
+ font-weight: normal;
+ padding: 0;
+ padding-left: 20px;
+ border: 0;
+}
+
+.aname-link a {
+ background: url('aname.gif') left center no-repeat;
+ padding-left: 15px;
+}
+
+.testdiv_3 {
+	width: 43px;
+	height: 343px;
+	border: 0px;
+	padding: 0px;
+	top: 200px;
+	left: 250px;
+	position: absolute;
+
+}
+.dynDiv_moveDiv {
+ position: absolute;
+ overflow: hidden;
+ 
+
+}
+ .toolbar {
+ background-image:url(toolbar.png)
+ }
+
+.docclock {
+ background-image:url(clock.png);
+ cursor:pointer;
+ z-index:2;
+ padding: 0;
+ margin: 0;
+}
+
+.doccalender {
+ background-image:url(doccalender.png);
+ cursor:pointer;
+ z-index:2;
+ padding: 0;
+ margin: 0;
+}
+
+.doccalc {
+ background-image:url(calc.png);
+ cursor:pointer;
+ z-index:2;
+ padding: 0;
+ margin: 0;
+}
+
+.docnotepad {
+ background-image:url(notepad.png);
+ cursor:pointer;
+ z-index:2;
+ padding: 0;
+ margin: 0;
+}
+
+.docmeeter {
+ background-image:url(meeter.png);
+ cursor:pointer;
+ z-index:2;
+ padding: 0;
+ margin: 0;
+}
+
+.doccconvrtr {
+ background-image:url(cconvrtr.png);
+ cursor:pointer;
+ z-index:2;
+ padding: 0;
+ margin: 0;
+}
+
+#docapDiv1 {
+	position:absolute;
+	width:36px;
+	height:36px;
+	z-index:2;
+	top: 42px;
+	left: 22px;
+}
+#docapDiv2 {
+	position:absolute;
+	width:36px;
+	height:36px;
+	z-index:2;
+	top: 92px;
+	left: 22px;
+}
+#docapDiv3 {
+	position:absolute;
+	width:36px;
+	height:36px;
+	z-index:3;
+	top: 142px;
+	left: 22px;
+}
+#docapDiv4 {
+	position:absolute;
+	width:36px;
+	height:36px;
+	z-index:4;
+	top: 192px;
+	left: 22px;
+}
+#docapDiv5 {
+	position:absolute;
+	width:36px;
+	height:36px;
+	z-index:5;
+	top: 242px;
+	left: 22px;
+}
+#docapDiv6 {
+	position:absolute;
+	width:36px;
+	height:36px;
+	z-index:5;
+	top: 292px;
+	left: 22px;
+}
+
+.calcbutton {
+		background-image:url(calcbutton.jpg);
+		cursor:pointer;
+		font-family:Tahoma;
+		font-size:14px;
+		color:#FFFFFF;
+		border: 0px; 
+		padding: px; 
+		margin:0px;
+		width:41;
+		height:32;		 
+		}
+		
+		.textval{
+		font-family:Tahoma;
+		color:#13425e;
+		font-size:18px;
+		font-weight:600;
+		background:none;
+		border: 0px; 
+		padding: px; 
+		margin:0px;
+		text-align:right;
+		}	
+		
+		.loop {
+		background-image:url(backimg1.jpg);
+		color:#FFFFFF;
+		}
+		
+		
+.calendermain {
+width:170px;
+height:140px;
+border:1px solid gray;
+background-image:url(calenderbk.png);
+}
+
+.month {
+background-color:black;
+font:bold 11px verdana;
+color:white;
+
+}
+
+.daysofweek {
+background-color:black;
+font:bold 11px verdana;
+color:white;
+}
+
+.days {
+font-size: 10px;
+font-family:verdana;
+color:white;
+background-color: black;
+padding: 1px;
+}
+
+.days #today{
+font-weight: bold;
+color: red;
+}

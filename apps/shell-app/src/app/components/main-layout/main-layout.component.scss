@@ -1,58 +1,20 @@
-.main-layout {
-  display: flex;
-  flex-direction: column;
+:host {
+  display: block;
   height: 100vh;
-  width: 100vw;
   overflow: hidden;
-
-  .top-navigation {
-    flex-shrink: 0;
-  }
-
-  .content-area {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-
-    .sidebar-menu {
-      flex-shrink: 0;
-      height: calc(100vh - 60px); /* Subtract top nav height */
-      overflow-y: auto;
-    }
-
-    .main-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-
-      .tab-manager {
-        flex-shrink: 0;
-      }
-    }
-  }
-
-  &.menu-collapsed {
-    .sidebar-menu {
-      width: 60px !important; /* Override library width when collapsed */
-    }
-  }
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .main-layout {
-    .content-area {
-      flex-direction: column;
+.main-content {
+  position: fixed;
+  top: 60px; // Below top nav
+  left: 280px; // After sidebar
+  right: 0;
+  bottom: 0;
+  background: #f5f5f5;
+  overflow: hidden;
 
-      .sidebar-menu {
-        height: auto;
-        width: 100% !important;
-      }
-
-      .main-content {
-        height: calc(100vh - 120px); /* Adjust for both top nav and menu */
-      }
-    }
+  // Adjust when sidebar is collapsed
+  @media (max-width: 768px) {
+    left: 0;
   }
 }

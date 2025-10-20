@@ -1,100 +1,123 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '..//environments/environment.dev';
 
-export interface AuthState {
-  isAuthenticated: boolean;
-  user: any;
-  token: string | null;
-  redirectToLogin: boolean;
+export interface LoginResponse {
+  token: string;
+  refreshToken: string;
+  expiresAt: Date;
+  user: User;
+}
+
+export interface User {
+  userId: string;
+  userName: string;
+  fullName: string;
+  email: string;
+  profileImage: string;
+  roles: any[];
+  businessUnits: any[];
+  currentRole: string;
+  currentBusinessUnit: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthenticationService {
-  private authStateSubject = new BehaviorSubject<AuthState>({
-    isAuthenticated: false,
-    user: null,
-    token: null,
-    redirectToLogin: false,
-  });
+  private currentUserSignal = signal<User | null>(null);
+  private tokenSignal = signal<string | null>(null);
 
-  public authState$ = this.authStateSubject.asObservable();
+  readonly currentUser = this.currentUserSignal.asReadonly();
+  readonly token = this.tokenSignal.asReadonly();
+  readonly isAuthenticated = signal<boolean>(false);
 
-  constructor() {}
-
-  login(username: string, password: string): Observable<any> {
-    // Simulate API call
-    return new Observable((observer) => {
-      setTimeout(() => {
-        if (username && password) {
-          const user = {
-            userName: username,
-            fullName: username,
-            userId: '123',
-            businessUnit: 'MAIN',
-            token: 'fake-jwt-token',
-          };
-
-          const authState: AuthState = {
-            isAuthenticated: true,
-            user: user,
-            token: user.token,
-            redirectToLogin: false,
-          };
-
-          this.authStateSubject.next(authState);
-          localStorage.setItem('ventura-auth', JSON.stringify(authState));
-          observer.next(user);
-          observer.complete();
-        } else {
-          observer.error('Invalid credentials');
-        }
-      }, 1000);
-    });
+  constructor(private http: HttpClient, private router: Router) {
+    this.loadStoredAuth();
   }
 
-  logout(): Observable<void> {
-    return new Observable((observer) => {
-      const authState: AuthState = {
-        isAuthenticated: false,
-        user: null,
-        token: null,
-        redirectToLogin: true,
-      };
+  async login(username: string, password: string): Promise<void> {
+    try {
+      const response = await firstValueFrom(
+        this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, {
+          username,
+          password,
+        })
+      );
 
-      this.authStateSubject.next(authState);
-      localStorage.removeItem('ventura-auth');
-      observer.next();
-      observer.complete();
-    });
+      this.setAuthData(response);
+      this.router.navigate(['/app']);
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
+    }
   }
 
-  initializeFromStorage(): Promise<void> {
-    return new Promise((resolve) => {
-      const storedAuth = localStorage.getItem('ventura-auth');
-      if (storedAuth) {
-        try {
-          const authState: AuthState = JSON.parse(storedAuth);
-          this.authStateSubject.next(authState);
-        } catch (error) {
-          console.warn('Failed to parse stored auth state:', error);
-        }
+  logout(): void {
+    this.clearAuthData();
+    this.router.navigate(['/login']);
+  }
+
+  async refreshToken(): Promise<void> {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      this.logout();
+      return;
+    }
+
+    try {
+      const response = await firstValueFrom(
+        this.http.post<LoginResponse>(`${environment.apiUrl}/auth/refresh`, {
+          refreshToken,
+        })
+      );
+
+      this.setAuthData(response);
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      this.logout();
+    }
+  }
+
+  private setAuthData(response: LoginResponse): void {
+    localStorage.setItem('token', response.token);
+    localStorage.setItem('refreshToken', response.refreshToken);
+    sessionStorage.setItem('user', JSON.stringify(response.user));
+
+    this.tokenSignal.set(response.token);
+    this.currentUserSignal.set(response.user);
+    this.isAuthenticated.set(true);
+  }
+
+  private clearAuthData(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('user');
+
+    this.tokenSignal.set(null);
+    this.currentUserSignal.set(null);
+    this.isAuthenticated.set(false);
+  }
+
+  private loadStoredAuth(): void {
+    const token = localStorage.getItem('token');
+    const userStr = sessionStorage.getItem('user');
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        this.tokenSignal.set(token);
+        this.currentUserSignal.set(user);
+        this.isAuthenticated.set(true);
+      } catch (error) {
+        this.clearAuthData();
       }
-      resolve();
-    });
-  }
-
-  isAuthenticated(): boolean {
-    return this.authStateSubject.value.isAuthenticated;
-  }
-
-  currentUser(): any {
-    return this.authStateSubject.value.user;
+    }
   }
 
   getToken(): string | null {
-    return this.authStateSubject.value.token;
+    return this.tokenSignal();
   }
 }

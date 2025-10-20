@@ -3,83 +3,96 @@ import {
   Input,
   Output,
   EventEmitter,
+  signal,
   computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
-import { Tab, CompareMode } from '../../models/tab.model';
+import {
+  CdkDragDrop,
+  DragDropModule,
+  moveItemInArray,
+} from '@angular/cdk/drag-drop';
+import { Tab } from '../../models/tab.model';
 
+/**
+ * Tab Header Component
+ * Displays tab navigation bar with sorting (Legacy: tabsort class)
+ */
 @Component({
   selector: 'lib-tab-header',
   standalone: true,
   imports: [CommonModule, DragDropModule],
   templateUrl: './tab-header.component.html',
-  styleUrls: ['./tab-header.component.scss'],
+  styleUrl: './tab-header.component.scss',
 })
 export class TabHeaderComponent {
   @Input() tabs: Tab[] = [];
   @Input() activeTabId: string | null = null;
-  @Input() compareMode: CompareMode = 'none';
-  @Input() canCreateNewTab: boolean = true;
+  @Input() minimizedTabs: string[] = [];
+  @Input() maximizedTabId: string | null = null;
+  @Input() enableSorting = true;
 
-  @Output() tabActivated = new EventEmitter<string>();
+  @Output() tabSelected = new EventEmitter<string>();
   @Output() tabClosed = new EventEmitter<string>();
-  @Output() tabDrop = new EventEmitter<CdkDragDrop<Tab[]>>();
-  @Output() compareToggle = new EventEmitter<string>();
+  @Output() tabMinimized = new EventEmitter<string>();
+  @Output() tabRestored = new EventEmitter<string>();
+  @Output() tabsReordered = new EventEmitter<{
+    fromIndex: number;
+    toIndex: number;
+  }>();
 
-  // Computed properties
-  readonly hasTabs = computed(() => this.tabs.length > 0);
+  readonly visibleTabs = computed(() =>
+    this.tabs.filter((tab) => !this.minimizedTabs.includes(tab.id))
+  );
 
-  // Event handlers
+  readonly minimizedTabsList = computed(() =>
+    this.tabs.filter((tab) => this.minimizedTabs.includes(tab.id))
+  );
+
   onTabClick(tabId: string): void {
-    this.tabActivated.emit(tabId);
+    this.tabSelected.emit(tabId);
   }
 
-  onCloseTab(tabId: string, event: Event): void {
+  onTabClose(event: Event, tabId: string): void {
     event.stopPropagation();
     this.tabClosed.emit(tabId);
   }
 
-  onCompareToggle(tabId: string, event: Event): void {
+  onTabMinimize(event: Event, tabId: string): void {
     event.stopPropagation();
-    this.compareToggle.emit(tabId);
+    this.tabMinimized.emit(tabId);
   }
 
-  onDrop(event: CdkDragDrop<Tab[]>): void {
-    this.tabDrop.emit(event);
+  onTabRestore(event: Event, tabId: string): void {
+    event.stopPropagation();
+    this.tabRestored.emit(tabId);
   }
 
-  // Utility methods
-  isActive(tabId: string): boolean {
+  /**
+   * Handle drag-drop tab reordering (Legacy: tabsort)
+   */
+  onTabDrop(event: CdkDragDrop<Tab[]>): void {
+    if (!this.enableSorting) {
+      return;
+    }
+
+    if (event.previousIndex !== event.currentIndex) {
+      this.tabsReordered.emit({
+        fromIndex: event.previousIndex,
+        toIndex: event.currentIndex,
+      });
+    }
+  }
+
+  isTabActive(tabId: string): boolean {
     return this.activeTabId === tabId;
   }
 
-  isTabInCompare(tabId: string): boolean {
-    return this.compareMode !== 'none' && this.tabs.some((t) => t.id === tabId);
+  isTabMinimized(tabId: string): boolean {
+    return this.minimizedTabs.includes(tabId);
   }
 
   trackByTab(index: number, tab: Tab): string {
     return tab.id;
-  }
-  getTabIcon(tab: Tab): string {
-    if (tab.icon) return tab.icon;
-
-    switch (tab.taskType) {
-      case 'DASHBOARD':
-        return 'fa fa-dashboard';
-      case 'REPORT':
-        return 'fa fa-file-text';
-      case 'FORM':
-        return 'fa fa-edit';
-      case 'EXTERNAL':
-        return 'fa fa-external-link';
-      default:
-        return 'fa fa-file';
-    }
-  }
-  onNewTab(): void {
-    // This should be handled by the parent component
-    // For now, emit an event or do nothing
-    console.log('New tab button clicked');
   }
 }

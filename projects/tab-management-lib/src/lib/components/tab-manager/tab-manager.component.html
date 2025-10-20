@@ -1,43 +1,47 @@
-<div class="tab-manager-container" [class.fullscreen]="isFullscreen()">
-  <!-- Tab Tools Bar -->
-  <lib-tab-tools
-    [toolsConfig]="toolsConfig"
-    [showCompareTools]="showCompareTools()"
-    [compareMode]="compareMode()"
-    [userName]="userName"
-    [businessUnit]="businessUnit"
-    (homeClick)="onHomeClick()"
-    (fullscreenClick)="toggleFullscreen()"
-    (compareClick)="toggleCompareMode('horizontal')"
-    (printClick)="onPrintClick()"
-    (mailClick)="onMailClick()"
-    (helpClick)="onHelpClick()"
-  >
-  </lib-tab-tools>
+<lib-tab-tools
+  [activeTabId]="activeTabId()"
+  [tabCount]="tabs().length"
+  [canAddTab]="tabs().length < maxTabs"
+  [hasUnsavedTabs]="hasUnsavedTabs()"
+  [isMaximized]="maximizedTabId() !== null"
+  (refreshClicked)="tabManagerService.refreshTab(activeTabId() || '')"
+  (closeActiveClicked)="tabManagerService.closeTab(activeTabId() || '')"
+  (closeAllClicked)="tabManagerService.closeAllTabs()"
+  (closeOthersClicked)="tabManagerService.closeOtherTabs(activeTabId() || '')"
+  (maximizeToggled)="
+    maximizedTabId() === activeTabId()
+      ? tabManagerService.restoreMaximized()
+      : tabManagerService.maximizeTab(activeTabId() || '')
+  "
+  (minimizeClicked)="tabManagerService.minimizeTab(activeTabId() || '')"
+  (fullscreenToggled)="toggleFullscreen()"
+  (newTabClicked)="openNewTabDialog()"
+  (saveAllClicked)="saveAllUnsavedTabs()"
+></lib-tab-tools>
 
-  <!-- Tab Header -->
-  <lib-tab-header
-    [tabs]="visibleTabs()"
-    [activeTabId]="activeTab()?.id ?? ''"
-    [compareMode]="compareMode()"
-    [canCreateNewTab]="canCreateNewTab()"
-    (tabActivated)="activateTab($event)"
-    (tabClosed)="closeTab($event)"
-    (tabDrop)="onTabDrop($event)"
-    (compareToggle)="toggleTabInCompare($event)"
-  >
-  </lib-tab-header>
+<lib-tab-header
+  [tabs]="tabs()"
+  [activeTabId]="activeTabId()"
+  [minimizedTabs]="minimizedTabs()"
+  [maximizedTabId]="maximizedTabId()"
+  (tabSelected)="tabManagerService.activateTab($event)"
+  (tabClosed)="tabManagerService.closeTab($event)"
+  (tabMinimized)="tabManagerService.minimizeTab($event)"
+  (tabRestored)="tabManagerService.restoreTab($event)"
+  (tabsReordered)="
+    tabManagerService.reorderTabs($event.fromIndex, $event.toIndex)
+  "
+></lib-tab-header>
 
-  <!-- Tab Content -->
-  <lib-tab-content
-    [tabs]="visibleTabs()"
-    [activeTab]="activeTab()"
-    [compareMode]="compareMode()"
-    [compareTabs]="compareTabs()"
-    class="tab-content-wrapper"
-  >
-  </lib-tab-content>
-
-  <!-- Dynamic Content Container -->
-  <div #dynamicContent class="dynamic-content-container"></div>
+<div class="tab-content-bed">
+  <ng-container *ngFor="let tab of tabs(); trackBy: trackByTab">
+    <lib-tab-content
+      *ngIf="tab.isActive"
+      [tab]="tab"
+      [isFullscreen]="maximizedTabId() === tab.id"
+      (stateChanged)="onTabStateChanged($event)"
+      (titleChanged)="onTabTitleChanged($event)"
+      (metadataChanged)="onTabMetadataChanged($event)"
+    ></lib-tab-content>
+  </ng-container>
 </div>

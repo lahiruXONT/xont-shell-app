@@ -1,88 +1,88 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TabTools, CompareMode } from '../../models/tab.model';
 
+/**
+ * Tab Tools Component
+ * Toolbar with tab actions (refresh, fullscreen, close all, etc.)
+ * Legacy: Tab toolbar functionality from Main.aspx
+ */
 @Component({
   selector: 'lib-tab-tools',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './tab-tools.component.html',
-  styleUrls: ['./tab-tools.component.scss'],
+  styleUrl: './tab-tools.component.scss',
 })
 export class TabToolsComponent {
-  @Input() toolsConfig: TabTools = {
-    showHomeButton: true,
-    showFullscreenButton: true,
-    showCompareButton: true,
-    showToolsDropdown: true,
-    showPrintButton: true,
-    showMailButton: true,
-    showFavoritesButton: true,
-    showNotesButton: true,
-    showHelpButton: true,
-  };
+  @Input() activeTabId: string | null = null;
+  @Input() tabCount = 0;
+  @Input() canAddTab = true;
+  @Input() hasUnsavedTabs = false;
+  @Input() isMaximized = false;
 
-  @Input() showCompareTools: boolean = false;
-  @Input() compareMode: CompareMode = 'none';
-  @Input() userName: string = '';
-  @Input() businessUnit: string = '';
+  @Output() refreshClicked = new EventEmitter<void>();
+  @Output() fullscreenToggled = new EventEmitter<void>();
+  @Output() maximizeToggled = new EventEmitter<void>();
+  @Output() minimizeClicked = new EventEmitter<void>();
+  @Output() closeActiveClicked = new EventEmitter<void>();
+  @Output() closeAllClicked = new EventEmitter<void>();
+  @Output() closeOthersClicked = new EventEmitter<void>();
+  @Output() newTabClicked = new EventEmitter<void>();
+  @Output() saveAllClicked = new EventEmitter<void>();
 
-  @Output() homeClick = new EventEmitter<void>();
-  @Output() fullscreenClick = new EventEmitter<void>();
-  @Output() compareClick = new EventEmitter<void>();
-  @Output() printClick = new EventEmitter<void>();
-  @Output() mailClick = new EventEmitter<void>();
-  @Output() helpClick = new EventEmitter<void>();
-
-  // Event handlers
-  onHomeClick(): void {
-    this.homeClick.emit();
-  }
-
-  onFullscreenClick(): void {
-    this.fullscreenClick.emit();
-  }
-
-  onCompareClick(): void {
-    this.compareClick.emit();
-  }
-
-  onPrintClick(): void {
-    this.printClick.emit();
-  }
-
-  onMailClick(): void {
-    this.mailClick.emit();
-  }
-
-  onHelpClick(): void {
-    this.helpClick.emit();
-  }
-
-  // Utility methods
-  getCompareModeLabel(): string {
-    switch (this.compareMode) {
-      case 'horizontal':
-        return 'Horizontal Compare';
-      case 'vertical':
-        return 'Vertical Compare';
-      case 'grid':
-        return 'Grid Compare';
-      default:
-        return 'Compare';
+  onRefresh(): void {
+    if (this.activeTabId) {
+      this.refreshClicked.emit();
     }
   }
 
-  getCompareIcon(): string {
-    switch (this.compareMode) {
-      case 'horizontal':
-        return 'fa fa-columns';
-      case 'vertical':
-        return 'fa fa-table';
-      case 'grid':
-        return 'fa fa-th';
-      default:
-        return 'fa fa-columns';
+  onFullscreen(): void {
+    this.fullscreenToggled.emit();
+  }
+
+  onMaximize(): void {
+    this.maximizeToggled.emit();
+  }
+
+  onMinimize(): void {
+    if (this.activeTabId) {
+      this.minimizeClicked.emit();
+    }
+  }
+
+  onCloseActive(): void {
+    if (this.activeTabId) {
+      this.closeActiveClicked.emit();
+    }
+  }
+
+  onCloseAll(): void {
+    if (this.tabCount > 0) {
+      if (this.hasUnsavedTabs) {
+        if (confirm('Some tabs have unsaved changes. Close all tabs anyway?')) {
+          this.closeAllClicked.emit();
+        }
+      } else {
+        this.closeAllClicked.emit();
+      }
+    }
+  }
+
+  onCloseOthers(): void {
+    if (this.activeTabId && this.tabCount > 1) {
+      this.closeOthersClicked.emit();
+    }
+  }
+
+  onNewTab(): void {
+    if (this.canAddTab) {
+      this.newTabClicked.emit();
+    }
+  }
+
+  onSaveAll(): void {
+    if (this.hasUnsavedTabs) {
+      this.saveAllClicked.emit();
     }
   }
 }

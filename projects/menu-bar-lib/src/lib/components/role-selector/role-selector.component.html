@@ -1,36 +1,60 @@
 <div class="role-selector">
-  <label class="selector-label">Select Role</label>
-  <select
-    class="role-select"
-    [(ngModel)]="selectedRoleCodeSignal"
-    (ngModelChange)="onRoleChange()"
-  >
-    <option value="">-- Select Role --</option>
-    <option
-      *ngFor="let role of availableRoles()"
-      [value]="role.roleCode"
-      [disabled]="!role.isActive"
-    >
-      {{ role.description }}
-    </option>
-  </select>
+  <div class="selector-trigger" (click)="toggleDropdown()">
+    <i class="fa fa-user-tag"></i>
+    <span class="current-role">{{
+      currentRole?.description || "Select Role"
+    }}</span>
+    <i class="fa fa-chevron-down"></i>
+  </div>
 
-  <div class="role-list" *ngIf="showRoleList">
-    <div
-      class="role-item"
-      *ngFor="let role of availableRoles(); trackBy: trackByRole"
-      [class.selected]="role.roleCode === selectedRoleSignal()?.roleCode"
-      [class.disabled]="!role.isActive"
-      (click)="selectRole(role)"
-    >
-      <div class="role-info">
-        <div class="role-name">{{ role.description }}</div>
-        <div class="role-code">{{ role.roleCode }}</div>
+  <div
+    class="role-dropdown"
+    *ngIf="showDropdown()"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="dropdown-header">
+      <span>{{ allowMultiple ? "Select Roles" : "Switch Role" }}</span>
+      <button class="close-btn" (click)="closeDropdown()">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+
+    <div class="roles-list">
+      <div
+        *ngFor="let role of roles; trackBy: trackByRoleCode"
+        class="role-item"
+        [class.selected]="role.roleCode === currentRole?.roleCode"
+        [class.priority]="role.isPriorityRole"
+        (click)="selectRole(role)"
+      >
+        <input
+          *ngIf="allowMultiple"
+          type="checkbox"
+          [(ngModel)]="role.isSelected"
+          (click)="$event.stopPropagation()"
+        />
+        <div class="role-info">
+          <div class="role-name">{{ role.description }}</div>
+          <div class="role-badges">
+            <span class="badge priority-badge" *ngIf="role.isPriorityRole">
+              <i class="fa fa-star"></i> Priority
+            </span>
+            <span class="badge default-badge" *ngIf="role.isDefaultRole"
+              >Default</span
+            >
+          </div>
+        </div>
+        <i
+          class="fa fa-check check-icon"
+          *ngIf="!allowMultiple && role.roleCode === currentRole?.roleCode"
+        ></i>
       </div>
-      <i
-        class="fa fa-check"
-        *ngIf="role.roleCode === selectedRoleSignal()?.roleCode"
-      ></i>
     </div>
   </div>
 </div>
+
+<div
+  class="dropdown-overlay"
+  *ngIf="showDropdown()"
+  (click)="closeDropdown()"
+></div>
