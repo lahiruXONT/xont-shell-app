@@ -119,7 +119,21 @@
                 "input": "apps/shell-app/public"
               },
               "apps/shell-app/src/favicon.ico",
-              "apps/shell-app/src/assets"
+              {
+                "glob": "**/*",
+                "input": "apps/shell-app/src/assets",
+                "output": "/assets"
+              },
+              {
+                "glob": "**/*.css",
+                "input": "node_modules/@fortawesome/fontawesome-free/css",
+                "output": "/assets/fontawesome/css"
+              },
+              {
+                "glob": "**/*.{ttf,woff,woff2,eot,svg}",
+                "input": "node_modules/@fortawesome/fontawesome-free/webfonts",
+                "output": "/assets/fontawesome/webfonts"
+              }
             ],
             "styles": [
               "node_modules/@angular/material/prebuilt-themes/indigo-pink.css",

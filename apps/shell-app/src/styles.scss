@@ -1,19 +1,175 @@
-@import "@angular/material/prebuilt-themes/indigo-pink.css";
+/* Global Styles */
 @import "bootstrap/dist/css/bootstrap.min.css";
 @import "@fortawesome/fontawesome-free/css/all.min.css";
+@import "@angular/material/prebuilt-themes/indigo-pink.css";
 
+/* CSS Reset & Base */
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
 html,
 body {
   height: 100%;
-  font-family: "Roboto", "Helvetica Neue", sans-serif;
-  overflow: hidden;
+  font-family: "Roboto", Arial, sans-serif;
+  font-size: 14px;
+  color: #333;
+  background: #f5f5f5;
 }
 
-// Import theme CSS files dynamically
-// These will be loaded by ThemeService
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Utility Classes */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #3498db;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.success-message {
+  color: #27ae60;
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+/* Button Styles */
+.btn-primary {
+  background-color: #3498db;
+  border-color: #3498db;
+
+  &:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+  }
+}
+
+.btn-success {
+  background-color: #27ae60;
+  border-color: #27ae60;
+
+  &:hover {
+    background-color: #229954;
+    border-color: #229954;
+  }
+}
+
+.btn-danger {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+
+  &:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+  }
+}
+
+/* Card Styles */
+.card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+/* Form Styles */
+.form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.slide-in-down {
+  animation: slideInDown 0.3s ease-out;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

@@ -1,85 +1,49 @@
-<div
-  class="tab-content-container"
-  [class.fullscreen]="isFullscreen"
-  [class.hidden]="!isVisible()"
->
-  <!-- Loading State -->
-  <div class="loading-overlay" *ngIf="tab.state === TabState.LOADING">
-    <div class="loading-spinner">
-      <div class="spinner"></div>
-      <div class="loading-text">Loading {{ tab.title }}...</div>
-      <div
-        class="progress-bar"
-        *ngIf="loadProgress() > 0 && loadProgress() < 100"
-      >
-        <div class="progress" [style.width.%]="loadProgress()"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Error State -->
-  <div class="error-state" *ngIf="tab.state === TabState.ERROR">
-    <div class="error-icon">
-      <i class="fa fa-exclamation-triangle"></i>
-    </div>
-    <div class="error-message">
-      <h3>Failed to Load Content</h3>
-      <p>
-        {{ tab.error || "An unknown error occurred while loading this task" }}
-      </p>
-      <div class="error-actions">
-        <button class="retry-btn" (click)="reload()">
-          <i class="fa fa-refresh"></i> Retry
-        </button>
-        <button
-          class="close-btn"
-          (click)="stateChanged.emit({ tabId: tab.id, state: TabState.IDLE })"
-        >
-          <i class="fa fa-times"></i> Close
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Minimized State -->
-  <div class="minimized-state" *ngIf="tab.isMinimized">
-    <div class="minimized-icon">
-      <i class="fa fa-window-minimize"></i>
-    </div>
-    <div class="minimized-message">
-      <h3>{{ tab.title }}</h3>
-      <p>This tab is minimized</p>
-    </div>
-  </div>
-
-  <!-- Iframe Content -->
+<div class="tab-content-container">
   <div
-    class="iframe-container"
-    *ngIf="tab.type === TabType.IFRAME"
-    [class.hidden]="tab.state !== TabState.LOADED || tab.isMinimized"
+    *ngIf="activeTab(); let tab"
+    class="tab-content"
+    [class.loading]="tab.state === TabState.LOADING"
   >
+    <!-- IFrame Content -->
     <iframe
-      #iframe
-      [src]="safeUrl()"
-      [title]="tab.title"
-      [id]="tab.id"
-      (load)="onIframeLoad()"
-      (error)="onIframeError($event)"
-      class="content-iframe"
-      [class.fullscreen]="isFullscreen"
+      *ngIf="tab.type === TabType.IFRAME && safeUrl()"
+      [src]="safeUrl()!"
+      class="tab-iframe"
+      [id]="'iframe-' + tab.id"
+      (load)="onIframeLoad(tab.id)"
+      (error)="onIframeError(tab.id)"
       frameborder="0"
       allowfullscreen
     ></iframe>
-  </div>
 
-  <!-- Angular Route Content -->
-  <div class="route-container" *ngIf="tab.type === TabType.ROUTE">
-    <router-outlet></router-outlet>
-  </div>
+    <!-- Angular Route Content -->
+    <div *ngIf="tab.type === TabType.ANGULAR" class="tab-angular-content">
+      <!-- Angular component will be loaded here via router-outlet or dynamic component -->
+      <router-outlet></router-outlet>
+    </div>
 
-  <!-- Unsaved Changes Indicator -->
-  <div class="unsaved-indicator" *ngIf="tab.metadata?.hasUnsavedChanges">
-    <i class="fa fa-circle"></i>
-    <span>Unsaved changes</span>
+    <!-- External Link -->
+    <div *ngIf="tab.type === TabType.EXTERNAL" class="tab-external">
+      <p>This task opens in a new window</p>
+      <a [href]="tab.url" target="_blank" class="btn btn-primary">
+        <i class="fa fa-external-link-alt"></i> Open in New Window
+      </a>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="tab.state === TabState.LOADING" class="loading-overlay">
+      <div class="spinner"></div>
+      <p>Loading {{ tab.title }}...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="tab.state === TabState.ERROR" class="error-overlay">
+      <i class="fa fa-exclamation-triangle"></i>
+      <h3>Failed to Load</h3>
+      <p>There was an error loading this content</p>
+      <button class="btn btn-primary" (click)="tabManager.refreshTab(tab.id)">
+        <i class="fa fa-sync"></i> Retry
+      </button>
+    </div>
   </div>
 </div>

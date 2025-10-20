@@ -1,97 +1,66 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  signal,
-  computed,
-} from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TabManagerService } from '../../services/tab-manager.service';
+import { Tab } from '../../models/tab.model';
 import {
   CdkDragDrop,
-  DragDropModule,
   moveItemInArray,
+  DragDropModule,
 } from '@angular/cdk/drag-drop';
-import { Tab } from '../../models/tab.model';
 
-/**
- * Tab Header Component
- * Displays tab navigation bar with sorting (Legacy: tabsort class)
- */
 @Component({
   selector: 'lib-tab-header',
-  standalone: true,
   imports: [CommonModule, DragDropModule],
   templateUrl: './tab-header.component.html',
   styleUrl: './tab-header.component.scss',
 })
 export class TabHeaderComponent {
-  @Input() tabs: Tab[] = [];
-  @Input() activeTabId: string | null = null;
-  @Input() minimizedTabs: string[] = [];
-  @Input() maximizedTabId: string | null = null;
-  @Input() enableSorting = true;
+  tabManager = inject(TabManagerService);
+  showTabMenu = signal<string | null>(null);
 
-  @Output() tabSelected = new EventEmitter<string>();
-  @Output() tabClosed = new EventEmitter<string>();
-  @Output() tabMinimized = new EventEmitter<string>();
-  @Output() tabRestored = new EventEmitter<string>();
-  @Output() tabsReordered = new EventEmitter<{
-    fromIndex: number;
-    toIndex: number;
-  }>();
-
-  readonly visibleTabs = computed(() =>
-    this.tabs.filter((tab) => !this.minimizedTabs.includes(tab.id))
-  );
-
-  readonly minimizedTabsList = computed(() =>
-    this.tabs.filter((tab) => this.minimizedTabs.includes(tab.id))
-  );
-
-  onTabClick(tabId: string): void {
-    this.tabSelected.emit(tabId);
+  onTabClick(tab: Tab): void {
+    this.tabManager.activateTab(tab.id);
   }
 
-  onTabClose(event: Event, tabId: string): void {
+  async onCloseTab(event: Event, tabId: string): Promise<void> {
     event.stopPropagation();
-    this.tabClosed.emit(tabId);
+    await this.tabManager.closeTab(tabId);
   }
 
-  onTabMinimize(event: Event, tabId: string): void {
-    event.stopPropagation();
-    this.tabMinimized.emit(tabId);
+  onTabContextMenu(event: MouseEvent, tabId: string): void {
+    event.preventDefault();
+    this.showTabMenu.set(tabId);
   }
 
-  onTabRestore(event: Event, tabId: string): void {
-    event.stopPropagation();
-    this.tabRestored.emit(tabId);
+  onPinTab(tabId: string): void {
+    this.tabManager.togglePinTab(tabId);
+    this.showTabMenu.set(null);
   }
 
-  /**
-   * Handle drag-drop tab reordering (Legacy: tabsort)
-   */
-  onTabDrop(event: CdkDragDrop<Tab[]>): void {
-    if (!this.enableSorting) {
-      return;
-    }
+  async onCloseOtherTabs(tabId: string): Promise<void> {
+    await this.tabManager.closeOtherTabs(tabId);
+    this.showTabMenu.set(null);
+  }
 
-    if (event.previousIndex !== event.currentIndex) {
-      this.tabsReordered.emit({
-        fromIndex: event.previousIndex,
-        toIndex: event.currentIndex,
-      });
+  async onCloseAllTabs(): Promise<void> {
+    await this.tabManager.closeAllTabs();
+    this.showTabMenu.set(null);
+  }
+
+  onRefreshTab(tabId: string): void {
+    this.tabManager.refreshTab(tabId);
+    this.showTabMenu.set(null);
+  }
+
+  onDrop(event: CdkDragDrop<Tab[]>): void {
+    if (this.tabManager.config().enableDragDrop) {
+      this.tabManager.reorderTabs(event.previousIndex, event.currentIndex);
     }
   }
 
-  isTabActive(tabId: string): boolean {
-    return this.activeTabId === tabId;
+  closeMenu(): void {
+    this.showTabMenu.set(null);
   }
-
-  isTabMinimized(tabId: string): boolean {
-    return this.minimizedTabs.includes(tabId);
-  }
-
   trackByTab(index: number, tab: Tab): string {
     return tab.id;
   }

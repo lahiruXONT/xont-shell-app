@@ -1,101 +1,74 @@
 <div class="tab-header-container">
-  <!-- Main Tab Bar -->
-  <div class="tab-bar">
-    <!-- Visible Tabs (with drag-drop if enabled) -->
+  <div
+    class="tabs-list"
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    (cdkDropListDropped)="onDrop($event)"
+  >
     <div
-      class="tabs-list"
-      cdkDropList
-      [cdkDropListDisabled]="!enableSorting"
-      (cdkDropListDropped)="onTabDrop($event)"
+      *ngFor="let tab of tabManager.tabs(); trackBy: trackByTab"
+      class="tab-item"
+      [class.active]="tab.isActive"
+      [class.pinned]="tab.isPinned"
+      [class.dirty]="tab.isDirty"
+      cdkDrag
+      (click)="onTabClick(tab)"
+      (contextmenu)="onTabContextMenu($event, tab.id)"
     >
-      <div
-        *ngFor="let tab of visibleTabs(); trackBy: trackByTab"
-        class="tab-item"
-        [class.active]="isTabActive(tab.id)"
-        [class.loading]="tab.state === 'loading'"
-        [class.error]="tab.state === 'error'"
-        [class.pinned]="tab.isPinned"
-        cdkDrag
-        [cdkDragDisabled]="!enableSorting || tab.isPinned"
-        (click)="onTabClick(tab.id)"
+      <!-- Pin Icon -->
+      <i *ngIf="tab.isPinned" class="fa fa-thumbtack pin-icon"></i>
+
+      <!-- Tab Icon -->
+      <i class="fa {{ tab.icon }} tab-icon" *ngIf="!tab.isPinned"></i>
+
+      <!-- Tab Title -->
+      <span class="tab-title">
+        {{ tab.title }}
+        <span *ngIf="tab.isDirty" class="dirty-indicator">*</span>
+      </span>
+
+      <!-- Loading Indicator -->
+      <span *ngIf="tab.state === 'LOADING'" class="loading-spinner"></span>
+
+      <!-- Close Button -->
+      <button
+        class="close-btn"
+        (click)="onCloseTab($event, tab.id)"
+        [disabled]="tab.metadata?.canClose === false"
       >
-        <!-- Tab Icon -->
-        <i class="tab-icon fa {{ tab.icon }}"></i>
-
-        <!-- Tab Title -->
-        <span class="tab-title" [title]="tab.title">
-          {{ tab.title }}
-        </span>
-
-        <!-- Tab Task Code (if available) -->
-        <span class="tab-code" *ngIf="tab.taskCode">
-          [{{ tab.taskCode }}]
-        </span>
-
-        <!-- Loading Indicator -->
-        <span class="tab-loading" *ngIf="tab.state === 'loading'">
-          <i class="fa fa-spinner fa-spin"></i>
-        </span>
-
-        <!-- Pin Indicator -->
-        <i class="tab-pin fa fa-thumb-tack" *ngIf="tab.isPinned"></i>
-
-        <!-- Tab Actions -->
-        <div class="tab-actions" (click)="$event.stopPropagation()">
-          <!-- Minimize Button (Legacy feature) -->
-          <button
-            class="tab-action-btn minimize-btn"
-            (click)="onTabMinimize($event, tab.id)"
-            title="Minimize"
-          >
-            <i class="fa fa-minus"></i>
-          </button>
-
-          <!-- Close Button -->
-          <button
-            class="tab-action-btn close-btn"
-            (click)="onTabClose($event, tab.id)"
-            [disabled]="tab.isPinned"
-            title="Close"
-          >
-            <i class="fa fa-times"></i>
-          </button>
-        </div>
-
-        <!-- Drag Handle (if sorting enabled) -->
-        <div
-          class="drag-handle"
-          *ngIf="enableSorting && !tab.isPinned"
-          cdkDragHandle
-        >
-          <i class="fa fa-grip-vertical"></i>
-        </div>
-      </div>
-    </div>
-
-    <!-- New Tab Button -->
-    <button class="new-tab-btn" title="New Tab">
-      <i class="fa fa-plus"></i>
-    </button>
-  </div>
-
-  <!-- Minimized Tabs Bar (Legacy feature) -->
-  <div class="minimized-tabs-bar" *ngIf="minimizedTabsList().length > 0">
-    <div class="minimized-tabs-label">
-      <i class="fa fa-window-minimize"></i>
-      Minimized Tabs:
-    </div>
-    <div
-      *ngFor="let tab of minimizedTabsList(); trackBy: trackByTab"
-      class="minimized-tab-item"
-      (click)="onTabRestore($event, tab.id)"
-      [title]="tab.title"
-    >
-      <i class="fa {{ tab.icon }}"></i>
-      <span class="minimized-tab-title">{{ tab.title }}</span>
-      <button class="minimized-close-btn" (click)="onTabClose($event, tab.id)">
         <i class="fa fa-times"></i>
       </button>
+
+      <!-- Context Menu -->
+      <div class="tab-context-menu" *ngIf="showTabMenu() === tab.id">
+        <button (click)="onPinTab(tab.id)">
+          <i
+            class="fa"
+            [class.fa-thumbtack]="!tab.isPinned"
+            [class.fa-times]="tab.isPinned"
+          ></i>
+          {{ tab.isPinned ? "Unpin" : "Pin" }} Tab
+        </button>
+        <button (click)="onRefreshTab(tab.id)">
+          <i class="fa fa-sync"></i> Refresh
+        </button>
+        <button (click)="onCloseOtherTabs(tab.id)">
+          <i class="fa fa-window-close"></i> Close Others
+        </button>
+        <button (click)="onCloseAllTabs()">
+          <i class="fa fa-times-circle"></i> Close All
+        </button>
+      </div>
     </div>
   </div>
+
+  <!-- Tab Tools -->
+  <div class="tab-tools" *ngIf="tabManager.config().showToolsMenu">
+    <button class="tool-btn" title="Close All Tabs" (click)="onCloseAllTabs()">
+      <i class="fa fa-times-circle"></i>
+    </button>
+  </div>
 </div>
+
+<!-- Backdrop to close context menu -->
+<div class="menu-backdrop" *ngIf="showTabMenu()" (click)="closeMenu()"></div>

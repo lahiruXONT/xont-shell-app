@@ -11,7 +11,8 @@
     "build:top-nav": "ng build top-nav-lib",
     "build:all": "npm run build:libs && ng build shell-app --configuration=production",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "lint": "ng lint"
   },
   "private": true,
   "dependencies": {
@@ -25,18 +26,27 @@
     "@angular/platform-browser": "^19.2.0",
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
+    "@fortawesome/fontawesome-free": "^6.5.1",
     "@microsoft/signalr": "^8.0.7",
     "bootstrap": "^5.3.3",
-    "@fortawesome/fontawesome-free": "^6.5.1",
+    "crypto-js": "^4.2.0",
+    "date-fns": "^3.6.0",
+    "jwt-decode": "^4.0.0",
+    "lodash-es": "^4.17.21",
+    "ngx-cookie-service": "^17.1.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "uuid": "^9.0.1",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^19.2.18",
     "@angular/cli": "^19.2.9",
     "@angular/compiler-cli": "^19.2.0",
+    "@types/crypto-js": "^4.2.2",
     "@types/jasmine": "~5.1.0",
+    "@types/lodash-es": "^4.17.12",
+    "@types/uuid": "^9.0.8",
     "jasmine-core": "~5.6.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
