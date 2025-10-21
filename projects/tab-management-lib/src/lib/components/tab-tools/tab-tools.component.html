@@ -1,122 +1,25 @@
-<div class="tab-tools-container">
-  <div class="tools-group tools-left">
-    <!-- Refresh -->
-    <button
-      class="tool-btn"
-      [disabled]="!activeTabId"
-      (click)="onRefresh()"
-      title="Refresh Active Tab"
-    >
-      <i class="fa fa-refresh"></i>
-      <span class="tool-label">Refresh</span>
-    </button>
-
-    <!-- Save All -->
-    <button
-      class="tool-btn save-btn"
-      [disabled]="!hasUnsavedTabs"
-      [class.highlight]="hasUnsavedTabs"
-      (click)="onSaveAll()"
-      title="Save All Changes"
-    >
-      <i class="fa fa-save"></i>
-      <span class="tool-label">Save All</span>
-      <span class="badge" *ngIf="hasUnsavedTabs">!</span>
-    </button>
-
-    <div class="tool-divider"></div>
-
-    <!-- Minimize -->
-    <button
-      class="tool-btn"
-      [disabled]="!activeTabId"
-      (click)="onMinimize()"
-      title="Minimize Tab"
-    >
-      <i class="fa fa-minus"></i>
-      <span class="tool-label">Minimize</span>
-    </button>
-
-    <!-- Maximize/Restore -->
-    <button
-      class="tool-btn"
-      [disabled]="!activeTabId"
-      (click)="onMaximize()"
-      [title]="isMaximized ? 'Restore' : 'Maximize'"
-    >
-      <i
-        class="fa"
-        [class.fa-window-maximize]="!isMaximized"
-        [class.fa-window-restore]="isMaximized"
-      ></i>
-      <span class="tool-label">{{ isMaximized ? "Restore" : "Maximize" }}</span>
-    </button>
-
-    <!-- Fullscreen -->
-    <button
-      class="tool-btn"
-      [disabled]="!activeTabId"
-      (click)="onFullscreen()"
-      title="Toggle Fullscreen"
-    >
-      <i class="fa fa-expand"></i>
-      <span class="tool-label">Fullscreen</span>
-    </button>
-  </div>
-
-  <div class="tools-group tools-center">
-    <!-- Tab Count -->
-    <div class="tab-count-badge">
-      <i class="fa fa-folder-open"></i>
-      <span>{{ tabCount }} tab{{ tabCount !== 1 ? "s" : "" }}</span>
-    </div>
-  </div>
-
-  <div class="tools-group tools-right">
-    <!-- Close Active -->
-    <button
-      class="tool-btn close-btn"
-      [disabled]="!activeTabId"
-      (click)="onCloseActive()"
-      title="Close Active Tab"
-    >
+<div class="tab-tools-panel">
+  <div class="tools-header">
+    <h4>Tab Tools</h4>
+    <button class="close-btn" (click)="onClose()">
       <i class="fa fa-times"></i>
-      <span class="tool-label">Close</span>
+    </button>
+  </div>
+
+  <div class="tools-content">
+    <button class="tool-btn" (click)="onRefresh()">
+      <i class="fa fa-refresh"></i>
+      <span>Refresh Tab</span>
     </button>
 
-    <!-- Close Others -->
-    <button
-      class="tool-btn close-btn"
-      [disabled]="!activeTabId || tabCount <= 1"
-      (click)="onCloseOthers()"
-      title="Close Other Tabs"
-    >
+    <button class="tool-btn" (click)="onCloseOthers()">
       <i class="fa fa-times-circle"></i>
-      <span class="tool-label">Close Others</span>
+      <span>Close Others</span>
     </button>
 
-    <!-- Close All -->
-    <button
-      class="tool-btn close-btn"
-      [disabled]="tabCount === 0"
-      (click)="onCloseAll()"
-      title="Close All Tabs"
-    >
-      <i class="fa fa-times-circle"></i>
-      <span class="tool-label">Close All</span>
-    </button>
-
-    <div class="tool-divider"></div>
-
-    <!-- New Tab -->
-    <button
-      class="tool-btn new-tab-btn"
-      [disabled]="!canAddTab"
-      (click)="onNewTab()"
-      title="New Tab"
-    >
-      <i class="fa fa-plus"></i>
-      <span class="tool-label">New Tab</span>
+    <button class="tool-btn danger" (click)="onCloseAll()">
+      <i class="fa fa-times-circle-o"></i>
+      <span>Close All</span>
     </button>
   </div>
 </div>

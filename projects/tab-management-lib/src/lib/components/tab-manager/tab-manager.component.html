@@ -1,14 +1,69 @@
-<div class="tab-manager">
-  <!-- Tab Headers -->
-  <lib-tab-header></lib-tab-header>
+<!-- Tab Manager Container -->
+<div class="tab-manager-container">
+  <!-- Tab Headers (Draggable) -->
+  <div class="tab-headers-container">
+    <div
+      class="tab-headers"
+      cdkDropList
+      cdkDropListOrientation="horizontal"
+      [cdkDropListData]="tabs()"
+      (cdkDropListDropped)="onTabDrop($event)"
+    >
+      @for (tab of tabs(); track trackByTabId($index, tab)) {
+      <lib-tab-header
+        [tab]="tab"
+        [isActive]="tab.id === activeTab()?.id"
+        [enableDrag]="config().enableDragDrop"
+        (tabClick)="onTabActivate(tab)"
+        (tabClose)="onTabClose(tab)"
+        (tabPin)="onTabPin(tab)"
+        (tabRefresh)="onTabRefresh(tab)"
+        (tabCloseOthers)="closeOtherTabs(tab)"
+        cdkDrag
+      ></lib-tab-header>
+      }
+    </div>
+
+    <!-- Tab Tools Button -->
+    @if (config().showToolsMenu && tabs().length > 0) {
+    <div class="tab-tools-trigger">
+      <button class="tools-btn" (click)="toggleTools()" title="Tab Tools">
+        <i class="fa fa-ellipsis-v"></i>
+      </button>
+    </div>
+    }
+  </div>
+
+  <!-- Tab Tools Menu -->
+  @if (showTools() && activeTab()) {
+  <lib-tab-tools
+    [tab]="activeTab()!"
+    (closeAll)="closeAllTabs()"
+    (closeOthers)="closeOtherTabs(activeTab()!)"
+    (refresh)="onTabRefresh(activeTab()!)"
+    (toolsClosed)="showTools.set(false)"
+  ></lib-tab-tools>
+  }
 
   <!-- Tab Content Area -->
-  <lib-tab-content></lib-tab-content>
+  <div class="tab-content-area">
+    @for (tab of tabs(); track trackByTabId($index, tab)) { @if (tab.id ===
+    activeTab()?.id) {
+    <lib-tab-content
+      [tab]="tab"
+      (stateChanged)="tabManagerService.updateTabState(tab.id, $event)"
+      (dirtyChanged)="tabManagerService.markTabAsDirty(tab.id, $event)"
+      (titleChanged)="tabManagerService.updateTabTitle(tab.id, $event)"
+    ></lib-tab-content>
+    } }
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="tabManager.tabCount() === 0">
-    <i class="fa fa-folder-open"></i>
-    <h3>No Active Tasks</h3>
-    <p>Select a task from the menu to get started</p>
+    <!-- Empty State -->
+    @if (tabs().length === 0) {
+    <div class="empty-state">
+      <i class="fa fa-folder-open"></i>
+      <h3>No tabs open</h3>
+      <p>Select a task from the menu to open a tab</p>
+    </div>
+    }
   </div>
 </div>

@@ -7,4 +7,5 @@ export const environment = {
   maxTabs: 5,
   cacheMenus: true,
   cacheDuration: 30,
+  signalRHubUrl: 'https://api.yourdomain.com/hubs/notification',
 };

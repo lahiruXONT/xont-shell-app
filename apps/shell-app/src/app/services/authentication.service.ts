@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -79,7 +79,6 @@ export class AuthenticationService {
   private initializeSession(): void {
     const token = this.getStoredToken();
     const user = this.getStoredUser();
-
     if (token && user) {
       this.setupSessionTimeout();
     }
@@ -91,10 +90,14 @@ export class AuthenticationService {
   async login(
     userName: string,
     password: string,
-    businessUnit: string = 'HEMA'
+    businessUnit: string
   ): Promise<void> {
     try {
-      const request: LoginRequest = { userName, password, businessUnit };
+      const request: LoginRequest = {
+        userName,
+        password,
+        businessUnit,
+      };
 
       const response = await firstValueFrom(
         this.http.post<LoginResponse>(
@@ -158,17 +161,12 @@ export class AuthenticationService {
   async refreshAuthToken(): Promise<boolean> {
     try {
       const refreshToken = this.refreshTokenSignal();
-
-      if (!refreshToken) {
-        return false;
-      }
+      if (!refreshToken) return false;
 
       const response = await firstValueFrom(
         this.http.post<LoginResponse>(
           `${environment.baseUrl}/api/auth/refresh`,
-          {
-            refreshToken,
-          }
+          { refreshToken }
         )
       );
 
@@ -180,7 +178,6 @@ export class AuthenticationService {
         this.setupSessionTimeout();
         return true;
       }
-
       return false;
     } catch (error) {
       console.error('Token refresh error:', error);
@@ -194,78 +191,6 @@ export class AuthenticationService {
    */
   getToken(): string | null {
     return this.tokenSignal();
-  }
-
-  /**
-   * Switch user role
-   */
-  async switchRole(roleCode: string): Promise<void> {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<{ user: UserData }>(
-          `${environment.baseUrl}/api/auth/switch-role`,
-          {
-            roleCode,
-          }
-        )
-      );
-
-      this.userDataSignal.set(response.user);
-      this.storeUser(response.user);
-    } catch (error) {
-      console.error('Switch role error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Switch business unit
-   */
-  async switchBusinessUnit(businessUnit: string): Promise<void> {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<{ user: UserData }>(
-          `${environment.baseUrl}/api/auth/switch-business-unit`,
-          {
-            businessUnit,
-          }
-        )
-      );
-
-      this.userDataSignal.set(response.user);
-      this.storeUser(response.user);
-    } catch (error) {
-      console.error('Switch business unit error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Change password
-   */
-  async changePassword(
-    currentPassword: string,
-    newPassword: string
-  ): Promise<void> {
-    try {
-      await firstValueFrom(
-        this.http.post(`${environment.baseUrl}/api/auth/change-password`, {
-          currentPassword,
-          newPassword,
-        })
-      );
-
-      // Update user data
-      const userData = this.userDataSignal();
-      if (userData) {
-        userData.mustChangePassword = false;
-        userData.isPasswordExpired = false;
-        this.userDataSignal.set({ ...userData });
-        this.storeUser(userData);
-      }
-    } catch (error: any) {
-      throw new Error(error.error?.message || 'Failed to change password');
-    }
   }
 
   /**
@@ -296,9 +221,9 @@ export class AuthenticationService {
    */
   private clearSession(): void {
     this.clearSessionTimeout();
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user_data');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userData');
     this.tokenSignal.set(null);
     this.refreshTokenSignal.set(null);
     this.userDataSignal.set(null);
@@ -307,27 +232,27 @@ export class AuthenticationService {
 
   // Storage helpers
   private storeToken(token: string): void {
-    localStorage.setItem('auth_token', token);
+    localStorage.setItem('authToken', token);
   }
 
   private getStoredToken(): string | null {
-    return localStorage.getItem('auth_token');
+    return localStorage.getItem('authToken');
   }
 
   private storeRefreshToken(token: string): void {
-    localStorage.setItem('refresh_token', token);
+    localStorage.setItem('refreshToken', token);
   }
 
   private getStoredRefreshToken(): string | null {
-    return localStorage.getItem('refresh_token');
+    return localStorage.getItem('refreshToken');
   }
 
   private storeUser(user: UserData): void {
-    localStorage.setItem('user_data', JSON.stringify(user));
+    localStorage.setItem('userData', JSON.stringify(user));
   }
 
   private getStoredUser(): UserData | null {
-    const userData = localStorage.getItem('user_data');
+    const userData = localStorage.getItem('userData');
     return userData ? JSON.parse(userData) : null;
   }
 }

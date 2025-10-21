@@ -8,9 +8,8 @@ describe('TabManagerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TabManagerComponent]
-    })
-    .compileComponents();
+      imports: [TabManagerComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(TabManagerComponent);
     component = fixture.componentInstance;

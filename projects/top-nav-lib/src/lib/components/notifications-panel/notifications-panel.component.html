@@ -1,137 +1,155 @@
-<div class="notifications-sidenav" [class.open]="panelState().isOpen">
-  <!-- Header -->
-  <div class="sidenav-header">
-    <h3 class="sidenav-title">
-      <i class="fa fa-bell"></i>
-      Notifications
-      <span class="unread-count" *ngIf="unreadCount() > 0">
-        ({{ unreadCount() }})
-      </span>
-    </h3>
-    <button class="close-btn" (click)="closePanel()">
-      <i class="fa fa-times"></i>
-    </button>
-  </div>
+<!-- Notifications Sidebar Panel -->
+<!-- Legacy: notificationsideNav -->
+<div
+  class="sidenav notification-panel"
+  [class.open]="panelState().isOpen"
+  id="notificationSideNav"
+>
+  <div class="sidebar-inner">
+    <!-- Panel Header -->
+    <div class="notification-header">
+      <h4 class="sidebar-title">
+        <i class="fa fa-bell"></i>
+        Notifications @if (unreadCount() > 0) {
+        <span class="unread-badge">{{ unreadCount() }}</span>
+        }
+      </h4>
+      <button class="close-btn" (click)="closePanel()" type="button">
+        <i class="fa fa-close"></i>
+      </button>
+    </div>
 
-  <!-- Main List View -->
-  <div class="sidenav-content" *ngIf="!showMessageView()">
-    <!-- Toolbar -->
-    <div class="toolbar">
+    <!-- Action Buttons -->
+    <div class="notification-actions">
+      @if (hasNotifications()) {
       <button
-        class="toolbar-btn"
-        (click)="selectAll()"
-        [disabled]="notifications().length === 0"
+        class="btn btn-sm btn-primary"
+        (click)="markAllAsRead()"
+        [disabled]="unreadCount() === 0"
+        type="button"
       >
-        <i class="fa fa-check-square"></i>
-        Select All
+        <i class="fa fa-check-double"></i>
+        Mark All Read
       </button>
+
+      @if (hasSelectedNotifications()) {
       <button
-        class="toolbar-btn"
-        (click)="markSelectedAsRead()"
-        [disabled]="selectedNotifications().length === 0"
-      >
-        <i class="fa fa-envelope-open"></i>
-        Mark Read
-      </button>
-      <button
-        class="toolbar-btn delete-btn"
+        class="btn btn-sm btn-danger"
         (click)="deleteSelected()"
-        [disabled]="selectedNotifications().length === 0"
+        type="button"
       >
         <i class="fa fa-trash"></i>
-        Delete
+        Delete ({{ selectedNotifications().size }})
       </button>
+      } }
     </div>
 
     <!-- Notifications List -->
-    <div class="notifications-list">
-      <div
-        *ngFor="let notification of notifications()"
-        class="notification-item"
-        [class.unread]="!notification.isRead"
-        [class.selected]="selectedNotifications().includes(notification.id)"
-        (click)="onNotificationClick(notification)"
-      >
-        <!-- Checkbox -->
-        <div class="notification-checkbox" (click)="$event.stopPropagation()">
-          <input
-            type="checkbox"
-            [checked]="selectedNotifications().includes(notification.id)"
-            (change)="toggleSelection(notification.id)"
-          />
-        </div>
-
-        <!-- Icon -->
-        <div class="notification-icon" [class]="'type-' + notification.type">
-          <i class="fa {{ getNotificationIcon(notification) }}"></i>
-        </div>
-
-        <!-- Content -->
-        <div class="notification-content">
-          <div class="notification-title">{{ notification.title }}</div>
-          <div class="notification-message">{{ notification.message }}</div>
-          <div class="notification-meta">
-            <span class="notification-time">
-              {{ formatTime(notification.timestamp) }}
-            </span>
-            <span
-              class="notification-type-badge"
-              *ngIf="notification.type === NotificationType.TASK"
-            >
-              Task
-            </span>
+    <div class="notifications-container">
+      @if (!isMessageViewOpen()) {
+      <!-- List View -->
+      @if (hasNotifications()) {
+      <ul class="notification-list" id="sideNav">
+        @for (notification of notifications(); track notification.id) {
+        <li [class]="getNotificationClass(notification)">
+          <!-- Selection Checkbox -->
+          <div class="notification-checkbox">
+            <input
+              type="checkbox"
+              [id]="'notif-check-' + notification.id"
+              [checked]="isSelected(notification.id)"
+              (change)="toggleNotificationSelection(notification.id)"
+            />
+            <label [for]="'notif-check-' + notification.id"></label>
           </div>
-        </div>
 
-        <!-- Unread Indicator -->
-        <div class="unread-indicator" *ngIf="!notification.isRead"></div>
-      </div>
+          <!-- Notification Content -->
+          <div
+            class="notification-content"
+            (click)="onNotificationClick(notification)"
+          >
+            <div class="notification-icon">
+              <i [class]="'fa ' + getNotificationIcon(notification)"></i>
+            </div>
 
+            <div class="notification-details">
+              <div class="notification-title">
+                {{ notification.title }}
+              </div>
+              <div class="notification-message">
+                {{ notification.message }}
+              </div>
+              <div class="notification-meta">
+                <span class="notification-time">
+                  {{ formatTimestamp(notification.timestamp) }}
+                </span>
+                @if (notification.type === NotificationType.TASK &&
+                notification.taskCode) {
+                <span class="notification-task-code">
+                  <i class="fa fa-code"></i>
+                  {{ notification.taskCode }}
+                </span>
+                }
+              </div>
+            </div>
+
+            @if (!notification.isRead) {
+            <div class="unread-indicator"></div>
+            }
+          </div>
+        </li>
+        }
+      </ul>
+      } @else {
       <!-- Empty State -->
-      <div class="empty-state" *ngIf="notifications().length === 0">
+      <div class="empty-state">
         <i class="fa fa-bell-slash"></i>
         <p>No notifications</p>
       </div>
-    </div>
-  </div>
+      } } @else {
+      <!-- Message View -->
+      <div class="message-view">
+        <div class="message-header">
+          <button class="back-btn" (click)="closeMessageView()" type="button">
+            <i class="fa fa-arrow-left"></i>
+            Back
+          </button>
+        </div>
 
-  <!-- Message View -->
-  <div class="message-view" *ngIf="showMessageView() && selectedNotification()">
-    <div class="message-header">
-      <button class="back-btn" (click)="backToList()">
-        <i class="fa fa-arrow-left"></i>
-        Back
-      </button>
-    </div>
+        <div class="message-content">
+          @if (panelState().selectedNotification; as notification) {
+          <div class="message-title">
+            <i [class]="'fa ' + getNotificationIcon(notification)"></i>
+            {{ notification.title }}
+          </div>
 
-    <div class="message-content">
-      <div class="message-title">
-        <i class="fa {{ getNotificationIcon(selectedNotification()!) }}"></i>
-        {{ selectedNotification()!.title }}
+          <div class="message-timestamp">
+            {{ formatTimestamp(notification.timestamp) }}
+          </div>
+
+          <div class="message-body">
+            {{ notification.message }}
+          </div>
+
+          @if (notification.actionUrl) {
+          <div class="message-actions">
+            <a
+              [href]="notification.actionUrl"
+              class="btn btn-primary"
+              target="_blank"
+            >
+              {{ notification.actionText || "View Details" }}
+            </a>
+          </div>
+          } }
+        </div>
       </div>
-
-      <div class="message-meta">
-        <span class="message-time">
-          {{ selectedNotification()!.timestamp | date : "medium" }}
-        </span>
-      </div>
-
-      <div class="message-body">
-        {{ selectedNotification()!.message }}
-      </div>
-
-      <div class="message-actions" *ngIf="selectedNotification()!.actionUrl">
-        <button class="action-btn">
-          {{ selectedNotification()!.actionText || "View Details" }}
-        </button>
-      </div>
+      }
     </div>
   </div>
 </div>
 
-<!-- Overlay -->
-<div
-  class="sidenav-overlay"
-  [class.active]="panelState().isOpen"
-  (click)="closePanel()"
-></div>
+<!-- Backdrop (click to close) -->
+@if (panelState().isOpen) {
+<div class="notification-backdrop" (click)="closePanel()"></div>
+}

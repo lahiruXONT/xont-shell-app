@@ -1,172 +1,234 @@
-import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+  inject,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+// Services
 import { NotificationService } from '../../services/notification.service';
+
+// Models
 import {
   Notification,
   NotificationType,
+  NotificationPanelState,
 } from '../../models/notification.model';
 
 /**
- * Notifications Panel Component
- * Legacy: Notification sidenav from Main.aspx
+ * Notifications Panel Component (Right Sidebar)
+ * Legacy: notificationsideNav from Main.aspx
+ *
+ * Features:
+ * - Slide-in notification panel from right
+ * - List of all notifications (Task + Message)
+ * - Unread/Read status indication
+ * - Select notification to view details
+ * - Delete notifications
+ * - Open tasks in tabs
  */
 @Component({
   selector: 'lib-notifications-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './notifications-panel.component.html',
-  styleUrl: './notifications-panel.component.scss',
+  styleUrls: ['./notifications-panel.component.scss'],
 })
 export class NotificationsPanelComponent implements OnInit, OnDestroy {
-  // Get state from service
-  readonly panelState = computed(() => this.notificationService.panelState());
-  readonly notifications = computed(() =>
-    this.notificationService.notifications()
-  );
-  readonly unreadCount = computed(() => this.notificationService.unreadCount());
+  // Services
+  private notificationService = inject(NotificationService);
 
   // Component state
-  selectedNotifications = signal<string[]>([]);
-  showMessageView = signal<boolean>(false);
-  selectedNotification = signal<Notification | null>(null);
+  private destroy$ = new Subject<void>();
+  selectedNotifications = signal<Set<string>>(new Set());
 
-  // Enum for template
+  // Outputs (for shell app integration)
+  @Output() taskNotificationClicked = new EventEmitter<{
+    taskCode: string;
+    taskUrl: string;
+  }>();
+  @Output() messageNotificationClicked = new EventEmitter<Notification>();
+
+  // Service state references
+  panelState = this.notificationService.panelState;
+  notifications = this.notificationService.notifications;
+  unreadCount = this.notificationService.unreadCount;
+  taskNotifications = this.notificationService.taskNotifications;
+  messageNotifications = this.notificationService.messageNotifications;
+
+  // Computed properties
+  hasNotifications = computed(() => this.notifications().length > 0);
+  hasSelectedNotifications = computed(
+    () => this.selectedNotifications().size > 0
+  );
+  isMessageViewOpen = computed(
+    () =>
+      this.panelState().showMessageView &&
+      this.panelState().selectedNotification !== null
+  );
+
+  // Notification type enum for template
   readonly NotificationType = NotificationType;
 
-  constructor(private notificationService: NotificationService) {}
-
   ngOnInit(): void {
-    // Subscribe to new notifications
-    this.notificationService.newNotification$.subscribe((notification) => {
-      this.handleNewNotification(notification);
-    });
+    // Component initialization
   }
 
   ngOnDestroy(): void {
-    // Cleanup
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /**
-   * Handle new notification
-   */
-  private handleNewNotification(notification: Notification): void {
-    // Could show toast here
-    console.log('New notification:', notification);
-  }
-
-  /**
-   * Close panel
-   * Legacy: closeNav()
+   * Close notifications panel
+   * Legacy: closeNav() function
    */
   closePanel(): void {
     this.notificationService.closePanel();
-    this.showMessageView.set(false);
-    this.selectedNotification.set(null);
+    this.selectedNotifications.set(new Set());
   }
 
   /**
-   * Select notification
+   * Handle notification click
    * Legacy: Click on .rolenotification
    */
   onNotificationClick(notification: Notification): void {
-    this.notificationService.selectNotification(notification);
-    this.selectedNotification.set(notification);
-    this.showMessageView.set(true);
-  }
+    if (notification.type === NotificationType.TASK && notification.taskCode) {
+      // Task notification - emit event to open task in tab
+      this.taskNotificationClicked.emit({
+        taskCode: notification.taskCode,
+        taskUrl: notification.taskUrl || '',
+      });
 
-  /**
-   * Toggle notification selection (for bulk delete)
-   */
-  toggleSelection(notificationId: string): void {
-    const selected = this.selectedNotifications();
-    if (selected.includes(notificationId)) {
-      this.selectedNotifications.set(
-        selected.filter((id) => id !== notificationId)
-      );
+      // Mark as read
+      if (!notification.isRead) {
+        this.notificationService.markAsRead(notification.id);
+      }
+
+      // Close panel
+      this.closePanel();
     } else {
-      this.selectedNotifications.set([...selected, notificationId]);
+      // Message notification - show message view
+      this.notificationService.selectNotification(notification);
     }
   }
 
   /**
-   * Select all notifications
+   * Toggle notification selection for deletion
    */
-  selectAll(): void {
-    const allIds = this.notifications().map((n) => n.id);
-    this.selectedNotifications.set(allIds);
+  toggleNotificationSelection(notificationId: string): void {
+    this.selectedNotifications.update((selected) => {
+      const newSet = new Set(selected);
+      if (newSet.has(notificationId)) {
+        newSet.delete(notificationId);
+      } else {
+        newSet.add(notificationId);
+      }
+      return newSet;
+    });
   }
 
   /**
-   * Deselect all
+   * Check if notification is selected
    */
-  deselectAll(): void {
-    this.selectedNotifications.set([]);
-  }
-
-  /**
-   * Mark selected as read
-   * Legacy: OpenNotification
-   */
-  async markSelectedAsRead(): Promise<void> {
-    await this.notificationService.markAllAsRead();
-    this.deselectAll();
+  isSelected(notificationId: string): boolean {
+    return this.selectedNotifications().has(notificationId);
   }
 
   /**
    * Delete selected notifications
-   * Legacy: PageMethods.deleteNotifications(arryOfB)
+   * Legacy: Delete button functionality
    */
   async deleteSelected(): Promise<void> {
-    const selected = this.selectedNotifications();
-    if (selected.length === 0) return;
+    const selectedIds = Array.from(this.selectedNotifications());
+    if (selectedIds.length === 0) return;
 
-    if (confirm(`Delete ${selected.length} notification(s)?`)) {
-      await this.notificationService.deleteNotifications(selected);
-      this.deselectAll();
+    const confirmed = confirm(
+      `Are you sure you want to delete ${selectedIds.length} notification(s)?`
+    );
+
+    if (confirmed) {
+      await this.notificationService.deleteNotifications(selectedIds);
+      this.selectedNotifications.set(new Set());
     }
   }
 
   /**
-   * Back to list from message view
+   * Mark all notifications as read
    */
-  backToList(): void {
-    this.showMessageView.set(false);
-    this.selectedNotification.set(null);
+  async markAllAsRead(): Promise<void> {
+    const unreadNotifications = this.notifications().filter((n) => !n.isRead);
+
+    for (const notification of unreadNotifications) {
+      await this.notificationService.markAsRead(notification.id);
+    }
   }
 
   /**
-   * Get notification icon
+   * Close message view
+   */
+  closeMessageView(): void {
+    const state = this.panelState();
+    this.notificationService['panelStateSignal'].set({
+      ...state,
+      showMessageView: false,
+      selectedNotification: null,
+    });
+  }
+
+  /**
+   * Get notification icon class
    */
   getNotificationIcon(notification: Notification): string {
-    switch (notification.type) {
-      case NotificationType.TASK:
-        return 'fa-tasks';
-      case NotificationType.MESSAGE:
-        return 'fa-envelope';
-      case NotificationType.ADMIN_ALERT:
-        return 'fa-exclamation-triangle';
-      case NotificationType.SUCCESS:
-        return 'fa-check-circle';
-      case NotificationType.ERROR:
-        return 'fa-times-circle';
-      default:
-        return 'fa-bell';
-    }
+    return this.notificationService.getNotificationIcon(notification);
   }
 
   /**
-   * Format timestamp
+   * Get notification CSS class
    */
-  formatTime(date: Date): string {
+  getNotificationClass(notification: Notification): string {
+    const classes = ['notification-item'];
+
+    if (!notification.isRead) {
+      classes.push('unread');
+    }
+
+    if (this.isSelected(notification.id)) {
+      classes.push('selected');
+    }
+
+    if (notification.type === NotificationType.TASK) {
+      classes.push('task-notification');
+    } else {
+      classes.push('message-notification');
+    }
+
+    return classes.join(' ');
+  }
+
+  /**
+   * Format notification timestamp
+   */
+  formatTimestamp(date: Date): string {
     const now = new Date();
     const diff = now.getTime() - new Date(date).getTime();
     const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
 
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
     if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    if (days < 7) return `${days}d ago`;
+
+    return new Date(date).toLocaleDateString();
   }
 }

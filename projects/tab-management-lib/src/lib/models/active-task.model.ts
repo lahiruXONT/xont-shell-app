@@ -1,6 +1,6 @@
 /**
  * Active User Task tracking model
- * Legacy equivalent: ActiveUserTask class in Common.Data
+ * Legacy: ActiveUserTask class in Common.Data
  */
 export interface ActiveUserTask {
   // User identification
@@ -13,9 +13,9 @@ export interface ActiveUserTask {
   applicationCode?: string; // Application identifier
 
   // Task properties
-  executionType: number; // 0 = normal, 1 = closing
+  executionType: number; // 0=normal, 1=closing
   exclusivityMode?: string; // Task exclusivity mode
-  statusFlag: number; // 1 = active, 2 = closed
+  statusFlag: number; // 1=active, 2=closed
 
   // User context
   powerUser?: boolean; // Is power user
@@ -31,7 +31,7 @@ export interface ActiveUserTask {
  */
 export interface TaskLogOptions {
   enableLogging: boolean;
-  logToServer: boolean;
-  logToConsole: boolean;
+  logToServer: boolean; // Call API
+  logToConsole: boolean; // Console.log
   logLevel: 'info' | 'warn' | 'error' | 'debug';
 }

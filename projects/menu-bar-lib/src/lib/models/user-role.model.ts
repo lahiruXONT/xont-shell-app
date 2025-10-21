@@ -3,12 +3,17 @@
  * Legacy: UserRole class in Domain
  */
 export interface UserRole {
-  roleCode: string; // Role code (e.g., 'ADMIN', 'PRTROLE001')
+  // Core identification
+  roleCode: string; // Role code (e.g., "ADMIN", "PRTROLE001")
   description: string; // Role name/description
+
+  // Status
   isActive: boolean;
   isPriorityRole: boolean; // Is this a PRTROLE
   isDefaultRole: boolean; // Is default role for user
   isSelected: boolean; // Selected in multi-role checkbox
+
+  // Permissions
   permissions: string[]; // Permission codes
   menuAccess: string[]; // Menu codes accessible
 }

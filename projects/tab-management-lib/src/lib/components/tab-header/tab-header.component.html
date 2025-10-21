@@ -1,74 +1,74 @@
-<div class="tab-header-container">
-  <div
-    class="tabs-list"
-    cdkDropList
-    cdkDropListOrientation="horizontal"
-    (cdkDropListDropped)="onDrop($event)"
+<!-- Tab Header -->
+<div
+  class="tab-header"
+  [class.active]="isActive"
+  [class.pinned]="tab.isPinned"
+  [class.dirty]="tab.isDirty"
+  [class.loading]="tab.state === 'LOADING'"
+  [class.error]="tab.state === 'ERROR'"
+  (click)="onClick($event)"
+  (contextmenu)="onContextMenu($event)"
+  [title]="tab.tooltip || tab.title"
+>
+  <!-- Tab Icon -->
+  <div class="tab-icon">
+    <i class="fa" [class]="getStateIcon()" [style.color]="getStateColor()"></i>
+  </div>
+
+  <!-- Tab Title -->
+  <div class="tab-title">
+    <span class="title-text">{{ tab.title }}</span>
+    @if (tab.isDirty) {
+    <span class="dirty-indicator">*</span>
+    }
+  </div>
+
+  <!-- Pin Indicator -->
+  @if (tab.isPinned) {
+  <div class="pin-indicator">
+    <i class="fa fa-thumbtack"></i>
+  </div>
+  }
+
+  <!-- Close Button -->
+  <button
+    class="tab-close-btn"
+    (click)="onClose($event)"
+    [title]="tab.isPinned ? 'Tab is pinned' : 'Close tab'"
   >
-    <div
-      *ngFor="let tab of tabManager.tabs(); trackBy: trackByTab"
-      class="tab-item"
-      [class.active]="tab.isActive"
-      [class.pinned]="tab.isPinned"
-      [class.dirty]="tab.isDirty"
-      cdkDrag
-      (click)="onTabClick(tab)"
-      (contextmenu)="onTabContextMenu($event, tab.id)"
-    >
-      <!-- Pin Icon -->
-      <i *ngIf="tab.isPinned" class="fa fa-thumbtack pin-icon"></i>
-
-      <!-- Tab Icon -->
-      <i class="fa {{ tab.icon }} tab-icon" *ngIf="!tab.isPinned"></i>
-
-      <!-- Tab Title -->
-      <span class="tab-title">
-        {{ tab.title }}
-        <span *ngIf="tab.isDirty" class="dirty-indicator">*</span>
-      </span>
-
-      <!-- Loading Indicator -->
-      <span *ngIf="tab.state === 'LOADING'" class="loading-spinner"></span>
-
-      <!-- Close Button -->
-      <button
-        class="close-btn"
-        (click)="onCloseTab($event, tab.id)"
-        [disabled]="tab.metadata?.canClose === false"
-      >
-        <i class="fa fa-times"></i>
-      </button>
-
-      <!-- Context Menu -->
-      <div class="tab-context-menu" *ngIf="showTabMenu() === tab.id">
-        <button (click)="onPinTab(tab.id)">
-          <i
-            class="fa"
-            [class.fa-thumbtack]="!tab.isPinned"
-            [class.fa-times]="tab.isPinned"
-          ></i>
-          {{ tab.isPinned ? "Unpin" : "Pin" }} Tab
-        </button>
-        <button (click)="onRefreshTab(tab.id)">
-          <i class="fa fa-sync"></i> Refresh
-        </button>
-        <button (click)="onCloseOtherTabs(tab.id)">
-          <i class="fa fa-window-close"></i> Close Others
-        </button>
-        <button (click)="onCloseAllTabs()">
-          <i class="fa fa-times-circle"></i> Close All
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tab Tools -->
-  <div class="tab-tools" *ngIf="tabManager.config().showToolsMenu">
-    <button class="tool-btn" title="Close All Tabs" (click)="onCloseAllTabs()">
-      <i class="fa fa-times-circle"></i>
-    </button>
-  </div>
+    <i class="fa fa-times"></i>
+  </button>
 </div>
 
-<!-- Backdrop to close context menu -->
-<div class="menu-backdrop" *ngIf="showTabMenu()" (click)="closeMenu()"></div>
+<!-- Context Menu -->
+@if (showContextMenu()) {
+<div
+  class="tab-context-menu"
+  [style.left.px]="contextMenuPosition().x"
+  [style.top.px]="contextMenuPosition().y"
+>
+  <div class="context-menu-item" (click)="onContextAction('refresh', $event)">
+    <i class="fa fa-refresh"></i>
+    <span>Refresh</span>
+  </div>
+  <div class="context-menu-item" (click)="onContextAction('pin', $event)">
+    <i class="fa fa-thumbtack"></i>
+    <span>{{ tab.isPinned ? "Unpin" : "Pin" }} Tab</span>
+  </div>
+  <div class="context-menu-divider"></div>
+  <div
+    class="context-menu-item"
+    (click)="onContextAction('closeOthers', $event)"
+  >
+    <i class="fa fa-times-circle"></i>
+    <span>Close Others</span>
+  </div>
+  <div
+    class="context-menu-item danger"
+    (click)="onContextAction('close', $event)"
+  >
+    <i class="fa fa-times"></i>
+    <span>Close Tab</span>
+  </div>
+</div>
+}

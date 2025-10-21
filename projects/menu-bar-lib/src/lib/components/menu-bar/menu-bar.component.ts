@@ -9,8 +9,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+
+// Services
 import { MenuBarService } from '../../services/menu-bar.service';
 import { FavoritesService } from '../../services/favorites.service';
+
+// Models
 import {
   MenuTask,
   MenuGroup,
@@ -31,10 +35,12 @@ import {
   styleUrl: './menu-bar.component.scss',
 })
 export class MenuBarComponent implements OnInit {
-  @Input() userName = '';
-  @Input() businessUnit = '';
-  @Input() roleCode = '';
+  // Inputs
+  @Input() userName!: string;
+  @Input() businessUnit!: string;
+  @Input() roleCode!: string;
 
+  // Outputs
   @Output() taskSelected = new EventEmitter<MenuTask>();
   @Output() taskFavorited = new EventEmitter<{
     task: MenuTask;
@@ -78,6 +84,7 @@ export class MenuBarComponent implements OnInit {
         this.roleCode,
         this.businessUnit
       );
+
       await this.favoritesService.loadFavorites(
         this.userName,
         this.businessUnit
@@ -125,7 +132,7 @@ export class MenuBarComponent implements OnInit {
   /**
    * Switch view mode
    */
-  switchView(mode: MenuViewMode): void {
+  switchViewMode(mode: MenuViewMode): void {
     this.menuBarService.switchViewMode(mode);
   }
 
@@ -218,6 +225,9 @@ export class MenuBarComponent implements OnInit {
     return task.taskCode;
   }
 
+  /**
+   * Track by for search results
+   */
   trackBySearchResult(index: number, result: MenuSearchResult): string {
     return result.taskCode;
   }

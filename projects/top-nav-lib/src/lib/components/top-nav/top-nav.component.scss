@@ -1,212 +1,237 @@
-.top-navigation {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: var(--nav-bg, #1a237e);
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
+// Top Navigation Bar Styles
+// Legacy: Header styles from Main.aspx
 
-.nav-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 100%;
-  padding: 0 20px;
-  max-width: 100%;
-}
+.top-nav-container {
+  #header {
+    height: 52px;
+    background: #0682b7;
+    box-shadow: 0 4px 0 #0682b7;
+    z-index: 999;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
 
-.nav-logo {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  gap: 12px;
+    .navbar {
+      height: 52px;
+      margin-bottom: 0;
+      padding-right: 20px;
+      border-radius: 0;
+      border: none;
+      background: #248fbd;
 
-  .logo-image {
-    height: 40px;
-    width: auto;
-  }
+      .navbar-header {
+        display: flex;
+        align-items: center;
 
-  .logo-text {
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: white;
-  }
+        .navbar-brand {
+          padding: 8px 15px;
+          height: 52px;
+          line-height: 36px;
 
-  &:hover {
-    opacity: 0.9;
-  }
-}
-
-.nav-center {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-
-  .bu-icon {
-    font-size: 1.1rem;
-    color: #4caf50;
-  }
-
-  .bu-name {
-    font-size: 0.95rem;
-    font-weight: 500;
-  }
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.nav-item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  padding: 8px 12px;
-  border-radius: 4px;
-  transition: background 0.2s;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  i {
-    font-size: 1.25rem;
-  }
-}
-
-.nav-notifications {
-  .notification-badge {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    background: #f44336;
-    color: white;
-    border-radius: 10px;
-    padding: 2px 6px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    min-width: 18px;
-    text-align: center;
-  }
-}
-
-.nav-user {
-  gap: 8px;
-  padding: 4px 12px;
-
-  .user-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid white;
-  }
-
-  .user-name {
-    font-size: 0.9rem;
-    font-weight: 500;
-  }
-
-  .dropdown-icon {
-    font-size: 0.8rem;
-    transition: transform 0.2s;
-  }
-
-  &:hover .dropdown-icon {
-    transform: translateY(2px);
-  }
-}
-
-.user-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  width: 280px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  z-index: 1001;
-
-  .dropdown-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px;
-    background: #f5f5f5;
-
-    .dropdown-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-    }
-
-    .dropdown-user-info {
-      flex: 1;
-
-      .dropdown-name {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 4px;
-      }
-
-      .dropdown-email {
-        font-size: 0.85rem;
-        color: #666;
-      }
-    }
-  }
-
-  .dropdown-divider {
-    height: 1px;
-    background: #e0e0e0;
-    margin: 8px 0;
-  }
-
-  .dropdown-menu {
-    padding: 8px 0;
-
-    .dropdown-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      color: #333;
-      text-decoration: none;
-      cursor: pointer;
-      transition: background 0.2s;
-
-      i {
-        font-size: 1.1rem;
-        width: 20px;
-        text-align: center;
-        color: #666;
-      }
-
-      &:hover {
-        background: #f5f5f5;
-      }
-
-      &.logout-item {
-        color: #f44336;
-
-        i {
-          color: #f44336;
+          img {
+            height: 36px;
+            width: auto;
+          }
         }
 
-        &:hover {
-          background: #ffebee;
+        .business-unit-display {
+          color: white;
+          line-height: 52px;
+          font-weight: 900;
+          font-size: 17px;
+          margin-left: 20px;
+
+          .fa-database {
+            font-size: 20px;
+          }
+
+          .bu-name {
+            font-weight: 600;
+          }
+        }
+      }
+
+      #top-nav {
+        .navbar-nav {
+          li {
+            height: 52px;
+            display: flex;
+            align-items: center;
+
+            a {
+              display: flex;
+              align-items: center;
+              padding: 10px 15px;
+              color: white;
+              text-decoration: none;
+              transition: background 0.3s;
+
+              &:hover,
+              &:focus {
+                background: #0682b7;
+              }
+
+              .avatar {
+                border-radius: 50%;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+              }
+
+              .avatar-name {
+                margin: 0 5px;
+                font-weight: 500;
+              }
+
+              .caret {
+                margin-left: 5px;
+              }
+            }
+
+            &.notification-dropdown {
+              position: relative;
+
+              .notification-trigger {
+                position: relative;
+
+                .notificationNumber {
+                  background-color: #fa3e3e;
+                  border-radius: 50%;
+                  color: white;
+                  padding-left: 5px;
+                  font-weight: bold;
+                  font-size: 10px;
+                  position: absolute;
+                  top: 8px;
+                  right: 8px;
+                  min-width: 16px;
+                  height: 16px;
+                  line-height: 16px;
+                  text-align: center;
+                }
+              }
+            }
+
+            &.dropdown {
+              position: relative;
+
+              &.open {
+                background: #0682b7;
+
+                a {
+                  background: #0682b7;
+                }
+              }
+
+              .dropdown-menu {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                z-index: 1000;
+                min-width: 200px;
+                padding: 5px 0;
+                margin: 2px 0 0;
+                background-color: #fff;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+
+                &.right {
+                  right: 0;
+                  left: auto;
+                }
+
+                li {
+                  height: auto;
+
+                  a {
+                    color: #030303;
+                    text-align: left;
+                    padding: 8px 15px;
+                    line-height: 28px;
+                    background-color: #fff;
+                    display: block;
+
+                    i {
+                      margin-right: 10px;
+                      font-size: 16px;
+                      width: 20px;
+                      text-align: center;
+                    }
+
+                    &:hover {
+                      color: #141415;
+                      background: #d2ecf1;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Dropdown backdrop
+.dropdown-backdrop {
+  position: fixed;
+  top: 52px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 998;
+  background: transparent;
+}
+
+// Responsive styles
+@media screen and (max-width: 768px) {
+  .top-nav-container {
+    #header {
+      .navbar {
+        .navbar-header {
+          .business-unit-display {
+            font-size: 14px;
+            margin-left: 10px;
+
+            .fa-database {
+              display: none;
+            }
+          }
+        }
+
+        #top-nav {
+          .navbar-nav {
+            li {
+              a {
+                padding: 10px 8px;
+
+                .avatar-name {
+                  display: none;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .top-nav-container {
+    #header {
+      .navbar {
+        .navbar-header {
+          .navbar-brand {
+            img {
+              width: 120px;
+            }
+          }
+
+          .business-unit-display {
+            display: none;
+          }
         }
       }
     }

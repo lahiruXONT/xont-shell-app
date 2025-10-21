@@ -5,14 +5,18 @@ import {
   UserSettings,
   PasswordChangeRequest,
   ProfileImageUpload,
+  SettingsModalState,
+  SettingsSaveResponse,
   SettingsValidation,
+  SettingsError,
 } from '../models/settings.model';
 import { Inject, Optional } from '@angular/core';
 import { TOP_NAV_API_URL as API_URL } from '../tokens/api-url.token';
+import { ThemeService } from './theme.service';
 
 /**
  * Settings Service
- * Legacy: User settings from settings modal
+ * Legacy: Settings modal functionality from Main.aspx
  */
 @Injectable({
   providedIn: 'root',
@@ -20,87 +24,338 @@ import { TOP_NAV_API_URL as API_URL } from '../tokens/api-url.token';
 export class SettingsService {
   // Settings state using signals
   private settingsSignal = signal<UserSettings | null>(null);
-  private isSavingSignal = signal<boolean>(false);
-  private lastSavedSignal = signal<Date | null>(null);
+  private modalStateSignal = signal<SettingsModalState>({
+    isOpen: false,
+    activeTab: 'theme',
+    isSaving: false,
+    hasUnsavedChanges: false,
+  });
+
+  // Temporary settings (for unsaved changes)
+  private tempSettingsSignal = signal<Partial<UserSettings> | null>(null);
 
   // Public readonly signals
   readonly settings = this.settingsSignal.asReadonly();
-  readonly isSaving = this.isSavingSignal.asReadonly();
-  readonly lastSaved = this.lastSavedSignal.asReadonly();
-
-  // Computed values
-  readonly hasUnsavedChanges = computed(() => {
-    // Compare with last saved
-    return false; // Implement comparison logic
-  });
+  readonly modalState = this.modalStateSignal.asReadonly();
+  readonly hasUnsavedChanges = computed(
+    () => this.modalStateSignal().hasUnsavedChanges
+  );
 
   constructor(
     private http: HttpClient,
+    private themeService: ThemeService,
     @Inject(API_URL) private apiBaseUrl: string
-  ) {
-    this.loadSettings();
-  }
+  ) {}
 
   /**
-   * Load user settings from server
-   * Legacy: Load from User object
+   * Load user settings
+   * Legacy: Load user settings from database
    */
-  async loadSettings(): Promise<void> {
+  async loadSettings(userName: string): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<UserSettings>(`${this.apiBaseUrl}/api/user/settings`)
+        this.http.get<UserSettings>(
+          `${this.apiBaseUrl}/api/settings/${userName}`
+        )
       );
 
       this.settingsSignal.set(response);
+
+      // Apply theme
+      await this.themeService.applyTheme(
+        this.themeService.getThemeByName(response.theme)
+      );
     } catch (error) {
       console.error('Failed to load settings:', error);
     }
   }
 
   /**
-   * Save settings to server
-   * Legacy: PageMethods.saveSettings()
+   * Save user settings
+   * Legacy: saveSetting button handler
    */
-  async saveSettings(settings: Partial<UserSettings>): Promise<void> {
-    this.isSavingSignal.set(true);
+  async saveSettings(
+    userName: string,
+    settings: Partial<UserSettings>
+  ): Promise<SettingsSaveResponse> {
+    this.modalStateSignal.update((state) => ({
+      ...state,
+      isSaving: true,
+    }));
 
     try {
+      // Validate settings
+      const validation = this.validateSettings(settings);
+      if (!validation.isValid) {
+        return {
+          success: false,
+          message: 'Validation failed',
+          errors: validation.errors,
+        };
+      }
+
       const response = await firstValueFrom(
-        this.http.post<UserSettings>(
-          `${this.apiBaseUrl}/api/user/settings`,
+        this.http.put<SettingsSaveResponse>(
+          `${this.apiBaseUrl}/api/settings/${userName}`,
           settings
         )
       );
 
-      this.settingsSignal.set(response);
-      this.lastSavedSignal.set(new Date());
-    } catch (error) {
+      if (response.success) {
+        // Update local settings
+        const currentSettings = this.settingsSignal();
+        this.settingsSignal.set({ ...currentSettings!, ...settings });
+
+        // Clear temp settings
+        this.tempSettingsSignal.set(null);
+
+        // Update modal state
+        this.modalStateSignal.update((state) => ({
+          ...state,
+          hasUnsavedChanges: false,
+        }));
+
+        // Apply theme if changed
+        if (settings.theme) {
+          const theme = this.themeService.getThemeByName(settings.theme);
+          await this.themeService.applyTheme(theme);
+        }
+      }
+
+      return response;
+    } catch (error: any) {
       console.error('Failed to save settings:', error);
-      throw error;
+      return {
+        success: false,
+        message: error.message || 'Failed to save settings',
+      };
     } finally {
-      this.isSavingSignal.set(false);
+      this.modalStateSignal.update((state) => ({
+        ...state,
+        isSaving: false,
+      }));
     }
   }
 
   /**
-   * Change password
-   * Legacy: Change password functionality in settings
+   * Change user password
+   * Legacy: Change password functionality
    */
-  async changePassword(request: PasswordChangeRequest): Promise<void> {
+  async changePassword(
+    userName: string,
+    request: PasswordChangeRequest
+  ): Promise<SettingsSaveResponse> {
     // Validate passwords
     const validation = this.validatePasswordChange(request);
     if (!validation.isValid) {
-      throw new Error(validation.errors[0].message);
+      return {
+        success: false,
+        message: 'Password validation failed',
+        errors: validation.errors,
+      };
     }
 
     try {
-      await firstValueFrom(
-        this.http.post(`${this.apiBaseUrl}/api/user/change-password`, request)
+      const response = await firstValueFrom(
+        this.http.post<SettingsSaveResponse>(
+          `${this.apiBaseUrl}/api/auth/change-password`,
+          {
+            userName,
+            currentPassword: request.currentPassword,
+            newPassword: request.newPassword,
+          }
+        )
       );
-    } catch (error) {
+
+      return response;
+    } catch (error: any) {
       console.error('Failed to change password:', error);
-      throw error;
+      return {
+        success: false,
+        message: error.message || 'Failed to change password',
+      };
     }
+  }
+
+  /**
+   * Upload profile image
+   * Legacy: imgProUpload control
+   */
+  async uploadProfileImage(
+    userName: string,
+    upload: ProfileImageUpload
+  ): Promise<SettingsSaveResponse> {
+    // Validate file
+    const validation = this.validateProfileImage(upload);
+    if (!validation.isValid) {
+      return {
+        success: false,
+        message: 'Image validation failed',
+        errors: validation.errors,
+      };
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', upload.file);
+      formData.append('userName', userName);
+
+      const response = await firstValueFrom(
+        this.http.post<{ imageUrl: string }>(
+          `${this.apiBaseUrl}/api/settings/upload-profile-image`,
+          formData
+        )
+      );
+
+      // Update settings
+      const currentSettings = this.settingsSignal();
+      this.settingsSignal.set({
+        ...currentSettings!,
+        profileImage: response.imageUrl,
+      });
+
+      return {
+        success: true,
+        message: 'Profile image uploaded successfully',
+      };
+    } catch (error: any) {
+      console.error('Failed to upload profile image:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to upload profile image',
+      };
+    }
+  }
+
+  /**
+   * Reset settings to default
+   * Legacy: setDefault button
+   */
+  async resetToDefault(userName: string): Promise<SettingsSaveResponse> {
+    try {
+      const response = await firstValueFrom(
+        this.http.post<SettingsSaveResponse>(
+          `${this.apiBaseUrl}/api/settings/${userName}/reset`,
+          {}
+        )
+      );
+
+      if (response.success) {
+        await this.loadSettings(userName);
+      }
+
+      return response;
+    } catch (error: any) {
+      console.error('Failed to reset settings:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to reset settings',
+      };
+    }
+  }
+
+  /**
+   * Update temporary settings (unsaved changes)
+   */
+  updateTempSettings(settings: Partial<UserSettings>): void {
+    this.tempSettingsSignal.update((current) => ({
+      ...current,
+      ...settings,
+    }));
+
+    this.modalStateSignal.update((state) => ({
+      ...state,
+      hasUnsavedChanges: true,
+    }));
+  }
+
+  /**
+   * Discard unsaved changes
+   */
+  discardChanges(): void {
+    this.tempSettingsSignal.set(null);
+    this.modalStateSignal.update((state) => ({
+      ...state,
+      hasUnsavedChanges: false,
+    }));
+  }
+
+  /**
+   * Open settings modal
+   */
+  openModal(tab: 'theme' | 'account' | 'profile' = 'theme'): void {
+    this.modalStateSignal.update((state) => ({
+      ...state,
+      isOpen: true,
+      activeTab: tab,
+    }));
+  }
+
+  /**
+   * Close settings modal
+   */
+  closeModal(): void {
+    // Check for unsaved changes
+    if (this.modalStateSignal().hasUnsavedChanges) {
+      const confirmed = confirm(
+        'You have unsaved changes. Are you sure you want to close?'
+      );
+      if (!confirmed) {
+        return;
+      }
+      this.discardChanges();
+    }
+
+    this.modalStateSignal.update((state) => ({
+      ...state,
+      isOpen: false,
+    }));
+  }
+
+  /**
+   * Switch active tab
+   */
+  switchTab(tab: 'theme' | 'account' | 'profile'): void {
+    this.modalStateSignal.update((state) => ({
+      ...state,
+      activeTab: tab,
+    }));
+  }
+
+  /**
+   * Validate settings
+   */
+  private validateSettings(
+    settings: Partial<UserSettings>
+  ): SettingsValidation {
+    const errors: SettingsError[] = [];
+
+    // Validate theme
+    if (settings.theme) {
+      const validThemes = ['green', 'blue', 'red', 'gray', 'purple'];
+      if (!validThemes.includes(settings.theme)) {
+        errors.push({
+          field: 'theme',
+          message: 'Invalid theme selection',
+        });
+      }
+    }
+
+    // Validate font size
+    if (settings.fontSize) {
+      const size = parseInt(settings.fontSize);
+      if (isNaN(size) || size < 10 || size > 24) {
+        errors.push({
+          field: 'fontSize',
+          message: 'Font size must be between 10 and 24',
+        });
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
   }
 
   /**
@@ -109,22 +364,9 @@ export class SettingsService {
   private validatePasswordChange(
     request: PasswordChangeRequest
   ): SettingsValidation {
-    const errors = [];
+    const errors: SettingsError[] = [];
 
-    if (!request.currentPassword) {
-      errors.push({
-        field: 'currentPassword',
-        message: 'Current password is required',
-      });
-    }
-
-    if (!request.newPassword) {
-      errors.push({
-        field: 'newPassword',
-        message: 'New password is required',
-      });
-    }
-
+    // Check if passwords match
     if (request.newPassword !== request.confirmNewPassword) {
       errors.push({
         field: 'confirmNewPassword',
@@ -132,10 +374,11 @@ export class SettingsService {
       });
     }
 
-    if (request.newPassword && request.newPassword.length < 6) {
+    // Check password strength
+    if (request.newPassword.length < 8) {
       errors.push({
         field: 'newPassword',
-        message: 'Password must be at least 6 characters',
+        message: 'Password must be at least 8 characters long',
       });
     }
 
@@ -146,57 +389,18 @@ export class SettingsService {
   }
 
   /**
-   * Upload profile image
-   * Legacy: imgProUpload file upload
-   */
-  async uploadProfileImage(upload: ProfileImageUpload): Promise<string> {
-    // Validate file
-    const validation = this.validateProfileImage(upload);
-    if (!validation.isValid) {
-      throw new Error(validation.errors[0].message);
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append('file', upload.file);
-
-      const response = await firstValueFrom(
-        this.http.post<{ url: string }>(
-          `${this.apiBaseUrl}/api/user/profile-image`,
-          formData
-        )
-      );
-
-      // Update settings with new image URL
-      const settings = this.settingsSignal();
-      if (settings) {
-        this.settingsSignal.set({
-          ...settings,
-          profileImage: response.url,
-        });
-      }
-
-      return response.url;
-    } catch (error) {
-      console.error('Failed to upload profile image:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Validate profile image upload
+   * Validate profile image
+   * Legacy: RegularExpressionValidator + CustomValidator
    */
   private validateProfileImage(upload: ProfileImageUpload): SettingsValidation {
-    const errors = [];
+    const errors: SettingsError[] = [];
 
     // Check file type
-    const fileType = upload.file.type.toLowerCase();
-    if (!upload.allowedTypes.some((type) => fileType.includes(type))) {
+    const fileExtension = upload.file.name.split('.').pop()?.toLowerCase();
+    if (!upload.allowedTypes.includes(fileExtension!)) {
       errors.push({
         field: 'file',
-        message: `File type not allowed. Allowed types: ${upload.allowedTypes.join(
-          ', '
-        )}`,
+        message: `Only ${upload.allowedTypes.join(', ')} file types allowed`,
       });
     }
 
@@ -205,7 +409,7 @@ export class SettingsService {
     if (fileSizeKB > upload.maxSizeKB) {
       errors.push({
         field: 'file',
-        message: `File size exceeds ${upload.maxSizeKB}KB`,
+        message: `File size must be less than ${upload.maxSizeKB}KB`,
       });
     }
 
@@ -213,36 +417,5 @@ export class SettingsService {
       isValid: errors.length === 0,
       errors,
     };
-  }
-
-  /**
-   * Update specific setting
-   */
-  async updateSetting(key: keyof UserSettings, value: any): Promise<void> {
-    const settings = this.settingsSignal();
-    if (!settings) return;
-
-    const updated = {
-      ...settings,
-      [key]: value,
-    };
-
-    await this.saveSettings(updated);
-  }
-
-  /**
-   * Reset settings to defaults
-   */
-  async resetToDefaults(): Promise<void> {
-    try {
-      await firstValueFrom(
-        this.http.post(`${this.apiBaseUrl}/api/user/settings/reset`, {})
-      );
-
-      await this.loadSettings();
-    } catch (error) {
-      console.error('Failed to reset settings:', error);
-      throw error;
-    }
   }
 }

@@ -64,6 +64,7 @@ export interface ReminderPanelState {
   isCreatingNew: boolean;
   isEditMode: boolean;
   showCalendar: boolean;
+  isOpen: boolean;
 }
 
 /**

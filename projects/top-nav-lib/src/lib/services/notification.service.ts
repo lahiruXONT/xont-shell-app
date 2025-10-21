@@ -37,9 +37,8 @@ export class NotificationService {
   private hubConnection: signalR.HubConnection | null = null;
   private isConnected = signal<boolean>(false);
 
-  // Notification state using signals
+  // State signals
   private notificationsSignal = signal<Notification[]>([]);
-  private unreadCountSignal = signal<number>(0);
   private panelStateSignal = signal<NotificationPanelState>({
     isOpen: false,
     unreadCount: 0,
@@ -48,25 +47,22 @@ export class NotificationService {
     notifications: [],
   });
   private configSignal = signal<NotificationConfig>(this.DEFAULT_CONFIG);
-
-  // Admin alerts
   private adminAlertSignal = signal<AdminAlert | null>(null);
-  private audioElement: HTMLAudioElement | null = null;
 
-  // Legacy observables for compatibility
+  // BehaviorSubjects for broadcasting
   private notificationSubject = new BehaviorSubject<Notification[]>([]);
-  private newNotificationSubject = new Subject<Notification>();
+  private unreadCountSubject = new BehaviorSubject<number>(0);
+  private adminAlertSubject = new Subject<AdminAlert>();
 
   // Public readonly signals
   readonly notifications = this.notificationsSignal.asReadonly();
-  readonly unreadCount = this.unreadCountSignal.asReadonly();
   readonly panelState = this.panelStateSignal.asReadonly();
-  readonly isSignalRConnected = this.isConnected.asReadonly();
+  readonly config = this.configSignal.asReadonly();
   readonly adminAlert = this.adminAlertSignal.asReadonly();
 
   // Computed values
-  readonly unreadNotifications = computed(() =>
-    this.notificationsSignal().filter((n) => !n.isRead)
+  readonly unreadCount = computed(
+    () => this.notificationsSignal().filter((n) => !n.isRead).length
   );
 
   readonly taskNotifications = computed(() =>
@@ -79,140 +75,151 @@ export class NotificationService {
     )
   );
 
-  // Public observables
-  readonly notifications$ = this.notificationSubject.asObservable();
-  readonly newNotification$ = this.newNotificationSubject.asObservable();
-
   constructor(
     private http: HttpClient,
     @Inject(API_URL) private apiBaseUrl: string
-  ) {
-    this.initializeAudioElement();
-  }
+  ) {}
 
   /**
-   * Initialize SignalR connection
-   * Legacy: SignalR hub connection from Main.aspx
+   * Connect to SignalR hub
+   * Legacy: SignalR connection setup in Main.aspx
    */
-  async connectToHub(
-    hubUrl: string,
-    accessTokenFactory: () => string
-  ): Promise<void> {
+  async connectToHub(hubUrl: string, accessToken: string): Promise<void> {
+    if (this.hubConnection) {
+      await this.disconnectFromHub();
+    }
+
     try {
       this.hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl, {
-          accessTokenFactory: () => accessTokenFactory(),
-          skipNegotiation: false,
-          transport:
-            signalR.HttpTransportType.WebSockets |
-            signalR.HttpTransportType.LongPolling,
+          accessTokenFactory: () => accessToken,
         })
         .withAutomaticReconnect()
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-      // Setup event handlers
-      this.setupSignalRHandlers();
+      // Register event handlers
+      this.registerSignalRHandlers();
 
       // Start connection
       await this.hubConnection.start();
       this.isConnected.set(true);
-      console.log('SignalR Connected');
+      console.log('SignalR connected');
     } catch (error) {
-      console.error('SignalR Connection Error:', error);
+      console.error('SignalR connection failed:', error);
       this.isConnected.set(false);
     }
   }
 
   /**
-   * Setup SignalR event handlers
-   * Legacy: Notification handlers from Main.aspx
+   * Disconnect from SignalR hub
    */
-  private setupSignalRHandlers(): void {
+  async disconnectFromHub(): Promise<void> {
+    if (this.hubConnection) {
+      await this.hubConnection.stop();
+      this.hubConnection = null;
+      this.isConnected.set(false);
+    }
+  }
+
+  /**
+   * Register SignalR event handlers
+   * Legacy: ReceiveNotification, ReceiveAdminAlert handlers
+   */
+  private registerSignalRHandlers(): void {
     if (!this.hubConnection) return;
 
-    // Receive notification event (Legacy: MyMethodResult)
-    this.hubConnection.on(
-      'ReceiveNotification',
-      (notification: Notification) => {
-        this.handleNewNotification(notification);
-      }
-    );
+    // Receive notification
+    this.hubConnection.on('ReceiveNotification', (notification: any) => {
+      this.handleIncomingNotification(notification);
+    });
 
-    // Admin alert event (Legacy: Admin alert popup)
-    this.hubConnection.on('AdminAlert', (alert: AdminAlert) => {
-      this.handleAdminAlert(alert);
+    // Receive admin alert
+    this.hubConnection.on('ReceiveAdminAlert', (alert: any) => {
+      this.handleIncomingAdminAlert(alert);
     });
 
     // Connection events
     this.hubConnection.onreconnecting(() => {
+      console.log('SignalR reconnecting...');
       this.isConnected.set(false);
-      console.log('SignalR Reconnecting...');
     });
 
     this.hubConnection.onreconnected(() => {
+      console.log('SignalR reconnected');
       this.isConnected.set(true);
-      console.log('SignalR Reconnected');
-      this.loadNotifications(); // Reload on reconnect
     });
 
     this.hubConnection.onclose(() => {
+      console.log('SignalR disconnected');
       this.isConnected.set(false);
-      console.log('SignalR Disconnected');
     });
   }
 
   /**
-   * Handle new notification received
-   * Legacy: MyMethodResult function
+   * Handle incoming notification from SignalR
    */
-  private handleNewNotification(notification: Notification): void {
-    const current = this.notificationsSignal();
-    const updated = [notification, ...current].slice(
-      0,
-      this.configSignal().maxNotifications
-    );
+  private handleIncomingNotification(notificationData: any): void {
+    const notification: Notification = {
+      id: notificationData.id || notificationData.recID.toString(),
+      recID: notificationData.recID,
+      type: notificationData.type,
+      priority: notificationData.priority || 'normal',
+      title: notificationData.title || notificationData.description,
+      message: notificationData.message || notificationData.description,
+      icon: notificationData.icon || 'fa-bell',
+      status: notificationData.status || NotificationStatus.UNREAD,
+      isRead: notificationData.status === NotificationStatus.READ,
+      isArchived: notificationData.status === NotificationStatus.ARCHIVED,
+      taskCode: notificationData.taskCode,
+      taskUrl: notificationData.taskUrl,
+      timestamp: new Date(notificationData.timestamp || Date.now()),
+      actionUrl: notificationData.actionUrl,
+      actionText: notificationData.actionText,
+    };
 
+    // Add to notifications
+    const updated = [notification, ...this.notificationsSignal()];
     this.notificationsSignal.set(updated);
-    this.updateUnreadCount();
-    this.notificationSubject.next(updated);
-    this.newNotificationSubject.next(notification);
+    this.updatePanelState();
 
-    // Show toast notification
-    if (this.configSignal().showToast) {
-      this.showToastNotification(notification);
-    }
-
-    // Play sound
+    // Play sound if enabled
     if (this.configSignal().enableSound) {
       this.playNotificationSound();
     }
 
-    // Update panel state
-    this.updatePanelState();
+    // Broadcast
+    this.notificationSubject.next(updated);
+    this.updateUnreadCount();
   }
 
   /**
-   * Handle admin alert
-   * Legacy: Admin alert modal with audio (myTune)
+   * Handle incoming admin alert from SignalR
+   * Legacy: Admin alert popup with audio
    */
-  private handleAdminAlert(alert: AdminAlert): void {
+  private handleIncomingAdminAlert(alertData: any): void {
+    const alert: AdminAlert = {
+      alertNumber: alertData.alertNumber,
+      message: alertData.message,
+      alertTime: new Date(alertData.alertTime),
+      timeInterval: alertData.timeInterval,
+      repeatTimes: alertData.repeatTimes,
+      recID: alertData.recID,
+      playSound: this.configSignal().enableSound,
+    };
+
     this.adminAlertSignal.set(alert);
+    this.adminAlertSubject.next(alert);
 
-    // Play audio if enabled
-    if (alert.playSound && this.audioElement) {
-      this.audioElement.src = 'assets/audio/adminAlert.mp3';
-      this.audioElement.loop = true;
-      this.audioElement.play();
+    // Play alert sound
+    if (alert.playSound) {
+      this.playAdminAlertSound();
     }
-
-    // Show modal
-    // The component will handle the modal display based on adminAlert signal
   }
 
   /**
-   * Load notifications from server
-   * Legacy: CheckNewNotification method
+   * Load notifications from API
+   * Legacy: Load notifications on page load
    */
   async loadNotifications(): Promise<void> {
     try {
@@ -221,9 +228,8 @@ export class NotificationService {
       );
 
       this.notificationsSignal.set(response);
-      this.updateUnreadCount();
-      this.notificationSubject.next(response);
       this.updatePanelState();
+      this.updateUnreadCount();
     } catch (error) {
       console.error('Failed to load notifications:', error);
     }
@@ -231,13 +237,13 @@ export class NotificationService {
 
   /**
    * Mark notification as read
-   * Legacy: PageMethods.executeNotification(recId)
+   * Legacy: Update notification status
    */
   async markAsRead(notificationId: string): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(
-          `${this.apiBaseUrl}/api/notifications/${notificationId}/mark-read`,
+        this.http.put(
+          `${this.apiBaseUrl}/api/notifications/${notificationId}/read`,
           {}
         )
       );
@@ -255,51 +261,24 @@ export class NotificationService {
       );
 
       this.notificationsSignal.set(updated);
-      this.updateUnreadCount();
-      this.notificationSubject.next(updated);
       this.updatePanelState();
+      this.updateUnreadCount();
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
   }
 
   /**
-   * Mark all as read
-   * Legacy: OpenNotification method
-   */
-  async markAllAsRead(): Promise<void> {
-    try {
-      await firstValueFrom(
-        this.http.post(`${this.apiBaseUrl}/api/notifications/mark-all-read`, {})
-      );
-
-      const notifications = this.notificationsSignal();
-      const updated = notifications.map((n) => ({
-        ...n,
-        isRead: true,
-        status: NotificationStatus.READ,
-        readAt: new Date(),
-      }));
-
-      this.notificationsSignal.set(updated);
-      this.updateUnreadCount();
-      this.notificationSubject.next(updated);
-      this.updatePanelState();
-    } catch (error) {
-      console.error('Failed to mark all as read:', error);
-    }
-  }
-
-  /**
-   * Delete notification(s)
-   * Legacy: PageMethods.deleteNotifications(arryOfB)
+   * Delete notifications
+   * Legacy: Delete selected notifications
    */
   async deleteNotifications(notificationIds: string[]): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${this.apiBaseUrl}/api/notifications/delete`, {
-          ids: notificationIds,
-        })
+        this.http.post(
+          `${this.apiBaseUrl}/api/notifications/delete`,
+          notificationIds
+        )
       );
 
       const notifications = this.notificationsSignal();
@@ -308,8 +287,6 @@ export class NotificationService {
       );
 
       this.notificationsSignal.set(updated);
-      this.updateUnreadCount();
-      this.notificationSubject.next(updated);
       this.updatePanelState();
     } catch (error) {
       console.error('Failed to delete notifications:', error);
@@ -322,10 +299,7 @@ export class NotificationService {
    */
   openPanel(): void {
     const state = this.panelStateSignal();
-    this.panelStateSignal.set({
-      ...state,
-      isOpen: true,
-    });
+    this.panelStateSignal.set({ ...state, isOpen: true });
   }
 
   /**
@@ -373,7 +347,7 @@ export class NotificationService {
       });
     }
 
-    // Mark as read
+    // Mark as read if unread
     if (!notification.isRead) {
       this.markAsRead(notification.id);
     }
@@ -381,36 +355,17 @@ export class NotificationService {
 
   /**
    * Load task details for notification
-   * Legacy: getTaskDetails(taskcode) + MyMethodResult
    */
   private async loadTaskDetailsForNotification(
     notification: Notification
   ): Promise<void> {
     try {
-      const response = await firstValueFrom(
-        this.http.get<any>(
-          `${this.apiBaseUrl}/api/tasks/${notification.taskCode}`
-        )
-      );
-
-      // Emit event to open task in tab
-      // This should be handled by the main app
-      this.newNotificationSubject.next({
-        ...notification,
-        taskUrl: response.url,
-        metadata: response,
-      });
+      // Emit event to open task in tab manager
+      // The shell app should listen to this and open the task
+      console.log('Opening task:', notification.taskCode);
     } catch (error) {
       console.error('Failed to load task details:', error);
     }
-  }
-
-  /**
-   * Update unread count
-   */
-  private updateUnreadCount(): void {
-    const count = this.notificationsSignal().filter((n) => !n.isRead).length;
-    this.unreadCountSignal.set(count);
   }
 
   /**
@@ -421,52 +376,67 @@ export class NotificationService {
     this.panelStateSignal.set({
       ...state,
       notifications: this.notificationsSignal(),
-      unreadCount: this.unreadCountSignal(),
+      unreadCount: this.unreadCount(),
     });
   }
 
   /**
-   * Initialize audio element for notifications
+   * Update unread count
    */
-  private initializeAudioElement(): void {
-    if (typeof document !== 'undefined') {
-      this.audioElement = document.createElement('audio');
-      this.audioElement.id = 'notificationAudio';
-      this.audioElement.style.display = 'none';
-      document.body.appendChild(this.audioElement);
-    }
+  private updateUnreadCount(): void {
+    this.unreadCountSubject.next(this.unreadCount());
   }
 
   /**
    * Play notification sound
    */
   private playNotificationSound(): void {
-    if (this.audioElement) {
-      this.audioElement.src = 'assets/audio/notification.mp3';
-      this.audioElement.play().catch((error) => {
-        console.error('Failed to play notification sound:', error);
-      });
-    }
+    // Play notification sound
+    const audio = new Audio('assets/sounds/notification.mp3');
+    audio.play().catch((error) => {
+      console.warn('Failed to play notification sound:', error);
+    });
   }
 
   /**
-   * Show toast notification
+   * Play admin alert sound
+   * Legacy: myTune audio element
    */
-  private showToastNotification(notification: Notification): void {
-    // This should trigger a toast component
-    // Implementation depends on toast library used
-    console.log('Toast notification:', notification.title);
+  private playAdminAlertSound(): void {
+    const audio = new Audio('assets/sounds/adminAlert.mp3');
+    audio.loop = true;
+    audio.play().catch((error) => {
+      console.warn('Failed to play admin alert sound:', error);
+    });
   }
 
   /**
    * Dismiss admin alert
    */
   dismissAdminAlert(): void {
-    if (this.audioElement) {
-      this.audioElement.pause();
-      this.audioElement.currentTime = 0;
-    }
     this.adminAlertSignal.set(null);
+  }
+
+  /**
+   * Get notification icon
+   */
+  getNotificationIcon(notification: Notification): string {
+    switch (notification.type) {
+      case NotificationType.TASK:
+        return 'fa-tasks';
+      case NotificationType.MESSAGE:
+        return 'fa-envelope';
+      case NotificationType.ADMIN_ALERT:
+        return 'fa-exclamation-triangle';
+      case NotificationType.SUCCESS:
+        return 'fa-check-circle';
+      case NotificationType.ERROR:
+        return 'fa-times-circle';
+      case NotificationType.WARNING:
+        return 'fa-exclamation-circle';
+      default:
+        return 'fa-bell';
+    }
   }
 
   /**
@@ -474,32 +444,5 @@ export class NotificationService {
    */
   updateConfig(config: Partial<NotificationConfig>): void {
     this.configSignal.update((current) => ({ ...current, ...config }));
-  }
-
-  /**
-   * Disconnect from SignalR hub
-   */
-  async disconnect(): Promise<void> {
-    if (this.hubConnection) {
-      await this.hubConnection.stop();
-      this.isConnected.set(false);
-      this.hubConnection = null;
-    }
-  }
-
-  /**
-   * Get notification by ID
-   */
-  getNotificationById(id: string): Notification | undefined {
-    return this.notificationsSignal().find((n) => n.id === id);
-  }
-
-  /**
-   * Check for task notification by task code
-   */
-  hasTaskNotification(taskCode: string): boolean {
-    return this.notificationsSignal().some(
-      (n) => n.type === NotificationType.TASK && n.taskCode === taskCode
-    );
   }
 }

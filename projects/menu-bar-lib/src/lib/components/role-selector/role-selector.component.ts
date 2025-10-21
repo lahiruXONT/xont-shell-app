@@ -5,7 +5,7 @@ import { UserRole } from '../../models/user-role.model';
 
 /**
  * Role Selector Component
- * Allows selecting multiple roles with checkboxes
+ * Allows selecting/switching multiple roles with checkboxes
  * Legacy: Role selection from Main.aspx
  */
 @Component({

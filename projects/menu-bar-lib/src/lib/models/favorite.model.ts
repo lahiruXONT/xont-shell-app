@@ -3,15 +3,20 @@
  * Legacy: User favorites/bookmarks system
  */
 export interface Favorite {
+  // Core identification
   bookmarkId: string; // Unique bookmark ID
   userName: string;
   businessUnit: string;
+
+  // Bookmark details
   taskCode: string; // Task code
   bookmarkName: string; // Custom bookmark name
   path: string; // ExecutionScript path
   icon: string;
   description: string;
   menuCode: string; // Parent menu
+
+  // Timestamps
   createdAt: Date;
   order: number; // Display order
 }

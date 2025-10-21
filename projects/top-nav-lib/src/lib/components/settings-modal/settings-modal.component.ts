@@ -1,146 +1,312 @@
-import { Component, OnInit, signal } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  signal,
+  computed,
+  inject,
+  Input,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ThemeService } from '../../services/theme.service';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+
+// Services
 import { SettingsService } from '../../services/settings.service';
+import { ThemeService } from '../../services/theme.service';
+
+// Models
 import {
-  ThemeName,
-  FontFamily,
-  FontSize,
-  FontOptions,
-  Theme,
-} from '../../models/theme.model';
-import {
+  UserSettings,
   PasswordChangeRequest,
   ProfileImageUpload,
 } from '../../models/settings.model';
+import { Theme, FontFamily, FontSize } from '../../models/theme.model';
 
 /**
  * Settings Modal Component
- * Legacy: Settings modal from Main.aspx
+ * Legacy: settingsModal from Main.aspx
+ *
+ * Features:
+ * - Theme selection (Blue, Green, Red, Gray, Purple)
+ * - Font customization (family, size, color)
+ * - Language selection
+ * - Profile picture upload
+ * - Password change
+ * - Reset to default
  */
 @Component({
   selector: 'lib-settings-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './settings-modal.component.html',
-  styleUrl: './settings-modal.component.scss',
+  styleUrls: ['./settings-modal.component.scss'],
 })
-export class SettingsModalComponent implements OnInit {
-  // Modal state
-  isOpen = signal<boolean>(false);
-  activeTab = signal<string>('theme'); // theme, account, profile
+export class SettingsModalComponent implements OnInit, OnDestroy {
+  // Services
+  private settingsService = inject(SettingsService);
+  private themeService = inject(ThemeService);
+  private fb = inject(FormBuilder);
 
-  // Theme settings
-  selectedTheme = signal<ThemeName>(ThemeName.BLUE);
-  selectedFont = signal<string>('arial');
-  selectedFontSize = signal<string>('14px');
-  selectedFontColor = signal<string>('#000000');
+  // Inputs
+  @Input() userName!: string;
 
-  // Password change
-  currentPassword = signal<string>('');
-  newPassword = signal<string>('');
-  confirmNewPassword = signal<string>('');
+  // Outputs
+  @Output() settingsSaved = new EventEmitter<UserSettings>();
+  @Output() passwordChanged = new EventEmitter<void>();
 
-  // Profile image
-  selectedImage = signal<File | null>(null);
-  imagePreview = signal<string | null>(null);
+  // Component state
+  private destroy$ = new Subject<void>();
 
-  // Loading states
+  // Service state
+  modalState = this.settingsService.modalState;
+  settings = this.settingsService.settings;
+  availableThemes = this.themeService.themeState().availableThemes;
+  fontOptions = this.themeService.fontOptions();
+
+  // Forms
+  passwordForm!: FormGroup;
+
+  // Local state
+  selectedTheme = signal<Theme | null>(null);
+  selectedFile = signal<File | null>(null);
+  profileImagePreview = signal<string | null>(null);
+  uploadError = signal<string>('');
+  passwordError = signal<string>('');
   isSaving = signal<boolean>(false);
-  saveMessage = signal<string>('');
-  availableThemes: Theme[] = [];
-  fontOptions: FontOptions = { availableFonts: [], availableSizes: [] };
 
-  constructor(
-    private themeService: ThemeService,
-    private settingsService: SettingsService
-  ) {
-    // Get available options
-    this.availableThemes = this.themeService.getAvailableThemes();
-    this.fontOptions = this.themeService.getFontOptions();
-  }
+  // Available languages
+  languages = [
+    { code: 'en', name: 'English' },
+    { code: 'si', name: 'Sinhala' },
+    { code: 'ta', name: 'Tamil' },
+  ];
+
+  // Temp settings for preview
+  tempSettings = signal<Partial<UserSettings>>({});
 
   ngOnInit(): void {
-    this.loadCurrentSettings();
+    this.initializeForms();
+    this.loadUserSettings();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /**
-   * Load current user settings
+   * Initialize forms
    */
-  private loadCurrentSettings(): void {
-    const currentTheme = this.themeService.currentTheme();
-    this.selectedTheme.set(currentTheme.name);
+  private initializeForms(): void {
+    this.passwordForm = this.fb.group(
+      {
+        currentPassword: ['', Validators.required],
+        newPassword: ['', [Validators.required, Validators.minLength(8)]],
+        confirmNewPassword: ['', Validators.required],
+      },
+      {
+        validators: this.passwordMatchValidator,
+      }
+    );
+  }
 
-    const settings = this.settingsService.settings();
-    if (settings) {
-      this.selectedFont.set(settings.fontFamily);
-      this.selectedFontSize.set(settings.fontSize);
-      this.selectedFontColor.set(settings.fontColor);
+  /**
+   * Load user settings
+   */
+  private async loadUserSettings(): Promise<void> {
+    if (this.userName) {
+      await this.settingsService.loadSettings(this.userName);
+
+      const currentSettings = this.settings();
+      if (currentSettings) {
+        this.selectedTheme.set(
+          this.themeService.getThemeByName(currentSettings.theme)
+        );
+        this.tempSettings.set({ ...currentSettings });
+      }
     }
   }
 
   /**
-   * Open modal
+   * Password match validator
    */
-  open(): void {
-    this.isOpen.set(true);
-    this.loadCurrentSettings();
+  private passwordMatchValidator(
+    group: FormGroup
+  ): { [key: string]: boolean } | null {
+    const newPassword = group.get('newPassword');
+    const confirmPassword = group.get('confirmNewPassword');
+
+    if (!newPassword || !confirmPassword) {
+      return null;
+    }
+
+    return newPassword.value === confirmPassword.value
+      ? null
+      : { passwordMismatch: true };
+  }
+
+  /**
+   * Switch active tab
+   */
+  switchTab(tab: 'theme' | 'account' | 'profile'): void {
+    this.settingsService.switchTab(tab);
   }
 
   /**
    * Close modal
    */
-  close(): void {
-    this.isOpen.set(false);
-    this.resetForm();
+  closeModal(): void {
+    this.settingsService.closeModal();
+    this.resetForms();
   }
 
   /**
-   * Switch tab
+   * Reset forms
    */
-  switchTab(tab: string): void {
-    this.activeTab.set(tab);
+  private resetForms(): void {
+    this.passwordForm.reset();
+    this.selectedFile.set(null);
+    this.profileImagePreview.set(null);
+    this.uploadError.set('');
+    this.passwordError.set('');
   }
 
   /**
-   * Apply theme
+   * Handle theme selection
    */
-  onThemeChange(): void {
-    const theme = this.themeService.getThemeByName(this.selectedTheme());
-    if (theme) {
-      this.themeService.applyTheme(theme);
+  onThemeSelect(theme: Theme): void {
+    this.selectedTheme.set(theme);
+    this.tempSettings.update((settings) => ({
+      ...settings,
+      theme: theme.name,
+    }));
+    this.settingsService.updateTempSettings({ theme: theme.name });
+
+    // Preview theme
+    this.themeService.applyTheme(theme);
+  }
+
+  /**
+   * Handle font family change
+   */
+  onFontFamilyChange(fontName: string): void {
+    this.tempSettings.update((settings) => ({
+      ...settings,
+      fontFamily: fontName,
+    }));
+    this.settingsService.updateTempSettings({ fontFamily: fontName });
+  }
+
+  /**
+   * Handle font size change
+   */
+  onFontSizeChange(fontSize: string): void {
+    this.tempSettings.update((settings) => ({
+      ...settings,
+      fontSize,
+    }));
+    this.settingsService.updateTempSettings({ fontSize });
+  }
+
+  /**
+   * Handle font color change
+   */
+  onFontColorChange(fontColor: string): void {
+    this.tempSettings.update((settings) => ({
+      ...settings,
+      fontColor,
+    }));
+    this.settingsService.updateTempSettings({ fontColor });
+  }
+
+  /**
+   * Handle language change
+   */
+  onLanguageChange(language: string): void {
+    this.tempSettings.update((settings) => ({
+      ...settings,
+      language,
+    }));
+    this.settingsService.updateTempSettings({ language });
+  }
+
+  /**
+   * Handle file selection
+   */
+  onFileSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    // Validate file
+    const allowedTypes = ['jpg', 'jpeg', 'png'];
+    const maxSizeKB = 300;
+
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    if (!fileExtension || !allowedTypes.includes(fileExtension)) {
+      this.uploadError.set('Only JPG, JPEG, and PNG files are allowed');
+      return;
     }
+
+    const fileSizeKB = file.size / 1024;
+    if (fileSizeKB > maxSizeKB) {
+      this.uploadError.set(`File size must be less than ${maxSizeKB}KB`);
+      return;
+    }
+
+    // Clear error and set file
+    this.uploadError.set('');
+    this.selectedFile.set(file);
+
+    // Preview image
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.profileImagePreview.set(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
   }
 
   /**
-   * Save all settings
+   * Upload profile image
    */
-  async saveSettings(): Promise<void> {
+  async uploadProfileImage(): Promise<void> {
+    const file = this.selectedFile();
+    if (!file) return;
+
     this.isSaving.set(true);
-    this.saveMessage.set('');
 
     try {
-      // Save theme and font settings
-      await this.settingsService.saveSettings({
-        theme: this.selectedTheme(),
-        fontFamily: this.selectedFont(),
-        fontSize: this.selectedFontSize(),
-        fontColor: this.selectedFontColor(),
-      });
+      const upload: ProfileImageUpload = {
+        file,
+        maxSizeKB: 300,
+        allowedTypes: ['jpg', 'jpeg', 'png'],
+      };
 
-      // Apply custom theme
-      await this.themeService.saveCustomTheme({
-        name: this.selectedTheme(),
-        fontFamily: this.selectedFont(),
-        fontSize: this.selectedFontSize(),
-        fontColor: this.selectedFontColor(),
-      } as any);
+      const result = await this.settingsService.uploadProfileImage(
+        this.userName,
+        upload
+      );
 
-      this.saveMessage.set('Settings saved successfully!');
-      setTimeout(() => this.saveMessage.set(''), 3000);
+      if (result.success) {
+        alert('Profile image uploaded successfully');
+        this.selectedFile.set(null);
+        this.profileImagePreview.set(null);
+      } else {
+        this.uploadError.set(result.message);
+      }
     } catch (error) {
-      this.saveMessage.set('Failed to save settings');
+      this.uploadError.set('Failed to upload profile image');
     } finally {
       this.isSaving.set(false);
     }
@@ -150,100 +316,119 @@ export class SettingsModalComponent implements OnInit {
    * Change password
    */
   async changePassword(): Promise<void> {
+    if (this.passwordForm.invalid) {
+      this.passwordError.set('Please fill in all fields correctly');
+      return;
+    }
+
     this.isSaving.set(true);
-    this.saveMessage.set('');
+    this.passwordError.set('');
 
     try {
-      const passwordChangeData: PasswordChangeRequest = {
-        currentPassword: this.currentPassword(),
-        newPassword: this.newPassword(),
-        confirmNewPassword: this.confirmNewPassword(),
+      const request: PasswordChangeRequest = {
+        currentPassword: this.passwordForm.value.currentPassword,
+        newPassword: this.passwordForm.value.newPassword,
+        confirmNewPassword: this.passwordForm.value.confirmNewPassword,
       };
 
-      await this.settingsService.changePassword(passwordChangeData);
-      this.saveMessage.set('Password changed successfully!');
+      const result = await this.settingsService.changePassword(
+        this.userName,
+        request
+      );
 
-      // Reset password fields
-      this.currentPassword.set('');
-      this.newPassword.set('');
-      this.confirmNewPassword.set('');
-
-      setTimeout(() => this.saveMessage.set(''), 3000);
-    } catch (error: any) {
-      this.saveMessage.set(error.message || 'Failed to change password');
+      if (result.success) {
+        alert('Password changed successfully');
+        this.passwordForm.reset();
+        this.passwordChanged.emit();
+      } else {
+        this.passwordError.set(result.message);
+      }
+    } catch (error) {
+      this.passwordError.set('Failed to change password');
     } finally {
       this.isSaving.set(false);
     }
   }
 
   /**
-   * Handle image selection
+   * Save settings
    */
-  onImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      this.selectedImage.set(file);
-
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.imagePreview.set(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  /**
-   * Upload profile image
-   */
-  async uploadImage(): Promise<void> {
-    const file = this.selectedImage();
-    if (!file) return;
-
+  async saveSettings(): Promise<void> {
     this.isSaving.set(true);
-    this.saveMessage.set('');
 
     try {
-      const upload: ProfileImageUpload = {
-        file,
-        maxSizeKB: 300,
-        allowedTypes: ['jpg', 'jpeg', 'png'],
-      };
+      const result = await this.settingsService.saveSettings(
+        this.userName,
+        this.tempSettings()
+      );
 
-      await this.settingsService.uploadProfileImage(upload);
-      this.saveMessage.set('Profile image updated successfully!');
-      this.selectedImage.set(null);
-      this.imagePreview.set(null);
-
-      setTimeout(() => this.saveMessage.set(''), 3000);
-    } catch (error: any) {
-      this.saveMessage.set(error.message || 'Failed to upload image');
+      if (result.success) {
+        alert('Settings saved successfully');
+        this.settingsSaved.emit(this.settings()!);
+        this.closeModal();
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      alert('Failed to save settings');
     } finally {
       this.isSaving.set(false);
     }
   }
 
   /**
-   * Reset form
+   * Reset to default
    */
-  private resetForm(): void {
-    this.activeTab.set('theme');
-    this.currentPassword.set('');
-    this.newPassword.set('');
-    this.confirmNewPassword.set('');
-    this.selectedImage.set(null);
-    this.imagePreview.set(null);
-    this.saveMessage.set('');
-  }
-
-  /**
-   * Get font family display name
-   */
-  getFontDisplayName(font: string): string {
-    const fontObj = this.fontOptions.availableFonts.find(
-      (f: FontFamily) => f.name === font
+  async resetToDefault(): Promise<void> {
+    const confirmed = confirm(
+      'Are you sure you want to reset all settings to default?'
     );
-    return fontObj?.displayName || font;
+
+    if (!confirmed) return;
+
+    this.isSaving.set(true);
+
+    try {
+      const result = await this.settingsService.resetToDefault(this.userName);
+
+      if (result.success) {
+        alert('Settings reset to default');
+        await this.loadUserSettings();
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      alert('Failed to reset settings');
+    } finally {
+      this.isSaving.set(false);
+    }
+  }
+
+  /**
+   * Get theme icon
+   */
+  getThemeIcon(themeName: string): string {
+    const icons: Record<string, string> = {
+      blue: 'fa-circle',
+      green: 'fa-circle',
+      red: 'fa-circle',
+      gray: 'fa-circle',
+      purple: 'fa-circle',
+    };
+    return icons[themeName] || 'fa-circle';
+  }
+
+  /**
+   * Get theme color
+   */
+  getThemeColor(theme: Theme): string {
+    return theme.primaryColor;
+  }
+
+  /**
+   * Check if theme is selected
+   */
+  isThemeSelected(theme: Theme): boolean {
+    return this.selectedTheme()?.name === theme.name;
   }
 }

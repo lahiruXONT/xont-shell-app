@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Tab } from '../../models/tab.model';
 
 /**
  * Tab Tools Component
- * Toolbar with tab actions (refresh, fullscreen, close all, etc.)
- * Legacy: Tab toolbar functionality from Main.aspx
+ * Toolbar with tab actions
+ * Legacy: Tab tools menu
  */
 @Component({
   selector: 'lib-tab-tools',
@@ -14,75 +15,35 @@ import { CommonModule } from '@angular/common';
   styleUrl: './tab-tools.component.scss',
 })
 export class TabToolsComponent {
-  @Input() activeTabId: string | null = null;
-  @Input() tabCount = 0;
-  @Input() canAddTab = true;
-  @Input() hasUnsavedTabs = false;
-  @Input() isMaximized = false;
+  @Input() tab!: Tab;
 
-  @Output() refreshClicked = new EventEmitter<void>();
-  @Output() fullscreenToggled = new EventEmitter<void>();
-  @Output() maximizeToggled = new EventEmitter<void>();
-  @Output() minimizeClicked = new EventEmitter<void>();
-  @Output() closeActiveClicked = new EventEmitter<void>();
-  @Output() closeAllClicked = new EventEmitter<void>();
-  @Output() closeOthersClicked = new EventEmitter<void>();
-  @Output() newTabClicked = new EventEmitter<void>();
-  @Output() saveAllClicked = new EventEmitter<void>();
+  @Output() refresh = new EventEmitter<void>();
+  @Output() closeAll = new EventEmitter<void>();
+  @Output() closeOthers = new EventEmitter<void>();
+  @Output() toolsClosed = new EventEmitter<void>();
 
   onRefresh(): void {
-    if (this.activeTabId) {
-      this.refreshClicked.emit();
-    }
-  }
-
-  onFullscreen(): void {
-    this.fullscreenToggled.emit();
-  }
-
-  onMaximize(): void {
-    this.maximizeToggled.emit();
-  }
-
-  onMinimize(): void {
-    if (this.activeTabId) {
-      this.minimizeClicked.emit();
-    }
-  }
-
-  onCloseActive(): void {
-    if (this.activeTabId) {
-      this.closeActiveClicked.emit();
-    }
+    this.refresh.emit();
+    this.toolsClosed.emit();
   }
 
   onCloseAll(): void {
-    if (this.tabCount > 0) {
-      if (this.hasUnsavedTabs) {
-        if (confirm('Some tabs have unsaved changes. Close all tabs anyway?')) {
-          this.closeAllClicked.emit();
-        }
-      } else {
-        this.closeAllClicked.emit();
-      }
+    const confirmed = confirm('Close all tabs?');
+    if (confirmed) {
+      this.closeAll.emit();
+      this.toolsClosed.emit();
     }
   }
 
   onCloseOthers(): void {
-    if (this.activeTabId && this.tabCount > 1) {
-      this.closeOthersClicked.emit();
+    const confirmed = confirm('Close all other tabs?');
+    if (confirmed) {
+      this.closeOthers.emit();
+      this.toolsClosed.emit();
     }
   }
 
-  onNewTab(): void {
-    if (this.canAddTab) {
-      this.newTabClicked.emit();
-    }
-  }
-
-  onSaveAll(): void {
-    if (this.hasUnsavedTabs) {
-      this.saveAllClicked.emit();
-    }
+  onClose(): void {
+    this.toolsClosed.emit();
   }
 }

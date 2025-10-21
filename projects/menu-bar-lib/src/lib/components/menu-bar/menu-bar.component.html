@@ -1,3 +1,4 @@
+<!-- Menu Sidebar -->
 <div class="menu-sidebar" [class.collapsed]="isCollapsed()">
   <!-- Sidebar Header -->
   <div class="sidebar-header">
@@ -9,7 +10,8 @@
             {{ currentRole()?.description || "Menu" }}
           </div>
           <div class="role-code" *ngIf="currentRole()?.isPriorityRole">
-            <i class="fa fa-star"></i> Priority Role
+            <i class="fa fa-star"></i>
+            Priority Role
           </div>
         </div>
       </div>
@@ -57,7 +59,7 @@
     <!-- Search Results -->
     <div class="search-results" *ngIf="searchResults().length > 0">
       <div class="results-header">
-        <span>{{ searchResults().length }} result(s)</span>
+        <span>{{ searchResults().length }} results</span>
         <button class="close-results-btn" (click)="clearSearch()">
           <i class="fa fa-times"></i>
         </button>
@@ -97,7 +99,7 @@
     <button
       class="tool-btn"
       [class.active]="config().viewMode === MenuViewMode.LIST"
-      (click)="switchView(MenuViewMode.LIST)"
+      (click)="switchViewMode(MenuViewMode.LIST)"
       title="List View"
     >
       <i class="fa fa-list"></i>
@@ -105,7 +107,7 @@
     <button
       class="tool-btn"
       [class.active]="config().viewMode === MenuViewMode.GRAPHICAL"
-      (click)="switchView(MenuViewMode.GRAPHICAL)"
+      (click)="switchViewMode(MenuViewMode.GRAPHICAL)"
       title="Graphical View"
     >
       <i class="fa fa-th"></i>
@@ -144,9 +146,9 @@
             <div class="task-content">
               <div class="task-title">
                 {{ task.caption }}
-                <span class="task-code" *ngIf="config().showTaskCodes"
-                  >[{{ task.taskCode }}]</span
-                >
+                <span class="task-code" *ngIf="config().showTaskCodes">
+                  {{ task.taskCode }}
+                </span>
               </div>
               <div class="task-description" *ngIf="task.description">
                 {{ task.description }}

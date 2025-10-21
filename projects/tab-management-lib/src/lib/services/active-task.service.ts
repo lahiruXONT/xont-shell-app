@@ -24,11 +24,12 @@ export class ActiveTaskService {
    */
   logOpen(task: ActiveUserTask): void {
     if (this.options.logToConsole) {
-      console.log('[Task Opened]', task);
+      console.log('Task Opened:', task);
     }
+
     if (this.options.logToServer) {
       // TODO: Implement API call
-      // this.apiService.post(`${environment.baseUrl}/api/tasks/active`, task)
+      // this.http.post(`${environment.baseUrl}/api/tasks/active`, task);
     }
   }
 
@@ -37,11 +38,12 @@ export class ActiveTaskService {
    */
   logClose(task: ActiveUserTask): void {
     if (this.options.logToConsole) {
-      console.log('[Task Closed]', task);
+      console.log('Task Closed:', task);
     }
+
     if (this.options.logToServer) {
       // TODO: Implement API call
-      // this.apiService.post(`${environment.baseUrl}/api/tasks/active/close`, task)
+      // this.http.post(`${environment.baseUrl}/api/tasks/active/close`, task);
     }
   }
 

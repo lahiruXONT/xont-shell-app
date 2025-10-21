@@ -1,103 +1,136 @@
-<nav class="top-navigation">
-  <div class="nav-container">
-    <!-- Logo Section -->
-    <div class="nav-logo" (click)="onLogoClick()">
-      <img src="assets/images/logo.png" alt="Logo" class="logo-image" />
-      <span class="logo-text">XONT Ventura CRM</span>
-    </div>
+<!-- Top Navigation Bar -->
+<div id="header" class="top-nav-container">
+  <div class="container-fluid">
+    <div class="navbar">
+      <!-- Navbar Header -->
+      <div class="navbar-header">
+        <!-- Logo for large screens -->
+        @if (showLogo) {
+        <a class="navbar-brand visible-lg visible-md">
+          <img
+            src="assets/images/logo-v2.png"
+            alt="VENTURA CRM"
+            style="width: 185px"
+          />
+        </a>
+        }
 
-    <!-- Center Section - Business Unit Display -->
-    <div class="nav-center" *ngIf="user">
-      <i class="fa fa-database bu-icon"></i>
-      <span class="bu-name">{{ user.currentBusinessUnit }}</span>
-    </div>
-
-    <!-- Right Section - User Controls -->
-    <div class="nav-right">
-      <!-- Notifications -->
-      <div
-        class="nav-item nav-notifications"
-        *ngIf="showNotifications"
-        (click)="onNotificationClick()"
-        [title]="'Notifications'"
-      >
-        <i class="fa fa-bell"></i>
-        <span class="notification-badge" *ngIf="unreadCount() > 0">
-          {{ unreadCount() > 99 ? "99+" : unreadCount() }}
+        <!-- Business Unit Display -->
+        @if (showBusinessUnit && user) {
+        <span class="business-unit-display">
+          <i class="fa fa-database"></i>
+          &nbsp;&nbsp;&nbsp;
+          <span class="bu-name">{{ user.businessUnit }}</span>
         </span>
+        }
       </div>
 
-      <!-- Settings -->
-      <div
-        class="nav-item nav-settings"
-        *ngIf="showSettings"
-        (click)="onSettingsClick()"
-        [title]="'Settings'"
-      >
-        <i class="fa fa-cog"></i>
-      </div>
-
-      <!-- Help -->
-      <div
-        class="nav-item nav-help"
-        *ngIf="showHelp"
-        (click)="onHelpClick()"
-        [title]="'Help'"
-      >
-        <i class="fa fa-question-circle"></i>
-      </div>
-
-      <!-- User Profile -->
-      <div
-        class="nav-item nav-user"
-        *ngIf="user"
-        (click)="toggleUserDropdown()"
-      >
-        <img
-          [src]="user.profileImage || 'assets/images/default-user.png'"
-          alt="User"
-          class="user-avatar"
-        />
-        <span class="user-name">{{ user.fullName }}</span>
-        <i class="fa fa-chevron-down dropdown-icon"></i>
-
-        <!-- User Dropdown Menu -->
-        <div class="user-dropdown" *ngIf="showUserDropdown()">
-          <div class="dropdown-header">
-            <img
-              [src]="user.profileImage || 'assets/images/default-user.png'"
-              alt="User"
-              class="dropdown-avatar"
-            />
-            <div class="dropdown-user-info">
-              <div class="dropdown-name">{{ user.fullName }}</div>
-              <div class="dropdown-email">{{ user.email }}</div>
-            </div>
-          </div>
-
-          <div class="dropdown-divider"></div>
-
-          <div class="dropdown-menu">
-            <a class="dropdown-item" (click)="onSettingsClick()">
-              <i class="fa fa-cog"></i>
-              Settings
+      <!-- Top Nav Menu -->
+      <nav id="top-nav" class="navbar-no-collapse" role="navigation">
+        <ul class="nav navbar-nav pull-right">
+          <!-- Notifications -->
+          @if (showNotifications) {
+          <li class="dropdown notification-dropdown">
+            <a
+              href="javascript:void(0)"
+              (click)="openNotifications()"
+              title="Notifications"
+              class="notification-trigger"
+            >
+              <i class="fa fa-globe" style="font-size: 23px"></i>
+              @if (hasUnreadNotifications()) {
+              <span class="notificationNumber">
+                {{ getNotificationCountDisplay() }}
+              </span>
+              }
             </a>
-            <a class="dropdown-item">
-              <i class="fa fa-user"></i>
-              Profile
+          </li>
+          }
+
+          <!-- User Menu -->
+          @if (showUserMenu && user) {
+          <li class="dropdown user-dropdown">
+            <a
+              href="javascript:void(0)"
+              (click)="toggleUserDropdown()"
+              class="user-menu-trigger"
+            >
+              <img
+                class="avatar"
+                [src]="userProfile().profileImage"
+                (error)="onAvatarError($event)"
+                width="36"
+                height="36"
+                [alt]="userProfile().fullName"
+              />
+              &nbsp;
+              <span class="avatar-name">{{ userProfile().userName }}</span>
+              <span class="caret ml5"></span>
             </a>
-            <a class="dropdown-item">
-              <i class="fa fa-key"></i>
-              Change Password
+            <!-- Role Selector Toggle Button -->
+            <button
+              class="icon-btn role-selector-btn"
+              (click)="onRoleSelectorClick()"
+              title="Select Role"
+            >
+              <i class="fa fa-users"></i>
+            </button>
+            <!-- User Dropdown Menu -->
+            @if (showUserDropdown()) {
+            <ul class="dropdown-menu right" role="menu">
+              <!-- Settings -->
+              <li>
+                <a href="javascript:void(0)" (click)="openSettings()">
+                  <i class="im-cog2"></i>
+                  Settings
+                </a>
+              </li>
+
+              <!-- Version Info -->
+              <li>
+                <a href="javascript:void(0)" (click)="openVersionInfo()">
+                  <i class="fa fa-info-circle" style="font-size: 22px"></i>
+                  Version Info.
+                </a>
+              </li>
+
+              <!-- About -->
+              <li>
+                <a href="javascript:void(0)" (click)="openAbout()">
+                  <i class="fa fa-copyright"></i>
+                  About
+                </a>
+              </li>
+
+              <!-- Logout -->
+              <li>
+                <a href="javascript:void(0)" (click)="onLogout()">
+                  <i class="fa fa-power-off"></i>
+                  Logout
+                </a>
+              </li>
+            </ul>
+            }
+          </li>
+
+          <!-- Role/BU Selector -->
+          <li class="role-selector-trigger">
+            <a
+              href="javascript:void(0)"
+              (click)="toggleRoleSelector()"
+              title="User Roles/Business Unit"
+            >
+              <i class="fa fa-cogs"></i>
             </a>
-            <div class="dropdown-divider"></div>
-            <a class="dropdown-item logout-item" (click)="onLogout()">
-              <i class="fa fa-sign-out-alt"></i>
-              Logout
-            </a>
-          </div>
-        </div>
-      </div>
+          </li>
+          }
+        </ul>
+      </nav>
     </div>
   </div>
-</nav>
+</div>
+
+<!-- Click outside to close dropdowns -->
+@if (showUserDropdown() || showRoleSelector()) {
+<div class="dropdown-backdrop" (click)="closeDropdowns()"></div>
+}

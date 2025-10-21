@@ -66,3 +66,22 @@ export interface ProfileImageUpload {
   maxSizeKB: number; // Default: 300KB
   allowedTypes: string[]; // jpg, jpeg, png
 }
+
+/**
+ * Settings modal state
+ */
+export interface SettingsModalState {
+  isOpen: boolean;
+  activeTab: 'theme' | 'account' | 'profile';
+  isSaving: boolean;
+  hasUnsavedChanges: boolean;
+}
+
+/**
+ * Settings save response
+ */
+export interface SettingsSaveResponse {
+  success: boolean;
+  message: string;
+  errors?: SettingsError[];
+}

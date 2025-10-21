@@ -1,225 +1,275 @@
-<div class="modal-overlay" [class.active]="isOpen()" (click)="close()">
-  <div class="modal-container" (click)="$event.stopPropagation()">
+<!-- Settings Modal -->
+<!-- Legacy: settingsModal -->
+@if (modalState().isOpen) {
+<div class="modalDialog2 fade in settings-modal">
+  <div class="s-content">
     <!-- Modal Header -->
-    <div class="modal-header">
-      <h2 class="modal-title">
-        <i class="fa fa-cog"></i>
-        Settings
-      </h2>
-      <button class="close-btn" (click)="close()">
-        <i class="fa fa-times"></i>
+    <div class="s-header">
+      <h4 class="s-title">Settings</h4>
+      <button class="close-btn" (click)="closeModal()" type="button">
+        <i class="fa fa-close"></i>
       </button>
     </div>
 
-    <!-- Tabs -->
-    <div class="modal-tabs">
+    <!-- Tab Navigation -->
+    <div class="tab-navigation">
       <button
         class="tab-btn"
-        [class.active]="activeTab() === 'theme'"
+        [class.active]="modalState().activeTab === 'theme'"
         (click)="switchTab('theme')"
+        type="button"
       >
         <i class="fa fa-palette"></i>
-        Theme & Appearance
+        Theme
       </button>
       <button
         class="tab-btn"
-        [class.active]="activeTab() === 'account'"
+        [class.active]="modalState().activeTab === 'account'"
         (click)="switchTab('account')"
+        type="button"
       >
         <i class="fa fa-user"></i>
         Account
       </button>
       <button
         class="tab-btn"
-        [class.active]="activeTab() === 'profile'"
+        [class.active]="modalState().activeTab === 'profile'"
         (click)="switchTab('profile')"
+        type="button"
       >
-        <i class="fa fa-id-card"></i>
-        Profile
+        <i class="fa fa-image"></i>
+        Profile Picture
       </button>
     </div>
 
     <!-- Modal Body -->
-    <div class="modal-body">
+    <div class="s-body">
       <!-- Theme Tab -->
-      <div class="tab-content" *ngIf="activeTab() === 'theme'">
-        <div class="form-section">
-          <h3 class="section-title">Theme Selection</h3>
-          <div class="theme-grid">
+      @if (modalState().activeTab === 'theme') {
+      <div class="tab-content theme-tab">
+        <!-- Theme Selection -->
+        <div class="setting-section">
+          <h5 class="section-title">Themes</h5>
+          <div class="theme-options">
+            @for (theme of availableThemes; track theme.name) {
             <div
-              *ngFor="let theme of availableThemes"
-              class="theme-card"
-              [class.selected]="selectedTheme() === theme.name"
-              (click)="selectedTheme.set(theme.name); onThemeChange()"
+              class="theme-option"
+              [class.selected]="isThemeSelected(theme)"
+              (click)="onThemeSelect(theme)"
             >
-              <div
-                class="theme-preview"
-                [style.background]="theme.primaryColor"
-              ></div>
+              <div class="theme-icon">
+                <i
+                  [class]="'fa ' + getThemeIcon(theme.name)"
+                  [style.color]="getThemeColor(theme)"
+                ></i>
+              </div>
               <div class="theme-name">{{ theme.displayName }}</div>
-              <i
-                class="fa fa-check-circle theme-check"
-                *ngIf="selectedTheme() === theme.name"
-              ></i>
+              @if (isThemeSelected(theme)) {
+              <div class="selected-indicator">
+                <i class="fa fa-check"></i>
+              </div>
+              }
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Font Settings -->
+        <div class="setting-section">
+          <h5 class="section-title">Fonts</h5>
+          <div class="font-settings">
+            <!-- Font Family -->
+            <div class="form-group">
+              <label>Font Family</label>
+              <select
+                class="form-control"
+                [value]="tempSettings().fontFamily"
+                (change)="onFontFamilyChange($any($event.target).value)"
+              >
+                @for (font of fontOptions.availableFonts; track font.name) {
+                <option [value]="font.name">{{ font.displayName }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Font Size -->
+            <div class="form-group">
+              <label>Font Size</label>
+              <select
+                class="form-control"
+                [value]="tempSettings().fontSize"
+                (change)="onFontSizeChange($any($event.target).value)"
+              >
+                @for (size of fontOptions.availableSizes; track size.value) {
+                <option [value]="size.value">{{ size.label }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Font Color -->
+            <div class="form-group">
+              <label>Font Color</label>
+              <input
+                type="color"
+                class="form-control color-picker"
+                [value]="tempSettings().fontColor || '#000000'"
+                (change)="onFontColorChange($any($event.target).value)"
+              />
             </div>
           </div>
         </div>
 
-        <div class="form-section">
-          <h3 class="section-title">Font Settings</h3>
-
-          <div class="form-group">
-            <label>Font Family</label>
-            <select
-              [value]="selectedFont()"
-              (change)="selectedFont.set($any($event.target).value)"
-              class="form-control"
-            >
-              <option
-                *ngFor="let font of fontOptions.availableFonts"
-                [value]="font.name"
-              >
-                {{ font.displayName }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Font Size</label>
-            <select
-              [value]="selectedFontSize()"
-              (change)="selectedFontSize.set($any($event.target).value)"
-              class="form-control"
-            >
-              <option
-                *ngFor="let size of fontOptions.availableSizes"
-                [value]="size.value"
-              >
-                {{ size.label }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Font Color</label>
-            <input
-              type="color"
-              [value]="selectedFontColor()"
-              (input)="selectedFontColor.set($any($event.target).value)"
-              class="color-picker"
-            />
-            <span class="color-value">{{ selectedFontColor() }}</span>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button
-            class="btn btn-primary"
-            (click)="saveSettings()"
-            [disabled]="isSaving()"
+        <!-- Language Settings -->
+        <div class="setting-section">
+          <h5 class="section-title">Language</h5>
+          <select
+            class="form-control"
+            [value]="tempSettings().language"
+            (change)="onLanguageChange($any($event.target).value)"
           >
-            <i class="fa fa-save"></i>
-            {{ isSaving() ? "Saving..." : "Save Theme Settings" }}
-          </button>
+            @for (lang of languages; track lang.code) {
+            <option [value]="lang.code">{{ lang.name }}</option>
+            }
+          </select>
         </div>
       </div>
+      }
 
       <!-- Account Tab -->
-      <div class="tab-content" *ngIf="activeTab() === 'account'">
-        <div class="form-section">
-          <h3 class="section-title">Change Password</h3>
-
-          <div class="form-group">
-            <label>Current Password</label>
-            <input
-              type="password"
-              [value]="currentPassword()"
-              (input)="currentPassword.set($any($event.target).value)"
-              class="form-control"
-              placeholder="Enter current password"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>New Password</label>
-            <input
-              type="password"
-              [value]="newPassword()"
-              (input)="newPassword.set($any($event.target).value)"
-              class="form-control"
-              placeholder="Enter new password"
-            />
-          </div>
-
-          <div class="form-group">
-            <label>Confirm New Password</label>
-            <input
-              type="password"
-              [value]="confirmNewPassword()"
-              (input)="confirmNewPassword.set($any($event.target).value)"
-              class="form-control"
-              placeholder="Confirm new password"
-            />
-          </div>
-
-          <div class="form-actions">
-            <button
-              class="btn btn-primary"
-              (click)="changePassword()"
-              [disabled]="isSaving()"
-            >
-              <i class="fa fa-key"></i>
-              {{ isSaving() ? "Changing..." : "Change Password" }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Profile Tab -->
-      <div class="tab-content" *ngIf="activeTab() === 'profile'">
-        <div class="form-section">
-          <h3 class="section-title">Profile Picture</h3>
-
-          <div class="image-upload-container">
-            <div class="image-preview">
-              <img
-                [src]="imagePreview() || 'assets/images/default-user.png'"
-                alt="Profile"
+      @if (modalState().activeTab === 'account') {
+      <div class="tab-content account-tab">
+        <div class="setting-section">
+          <h5 class="section-title">Change Password</h5>
+          <form [formGroup]="passwordForm" class="password-form">
+            <!-- Current Password -->
+            <div class="form-group">
+              <label>Current Password</label>
+              <input
+                type="password"
+                class="form-control"
+                formControlName="currentPassword"
+                placeholder="Enter current password"
               />
             </div>
 
-            <div class="upload-actions">
-              <label class="file-input-label">
-                <i class="fa fa-upload"></i>
-                Choose Image
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png"
-                  (change)="onImageSelected($event)"
-                  class="file-input"
-                />
-              </label>
-
-              <button
-                class="btn btn-primary"
-                (click)="uploadImage()"
-                [disabled]="!selectedImage() || isSaving()"
-              >
-                <i class="fa fa-check"></i>
-                {{ isSaving() ? "Uploading..." : "Upload Image" }}
-              </button>
-
-              <p class="upload-hint">Max size: 300KB. Formats: JPG, PNG</p>
+            <!-- New Password -->
+            <div class="form-group">
+              <label>New Password</label>
+              <input
+                type="password"
+                class="form-control"
+                formControlName="newPassword"
+                placeholder="Enter new password"
+              />
+              @if (passwordForm.get('newPassword')?.hasError('minlength')) {
+              <small class="error-text">
+                Password must be at least 8 characters
+              </small>
+              }
             </div>
-          </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+              <label>Confirm New Password</label>
+              <input
+                type="password"
+                class="form-control"
+                formControlName="confirmNewPassword"
+                placeholder="Re-enter new password"
+              />
+              @if (passwordForm.hasError('passwordMismatch')) {
+              <small class="error-text">Passwords do not match</small>
+              }
+            </div>
+
+            @if (passwordError()) {
+            <div class="alert alert-danger">
+              {{ passwordError() }}
+            </div>
+            }
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="changePassword()"
+              [disabled]="passwordForm.invalid || isSaving()"
+            >
+              Change Password
+            </button>
+          </form>
         </div>
       </div>
+      }
 
-      <!-- Save Message -->
-      <div class="save-message" *ngIf="saveMessage()">
-        <i class="fa fa-check-circle"></i>
-        {{ saveMessage() }}
+      <!-- Profile Picture Tab -->
+      @if (modalState().activeTab === 'profile') {
+      <div class="tab-content profile-tab">
+        <div class="setting-section">
+          <h5 class="section-title">Profile Picture</h5>
+
+          <!-- File Upload -->
+          <div class="upload-area">
+            <input
+              type="file"
+              id="profileImageInput"
+              accept=".jpg,.jpeg,.png"
+              (change)="onFileSelect($event)"
+              style="display: none"
+            />
+            <label for="profileImageInput" class="upload-label">
+              <i class="fa fa-upload"></i>
+              Choose Image
+            </label>
+            <small class="upload-hint"> JPG, JPEG, or PNG. Max 300KB. </small>
+          </div>
+
+          <!-- Image Preview -->
+          @if (profileImagePreview()) {
+          <div class="image-preview">
+            <img [src]="profileImagePreview()!" alt="Preview" />
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="uploadProfileImage()"
+              [disabled]="isSaving()"
+            >
+              Upload Image
+            </button>
+          </div>
+          } @if (uploadError()) {
+          <div class="alert alert-danger">
+            {{ uploadError() }}
+          </div>
+          }
+        </div>
       </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="s-footer">
+      <button
+        type="button"
+        class="btn btn-default"
+        (click)="resetToDefault()"
+        [disabled]="isSaving()"
+      >
+        Reset to Default
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="saveSettings()"
+        [disabled]="isSaving() || !modalState().hasUnsavedChanges"
+      >
+        @if (isSaving()) {
+        <i class="fa fa-spinner fa-spin"></i>
+        Saving... } @else { Save Settings }
+      </button>
     </div>
   </div>
 </div>
+
+<!-- Backdrop -->
+<div class="modal-backdrop" (click)="closeModal()"></div>
+}

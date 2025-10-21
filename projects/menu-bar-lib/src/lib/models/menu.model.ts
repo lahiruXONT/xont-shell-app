@@ -3,13 +3,20 @@
  * Legacy: UserMenu class in Domain
  */
 export interface MenuGroup {
-  menuCode: string; // MenuCode (e.g., 'CUSTOMER')
+  // Core identification
+  menuCode: string; // MenuCode (e.g., "CUSTOMER")
   description: string; // Menu caption/description
   icon: string; // Font awesome icon class
   order: number; // Display order
+
+  // State
   isExpanded: boolean; // Expanded/collapsed state
   isVisible: boolean; // Visibility based on role
-  tasks: MenuTask[]; // Child tasks
+
+  // Child tasks
+  tasks: MenuTask[];
+
+  // Associated role
   roleCode?: string; // Associated role code
 }
 
@@ -18,17 +25,22 @@ export interface MenuGroup {
  * Legacy: UserTask class in Domain
  */
 export interface MenuTask {
-  taskCode: string; // Task code (e.g., 'TASK001')
+  // Core identification
+  taskCode: string; // Task code (e.g., "TASK001")
   menuCode: string; // Parent menu code
   caption: string; // Task caption
   description: string; // Task description
   icon: string; // Font awesome icon
   url: string; // ExecutionScript path
+
+  // Task properties
   taskType: string; // Task type identifier
   applicationCode: string; // Application code
   exclusivityMode: number; // 0=none, 1=BU level, 2=territory level
   executionType: number; // 0=normal, 1=closing
   order: number; // Display order
+
+  // State
   isVisible: boolean; // Visibility flag
   isFavorite: boolean; // Is bookmarked
 }
@@ -62,7 +74,7 @@ export interface MenuSearchResult {
   menuCode: string;
   caption: string;
   description: string;
-  path: string; // "Menu > Task" breadcrumb
+  path: string; // Menu -> Task breadcrumb
   matchedText: string; // Highlighted match
 }
 

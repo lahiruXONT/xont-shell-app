@@ -53,7 +53,6 @@ export class FavoritesService {
 
   /**
    * Load user favorites
-   * Legacy: Load bookmarks from database
    */
   async loadFavorites(userName: string, businessUnit: string): Promise<void> {
     try {
@@ -72,28 +71,26 @@ export class FavoritesService {
 
   /**
    * Add favorite
-   * Legacy: SaveBookmark method
    */
   async addFavorite(
     favorite: Omit<Favorite, 'bookmarkId' | 'createdAt' | 'order'>
   ): Promise<void> {
-    if (!this.canAddMore()) {
-      throw new Error(
-        `Maximum ${this.configSignal().maxFavorites} favorites reached`
-      );
-    }
-
-    // Check for duplicates
-    if (!this.configSignal().allowDuplicates) {
-      const exists = this.favoritesSignal().some(
-        (f) => f.taskCode === favorite.taskCode
-      );
-      if (exists) {
-        throw new Error('This task is already bookmarked');
-      }
-    }
-
     try {
+      // Check if can add more
+      if (!this.canAddMore()) {
+        throw new Error('Maximum favorites limit reached');
+      }
+
+      // Check for duplicates
+      if (!this.configSignal().allowDuplicates) {
+        const exists = this.favoritesSignal().some(
+          (f) => f.taskCode === favorite.taskCode
+        );
+        if (exists) {
+          throw new Error('This task is already in favorites');
+        }
+      }
+
       const response = await firstValueFrom(
         this.http.post<Favorite>(`${this.apiBaseUrl}/api/favorites`, favorite)
       );
@@ -109,7 +106,6 @@ export class FavoritesService {
 
   /**
    * Remove favorite
-   * Legacy: DeleteBookmark method
    */
   async removeFavorite(bookmarkId: string): Promise<void> {
     try {
@@ -120,6 +116,7 @@ export class FavoritesService {
       const updated = this.favoritesSignal().filter(
         (f) => f.bookmarkId !== bookmarkId
       );
+
       this.favoritesSignal.set(updated);
       this.updatePanelState();
     } catch (error) {
@@ -129,7 +126,7 @@ export class FavoritesService {
   }
 
   /**
-   * Update favorite name
+   * Update favorite
    */
   async updateFavorite(
     bookmarkId: string,
@@ -158,49 +155,40 @@ export class FavoritesService {
   /**
    * Reorder favorites
    */
-  async reorderFavorites(fromIndex: number, toIndex: number): Promise<void> {
-    const favorites = [...this.favoritesSignal()];
-    const [moved] = favorites.splice(fromIndex, 1);
-    favorites.splice(toIndex, 0, moved);
-
-    // Update order property
-    const reordered = favorites.map((f, index) => ({ ...f, order: index }));
-
-    this.favoritesSignal.set(reordered);
-
+  async reorderFavorites(favoriteIds: string[]): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${this.apiBaseUrl}/api/favorites/reorder`, {
-          favorites: reordered,
-        })
+        this.http.post(`${this.apiBaseUrl}/api/favorites/reorder`, favoriteIds)
       );
+
+      // Update local order
+      const reordered = favoriteIds
+        .map((id) => this.favoritesSignal().find((f) => f.bookmarkId === id))
+        .filter((f): f is Favorite => f !== undefined);
+
+      this.favoritesSignal.set(reordered);
+      this.updatePanelState();
     } catch (error) {
       console.error('Failed to reorder favorites:', error);
+      throw error;
     }
   }
 
   /**
-   * Check if task is favorited
+   * Check if task is favorite
    */
   isFavorite(taskCode: string): boolean {
     return this.favoritesSignal().some((f) => f.taskCode === taskCode);
   }
 
   /**
-   * Toggle favorites panel
-   */
-  togglePanel(): void {
-    this.panelStateSignal.update((state) => ({
-      ...state,
-      isOpen: !state.isOpen,
-    }));
-  }
-
-  /**
    * Open favorites panel
    */
   openPanel(): void {
-    this.panelStateSignal.update((state) => ({ ...state, isOpen: true }));
+    this.panelStateSignal.update((state) => ({
+      ...state,
+      isOpen: true,
+    }));
   }
 
   /**

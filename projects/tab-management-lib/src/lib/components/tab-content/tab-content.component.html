@@ -1,49 +1,46 @@
+<!-- Tab Content Container -->
 <div class="tab-content-container">
-  <div
-    *ngIf="activeTab(); let tab"
-    class="tab-content"
-    [class.loading]="tab.state === TabState.LOADING"
-  >
-    <!-- IFrame Content -->
-    <iframe
-      *ngIf="tab.type === TabType.IFRAME && safeUrl()"
-      [src]="safeUrl()!"
-      class="tab-iframe"
-      [id]="'iframe-' + tab.id"
-      (load)="onIframeLoad(tab.id)"
-      (error)="onIframeError(tab.id)"
-      frameborder="0"
-      allowfullscreen
-    ></iframe>
-
-    <!-- Angular Route Content -->
-    <div *ngIf="tab.type === TabType.ANGULAR" class="tab-angular-content">
-      <!-- Angular component will be loaded here via router-outlet or dynamic component -->
-      <router-outlet></router-outlet>
+  <!-- Loading State -->
+  @if (isLoading()) {
+  <div class="loading-overlay">
+    <div class="spinner">
+      <i class="fa fa-spinner fa-spin"></i>
     </div>
-
-    <!-- External Link -->
-    <div *ngIf="tab.type === TabType.EXTERNAL" class="tab-external">
-      <p>This task opens in a new window</p>
-      <a [href]="tab.url" target="_blank" class="btn btn-primary">
-        <i class="fa fa-external-link-alt"></i> Open in New Window
-      </a>
-    </div>
-
-    <!-- Loading State -->
-    <div *ngIf="tab.state === TabState.LOADING" class="loading-overlay">
-      <div class="spinner"></div>
-      <p>Loading {{ tab.title }}...</p>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="tab.state === TabState.ERROR" class="error-overlay">
-      <i class="fa fa-exclamation-triangle"></i>
-      <h3>Failed to Load</h3>
-      <p>There was an error loading this content</p>
-      <button class="btn btn-primary" (click)="tabManager.refreshTab(tab.id)">
-        <i class="fa fa-sync"></i> Retry
-      </button>
-    </div>
+    <div class="loading-text">Loading...</div>
   </div>
+  }
+
+  <!-- Error State -->
+  @if (loadError()) {
+  <div class="error-state">
+    <i class="fa fa-exclamation-triangle"></i>
+    <h3>Failed to Load Content</h3>
+    <p>{{ loadError() }}</p>
+    <button class="retry-btn" (click)="refresh()">
+      <i class="fa fa-refresh"></i>
+      Retry
+    </button>
+  </div>
+  }
+
+  <!-- Iframe Content -->
+  @if (tab.type === TabType.IFRAME && !loadError()) {
+  <iframe
+    #iframe
+    [src]="safeUrl()!"
+    class="tab-iframe"
+    (load)="onIframeLoad()"
+    (error)="onIframeError($event)"
+    [title]="tab.title"
+    frameborder="0"
+  ></iframe>
+  }
+
+  <!-- Angular Component Content -->
+  @if (tab.type === TabType.ANGULAR) {
+  <div class="angular-content">
+    <!-- Dynamic component will be loaded here -->
+    <p>Angular Component: {{ tab.url }}</p>
+  </div>
+  }
 </div>

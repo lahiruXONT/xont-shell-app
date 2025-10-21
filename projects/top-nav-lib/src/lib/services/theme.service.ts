@@ -148,59 +148,66 @@ export class ThemeService {
           this.applyTheme(theme);
         }
       }
-
-      // Check for custom theme
-      const customTheme = await this.loadCustomTheme();
-      if (customTheme) {
-        this.applyCustomTheme(customTheme);
-      }
     } catch (error) {
-      console.error('Failed to load user theme:', error);
+      console.error('Failed to load theme:', error);
     }
   }
 
   /**
-   * Apply a theme
+   * Apply theme
    * Legacy: changeCSS() function
    */
-  applyTheme(theme: Theme): void {
-    // Remove existing theme link
-    if (this.currentLinkElement) {
-      this.currentLinkElement.remove();
+  async applyTheme(theme: Theme): Promise<void> {
+    try {
+      // Remove current theme link
+      if (this.currentLinkElement) {
+        this.currentLinkElement.remove();
+        this.currentLinkElement = null;
+      }
+
+      // Create new link element
+      const linkElement = document.createElement('link');
+      linkElement.rel = 'stylesheet';
+      linkElement.href = theme.cssFile;
+      linkElement.id = 'theme-css';
+
+      // Append to head
+      document.head.appendChild(linkElement);
+      this.currentLinkElement = linkElement;
+
+      // Update state
+      this.themeStateSignal.update((state) => ({
+        ...state,
+        currentTheme: theme,
+        isCustomThemeActive: false,
+      }));
+
+      // Save to localStorage
+      localStorage.setItem('userTheme', theme.name);
+    } catch (error) {
+      console.error('Failed to apply theme:', error);
     }
-
-    // Create new theme link element
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'stylesheet';
-    linkElement.type = 'text/css';
-    linkElement.href = theme.cssFile;
-    linkElement.id = 'theme-stylesheet';
-
-    document.head.appendChild(linkElement);
-    this.currentLinkElement = linkElement;
-
-    // Update state
-    this.themeStateSignal.update((state) => ({
-      ...state,
-      currentTheme: theme,
-      isCustomThemeActive: false,
-    }));
-
-    // Save to localStorage and server
-    localStorage.setItem('userTheme', theme.name);
-    this.saveThemeToServer(theme.name);
   }
 
   /**
-   * Apply custom theme
-   * Legacy: Custom theme with font settings
+   * Apply custom theme with font settings
+   * Legacy: User-specific theme customization
    */
-  applyCustomTheme(customTheme: CustomTheme): void {
-    // Apply base theme first
-    this.applyTheme(customTheme);
+  async applyCustomTheme(customTheme: CustomTheme): Promise<void> {
+    // Apply base theme
+    await this.applyTheme(customTheme);
 
-    // Apply custom CSS
-    this.applyCustomCSS(customTheme);
+    // Apply font settings
+    this.applyFontSettings(
+      customTheme.fontFamily,
+      customTheme.fontSize,
+      customTheme.fontColor
+    );
+
+    // Apply custom CSS if provided
+    if (customTheme.customCSS) {
+      this.injectCustomCSS(customTheme.customCSS);
+    }
 
     // Update state
     this.themeStateSignal.update((state) => ({
@@ -211,74 +218,84 @@ export class ThemeService {
   }
 
   /**
-   * Apply custom CSS (font family, size, color)
-   * Legacy: Font settings from settings modal
+   * Apply font settings
    */
-  private applyCustomCSS(customTheme: CustomTheme): void {
-    // Remove existing custom style
-    const existingStyle = document.getElementById('custom-theme-style');
-    if (existingStyle) {
-      existingStyle.remove();
+  private applyFontSettings(
+    fontFamily: string,
+    fontSize: string,
+    fontColor?: string
+  ): void {
+    const body = document.body;
+
+    // Apply font family
+    const font = this.FONT_FAMILIES.find((f) => f.name === fontFamily);
+    if (font) {
+      body.style.fontFamily = font.cssValue;
+    }
+
+    // Apply font size
+    body.style.fontSize = fontSize;
+
+    // Apply font color if provided
+    if (fontColor) {
+      body.style.color = fontColor;
+    }
+  }
+
+  /**
+   * Inject custom CSS
+   */
+  private injectCustomCSS(css: string): void {
+    // Remove existing custom CSS
+    const existing = document.getElementById('custom-theme-css');
+    if (existing) {
+      existing.remove();
     }
 
     // Create new style element
     const styleElement = document.createElement('style');
-    styleElement.id = 'custom-theme-style';
-    styleElement.innerHTML = `
-      body {
-        font-family: ${customTheme.fontFamily} !important;
-        font-size: ${customTheme.fontSize} !important;
-        color: ${customTheme.fontColor} !important;
-      }
-      ${customTheme.customCSS || ''}
-    `;
+    styleElement.id = 'custom-theme-css';
+    styleElement.textContent = css;
 
     document.head.appendChild(styleElement);
   }
 
   /**
-   * Save theme to server
-   * Legacy: PageMethods.saveTheme(theme)
+   * Get theme by name
    */
-  private async saveThemeToServer(themeName: string): Promise<void> {
+  getThemeByName(themeName: string): Theme {
+    const theme = this.AVAILABLE_THEMES.find((t) => t.name === themeName);
+    return theme || this.AVAILABLE_THEMES.find((t) => t.isDefault)!;
+  }
+
+  /**
+   * Get available themes
+   */
+  getAvailableThemes(): Theme[] {
+    return this.AVAILABLE_THEMES;
+  }
+
+  /**
+   * Get font family by name
+   */
+  getFontFamilyByName(name: string): FontFamily | undefined {
+    return this.FONT_FAMILIES.find((f) => f.name === name);
+  }
+
+  /**
+   * Save custom theme to server
+   */
+  async saveCustomTheme(
+    userName: string,
+    customTheme: CustomTheme
+  ): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${this.apiBaseUrl}/api/user/theme`, {
-          theme: themeName,
-        })
-      );
-    } catch (error) {
-      console.error('Failed to save theme to server:', error);
-    }
-  }
-
-  /**
-   * Load custom theme from server
-   */
-  private async loadCustomTheme(): Promise<CustomTheme | null> {
-    try {
-      const response = await firstValueFrom(
-        this.http.get<CustomTheme>(`${this.apiBaseUrl}/api/user/custom-theme`)
-      );
-      return response;
-    } catch (error) {
-      return null;
-    }
-  }
-
-  /**
-   * Save custom theme
-   */
-  async saveCustomTheme(customTheme: Partial<CustomTheme>): Promise<void> {
-    try {
-      const response = await firstValueFrom(
-        this.http.post<CustomTheme>(
-          `${this.apiBaseUrl}/api/user/custom-theme`,
+        this.http.post(
+          `${this.apiBaseUrl}/api/themes/custom/${userName}`,
           customTheme
         )
       );
-
-      this.applyCustomTheme(response);
     } catch (error) {
       console.error('Failed to save custom theme:', error);
       throw error;
@@ -286,43 +303,25 @@ export class ThemeService {
   }
 
   /**
-   * Reset to default theme
+   * Load custom theme from server
    */
-  resetToDefault(): void {
-    const defaultTheme = this.AVAILABLE_THEMES.find((t) => t.isDefault)!;
-    this.applyTheme(defaultTheme);
+  async loadCustomTheme(userName: string): Promise<CustomTheme | null> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<CustomTheme>(
+          `${this.apiBaseUrl}/api/themes/custom/${userName}`
+        )
+      );
 
-    // Clear custom theme
-    const existingStyle = document.getElementById('custom-theme-style');
-    if (existingStyle) {
-      existingStyle.remove();
+      if (response) {
+        await this.applyCustomTheme(response);
+        return response;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Failed to load custom theme:', error);
+      return null;
     }
-
-    this.themeStateSignal.update((state) => ({
-      ...state,
-      customTheme: null,
-      isCustomThemeActive: false,
-    }));
-  }
-
-  /**
-   * Get theme by name
-   */
-  getThemeByName(name: ThemeName): Theme | undefined {
-    return this.AVAILABLE_THEMES.find((t) => t.name === name);
-  }
-
-  /**
-   * Get all available themes
-   */
-  getAvailableThemes(): Theme[] {
-    return this.AVAILABLE_THEMES;
-  }
-
-  /**
-   * Get font options
-   */
-  getFontOptions(): FontOptions {
-    return this.fontOptions();
   }
 }

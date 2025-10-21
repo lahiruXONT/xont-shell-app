@@ -1,67 +1,122 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TabManagerService } from '../../services/tab-manager.service';
 import { Tab } from '../../models/tab.model';
-import {
-  CdkDragDrop,
-  moveItemInArray,
-  DragDropModule,
-} from '@angular/cdk/drag-drop';
 
+/**
+ * Tab Header Component
+ * Individual tab header with drag support, context menu
+ * Legacy: Tab li elements in Main.aspx
+ */
 @Component({
   selector: 'lib-tab-header',
-  imports: [CommonModule, DragDropModule],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './tab-header.component.html',
   styleUrl: './tab-header.component.scss',
 })
 export class TabHeaderComponent {
-  tabManager = inject(TabManagerService);
-  showTabMenu = signal<string | null>(null);
+  @Input() tab!: Tab;
+  @Input() isActive = false;
+  @Input() enableDrag = true;
 
-  onTabClick(tab: Tab): void {
-    this.tabManager.activateTab(tab.id);
-  }
+  @Output() tabClick = new EventEmitter<void>();
+  @Output() tabClose = new EventEmitter<void>();
+  @Output() tabPin = new EventEmitter<void>();
+  @Output() tabRefresh = new EventEmitter<void>();
+  @Output() tabCloseOthers = new EventEmitter<void>();
 
-  async onCloseTab(event: Event, tabId: string): Promise<void> {
+  showContextMenu = signal<boolean>(false);
+  contextMenuPosition = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  /**
+   * Handle tab click
+   */
+  onClick(event: MouseEvent): void {
     event.stopPropagation();
-    await this.tabManager.closeTab(tabId);
+    this.tabClick.emit();
   }
 
-  onTabContextMenu(event: MouseEvent, tabId: string): void {
+  /**
+   * Handle close button click
+   */
+  onClose(event: MouseEvent): void {
+    event.stopPropagation();
+    this.tabClose.emit();
+  }
+
+  /**
+   * Handle right-click context menu
+   */
+  onContextMenu(event: MouseEvent): void {
     event.preventDefault();
-    this.showTabMenu.set(tabId);
+    event.stopPropagation();
+
+    this.contextMenuPosition.set({
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    this.showContextMenu.set(true);
+
+    // Close menu when clicking outside
+    const closeMenu = () => {
+      this.showContextMenu.set(false);
+      document.removeEventListener('click', closeMenu);
+    };
+
+    setTimeout(() => {
+      document.addEventListener('click', closeMenu);
+    }, 0);
   }
 
-  onPinTab(tabId: string): void {
-    this.tabManager.togglePinTab(tabId);
-    this.showTabMenu.set(null);
-  }
+  /**
+   * Handle context menu actions
+   */
+  onContextAction(action: string, event: MouseEvent): void {
+    event.stopPropagation();
+    this.showContextMenu.set(false);
 
-  async onCloseOtherTabs(tabId: string): Promise<void> {
-    await this.tabManager.closeOtherTabs(tabId);
-    this.showTabMenu.set(null);
-  }
-
-  async onCloseAllTabs(): Promise<void> {
-    await this.tabManager.closeAllTabs();
-    this.showTabMenu.set(null);
-  }
-
-  onRefreshTab(tabId: string): void {
-    this.tabManager.refreshTab(tabId);
-    this.showTabMenu.set(null);
-  }
-
-  onDrop(event: CdkDragDrop<Tab[]>): void {
-    if (this.tabManager.config().enableDragDrop) {
-      this.tabManager.reorderTabs(event.previousIndex, event.currentIndex);
+    switch (action) {
+      case 'refresh':
+        this.tabRefresh.emit();
+        break;
+      case 'pin':
+        this.tabPin.emit();
+        break;
+      case 'close':
+        this.tabClose.emit();
+        break;
+      case 'closeOthers':
+        this.tabCloseOthers.emit();
+        break;
     }
   }
 
-  closeMenu(): void {
-    this.showTabMenu.set(null);
+  /**
+   * Get tab state icon
+   */
+  getStateIcon(): string {
+    switch (this.tab.state) {
+      case 'LOADING':
+        return 'fa-spinner fa-spin';
+      case 'ERROR':
+        return 'fa-exclamation-triangle';
+      default:
+        return this.tab.icon || 'fa-file';
+    }
   }
-  trackByTab(index: number, tab: Tab): string {
-    return tab.id;
+
+  /**
+   * Get tab state color
+   */
+  getStateColor(): string {
+    switch (this.tab.state) {
+      case 'LOADING':
+        return '#3498db';
+      case 'ERROR':
+        return '#e74c3c';
+      default:
+        return '#ecf0f1';
+    }
   }
 }

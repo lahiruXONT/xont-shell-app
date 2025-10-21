@@ -3,14 +3,15 @@ import { MenuHierarchy } from '../models/menu.model';
 
 /**
  * Menu Cache Service
- * Caches menu structures to reduce API calls
+ * Caches menu hierarchies to improve performance
+ * Legacy: Menu caching functionality
  */
 @Injectable({
   providedIn: 'root',
 })
 export class MenuCacheService {
   private cache = new Map<string, CachedMenu>();
-  private defaultDuration = 30; // minutes
+  private readonly defaultDuration = 30; // minutes
 
   /**
    * Get cached menu
@@ -23,8 +24,7 @@ export class MenuCacheService {
     }
 
     // Check if expired
-    const now = Date.now();
-    if (now > cached.expiresAt) {
+    if (Date.now() > cached.expiresAt) {
       this.cache.delete(key);
       return null;
     }
@@ -38,7 +38,6 @@ export class MenuCacheService {
   set(key: string, menu: MenuHierarchy, duration?: number): void {
     const expiresAt =
       Date.now() + (duration || this.defaultDuration) * 60 * 1000;
-
     this.cache.set(key, {
       menu,
       expiresAt,
@@ -68,7 +67,7 @@ export class MenuCacheService {
     roleCode: string,
     businessUnit: string
   ): string {
-    return `${userName}_${roleCode}_${businessUnit}`;
+    return `${userName}:${roleCode}:${businessUnit}`;
   }
 }
 

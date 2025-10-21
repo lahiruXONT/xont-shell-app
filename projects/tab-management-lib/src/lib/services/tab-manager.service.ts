@@ -2,11 +2,16 @@ import { Injectable, signal, computed } from '@angular/core';
 import { Tab, TabType, TabState, TabConfig } from '../models/tab.model';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Tab Manager Service
+ * Manages all tab operations, state, and persistence
+ * Legacy: Tab management from Main.aspx
+ */
 @Injectable({
   providedIn: 'root',
 })
 export class TabManagerService {
-  // Default configuration
+  // Default configuration (Legacy: max 5 tabs)
   private readonly DEFAULT_CONFIG: TabConfig = {
     maxTabs: 5,
     enablePersistence: true,
@@ -32,11 +37,9 @@ export class TabManagerService {
   });
 
   readonly tabCount = computed(() => this.tabsSignal().length);
-
   readonly canOpenNewTab = computed(
     () => this.tabCount() < this.configSignal().maxTabs
   );
-
   readonly dirtyTabs = computed(() =>
     this.tabsSignal().filter((tab) => tab.isDirty)
   );
@@ -53,6 +56,7 @@ export class TabManagerService {
 
   /**
    * Open a new tab
+   * Legacy: LoadTask function
    */
   openTab(
     taskCode: string,
@@ -101,12 +105,12 @@ export class TabManagerService {
 
     this.activeTabIdSignal.set(newTab.id);
     this.persistTabs();
-
     return newTab;
   }
 
   /**
    * Close tab
+   * Legacy: Close tab with dirty check
    */
   async closeTab(tabId: string): Promise<boolean> {
     const tab = this.tabsSignal().find((t) => t.id === tabId);
@@ -144,7 +148,7 @@ export class TabManagerService {
     const dirtyTabs = this.dirtyTabs();
     if (dirtyTabs.length > 0 && this.configSignal().confirmBeforeClose) {
       const confirmed = confirm(
-        `${dirtyTabs.length} tab(s) have unsaved changes. Close all anyway?`
+        `${dirtyTabs.length} tabs have unsaved changes. Close all anyway?`
       );
       if (!confirmed) return;
     }
@@ -161,7 +165,7 @@ export class TabManagerService {
     const dirtyTabs = this.dirtyTabs().filter((t) => t.id !== tabId);
     if (dirtyTabs.length > 0 && this.configSignal().confirmBeforeClose) {
       const confirmed = confirm(
-        `${dirtyTabs.length} tab(s) have unsaved changes. Close anyway?`
+        `${dirtyTabs.length} tabs have unsaved changes. Close anyway?`
       );
       if (!confirmed) return;
     }
@@ -185,7 +189,6 @@ export class TabManagerService {
         lastAccessedAt: tab.id === tabId ? new Date() : tab.lastAccessedAt,
       }))
     );
-
     this.activeTabIdSignal.set(tabId);
     localStorage.setItem('activeTabId', tabId);
   }
@@ -223,7 +226,7 @@ export class TabManagerService {
   }
 
   /**
-   * Reorder tabs
+   * Reorder tabs (drag & drop)
    */
   reorderTabs(fromIndex: number, toIndex: number): void {
     this.tabsSignal.update((tabs) => {

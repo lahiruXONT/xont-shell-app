@@ -57,26 +57,24 @@ export class MenuBarService {
     () => this.menuHierarchySignal()?.menuGroups || []
   );
 
-  readonly visibleMenuGroups = computed(() => {
-    return this.menuGroups().filter((group) => group.isVisible);
-  });
+  readonly visibleMenuGroups = computed(() =>
+    this.menuGroups().filter((group) => group.isVisible)
+  );
 
   readonly allTasks = computed(() => {
     const groups = this.menuGroups();
     return groups.flatMap((group) => group.tasks);
   });
 
-  readonly favoriteTaskCodes = computed(() => {
-    return this.allTasks()
+  readonly favoriteTaskCodes = computed(() =>
+    this.allTasks()
       .filter((task) => task.isFavorite)
-      .map((task) => task.taskCode);
-  });
+      .map((task) => task.taskCode)
+  );
 
   readonly searchResults = computed(() => {
     const query = this.searchQuerySignal();
-    if (!query || query.length < 2) {
-      return [];
-    }
+    if (!query || query.length < 2) return [];
 
     const results: MenuSearchResult[] = [];
     const lowerQuery = query.toLowerCase();
@@ -85,7 +83,7 @@ export class MenuBarService {
       group.tasks.forEach((task) => {
         const titleMatch = task.caption.toLowerCase().includes(lowerQuery);
         const codeMatch = task.taskCode.toLowerCase().includes(lowerQuery);
-        const descMatch = task.description.toLowerCase().includes(lowerQuery);
+        const descMatch = task.description?.toLowerCase().includes(lowerQuery);
 
         if (titleMatch || codeMatch || descMatch) {
           results.push({
@@ -93,7 +91,7 @@ export class MenuBarService {
             menuCode: task.menuCode,
             caption: task.caption,
             description: task.description,
-            path: `${group.description} > ${task.caption}`,
+            path: `${group.description} → ${task.caption}`,
             matchedText: titleMatch
               ? task.caption
               : codeMatch
@@ -125,11 +123,14 @@ export class MenuBarService {
       const response = await firstValueFrom(
         this.http.get<MenuHierarchy>(
           `${this.apiBaseUrl}/api/menu/user/${userName}/role/${roleCode}`,
-          { params: { businessUnit } }
+          {
+            params: { businessUnit },
+          }
         )
       );
 
       this.menuHierarchySignal.set(response);
+
       this.currentRoleSignal.set({
         roleCode: response.roleCode,
         description: response.roleName,
@@ -267,7 +268,10 @@ export class MenuBarService {
    * Legacy: Graphical view toggle (V2002)
    */
   switchViewMode(mode: MenuViewMode): void {
-    this.configSignal.update((config) => ({ ...config, viewMode: mode }));
+    this.configSignal.update((config) => ({
+      ...config,
+      viewMode: mode,
+    }));
   }
 
   /**
@@ -337,22 +341,6 @@ export class MenuBarService {
     } catch (error) {
       console.error('Failed to check daily menu:', error);
       return false;
-    }
-  }
-
-  /**
-   * Update daily menu last execution
-   * Legacy: UpdateDailyMenu method
-   */
-  async updateDailyMenu(menuCode: string): Promise<void> {
-    try {
-      await firstValueFrom(
-        this.http.post(`${this.apiBaseUrl}/api/menu/update-daily-menu`, {
-          menuCode,
-        })
-      );
-    } catch (error) {
-      console.error('Failed to update daily menu:', error);
     }
   }
 }

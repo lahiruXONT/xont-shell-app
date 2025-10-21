@@ -1,7 +1,7 @@
-<div class="login-container" backgroundImage="/images/i10.jpg">
+<div class="login-container">
   <div class="login-card">
     <div class="logo">
-      <img src="/images/logo.jpg" alt="Logo" />
+      <img src="assets/images/logo.png" alt="Logo" />
       <h1>XONT Ventura CRM</h1>
     </div>
 
@@ -30,9 +30,23 @@
         />
       </div>
 
-      <div class="error-message" *ngIf="errorMessage()">
+      <div class="form-group">
+        <label>Business Unit</label>
+        <input
+          type="text"
+          [value]="businessUnit()"
+          (input)="businessUnit.set($any($event.target).value)"
+          name="businessUnit"
+          placeholder="Business Unit"
+          required
+        />
+      </div>
+
+      @if (errorMessage()) {
+      <div class="error-message">
         {{ errorMessage() }}
       </div>
+      }
 
       <button type="submit" class="login-btn" [disabled]="isLoading()">
         {{ isLoading() ? "Logging in..." : "Login" }}

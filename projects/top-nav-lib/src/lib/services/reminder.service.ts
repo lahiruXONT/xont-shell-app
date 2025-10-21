@@ -13,7 +13,7 @@ import { TOP_NAV_API_URL as API_URL } from '../tokens/api-url.token';
 
 /**
  * Reminder Service
- * Legacy: Reminder system from Main.aspx right sidebar
+ * Legacy: Reminder system from Main.aspx (right sidebar)
  */
 @Injectable({
   providedIn: 'root',
@@ -38,6 +38,7 @@ export class ReminderService {
     isCreatingNew: false,
     isEditMode: false,
     showCalendar: false,
+    isOpen: false,
   });
   private configSignal = signal<ReminderConfig>(this.DEFAULT_CONFIG);
 
@@ -54,36 +55,32 @@ export class ReminderService {
     this.remindersSignal().filter((r) => r.isActive && !r.isExpired)
   );
 
-  readonly upcomingReminders = computed(() => {
-    const now = new Date();
-    return this.remindersSignal().filter(
-      (r) => r.isActive && r.triggerTime > now && !r.isTriggered
-    );
-  });
-
-  readonly expiredCount = computed(() => this.expiredRemindersSignal().length);
+  readonly triggeredReminders = computed(() =>
+    this.remindersSignal().filter((r) => r.isTriggered)
+  );
 
   constructor(
     private http: HttpClient,
     @Inject(API_URL) private apiBaseUrl: string
-  ) {
-    this.startPolling();
-  }
+  ) {}
 
   /**
-   * Start polling for reminders
-   * Legacy: Periodic check for reminder triggers
+   * Start reminder polling
+   * Legacy: Timer control in Main.aspx
    */
-  private startPolling(): void {
-    const checkInterval = this.configSignal().checkInterval;
+  startPolling(): void {
+    if (this.pollingSubscription) {
+      this.stopPolling();
+    }
 
-    this.pollingSubscription = interval(checkInterval).subscribe(() => {
+    const intervalMs = this.configSignal().checkInterval;
+    this.pollingSubscription = interval(intervalMs).subscribe(() => {
       this.checkReminders();
     });
   }
 
   /**
-   * Stop polling
+   * Stop reminder polling
    */
   stopPolling(): void {
     if (this.pollingSubscription) {
@@ -93,110 +90,47 @@ export class ReminderService {
   }
 
   /**
-   * Load reminders from server
-   * Legacy: Load reminders on page load
+   * Load user reminders
+   * Legacy: Load reminders from database
    */
-  async loadReminders(): Promise<void> {
+  async loadReminders(userName: string, businessUnit: string): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Reminder[]>(`${this.apiBaseUrl}/api/reminders`)
+        this.http.get<Reminder[]>(`${this.apiBaseUrl}/api/reminders`, {
+          params: { userName, businessUnit },
+        })
       );
 
       this.remindersSignal.set(response);
       this.updatePanelState();
 
-      // Check for expired reminders
+      // Check for expired reminders on login
       if (this.configSignal().showExpiredOnLogin) {
-        this.checkForExpiredReminders();
+        await this.checkExpiredReminders(userName, businessUnit);
       }
-
-      // Check for immediate triggers
-      this.checkReminders();
     } catch (error) {
       console.error('Failed to load reminders:', error);
     }
   }
 
   /**
-   * Check reminders for triggers
-   * Legacy: Periodic reminder check
-   */
-  private checkReminders(): void {
-    const now = new Date();
-    const reminders = this.remindersSignal();
-
-    reminders.forEach((reminder) => {
-      if (
-        reminder.isActive &&
-        !reminder.isTriggered &&
-        reminder.triggerTime <= now
-      ) {
-        this.triggerReminder(reminder);
-      }
-    });
-  }
-
-  /**
-   * Trigger a reminder
-   * Legacy: Show reminder popup
-   */
-  private triggerReminder(reminder: Reminder): void {
-    // Update reminder as triggered
-    const updated = {
-      ...reminder,
-      isTriggered: true,
-      triggeredAt: new Date(),
-    };
-
-    this.updateReminder(updated);
-
-    // Create trigger event
-    const event: ReminderTriggerEvent = {
-      reminder: updated,
-      canRemindLater: true,
-      remindLaterInterval: this.configSignal().defaultRemindLaterInterval,
-    };
-
-    // Emit event (component will show modal)
-    console.log('Reminder triggered:', event);
-
-    // Play sound if enabled
-    if (this.configSignal().enableSound) {
-      this.playReminderSound();
-    }
-  }
-
-  /**
-   * Check for expired reminders on login
-   * Legacy: Show expired reminders modal
-   */
-  private checkForExpiredReminders(): void {
-    const now = new Date();
-    const expired = this.remindersSignal().filter(
-      (r) => r.isActive && r.triggerTime < now && !r.isTriggered
-    );
-
-    if (expired.length > 0) {
-      this.expiredRemindersSignal.set(expired);
-      console.log('Expired reminders found:', expired.length);
-    }
-  }
-
-  /**
    * Create new reminder
-   * Legacy: Add new reminder
+   * Legacy: Create reminder functionality
    */
-  async createReminder(reminder: Partial<Reminder>): Promise<Reminder> {
+  async createReminder(
+    reminder: Omit<
+      Reminder,
+      'reminderId' | 'createdAt' | 'isTriggered' | 'isExpired'
+    >
+  ): Promise<void> {
     try {
       const response = await firstValueFrom(
         this.http.post<Reminder>(`${this.apiBaseUrl}/api/reminders`, reminder)
       );
 
-      const reminders = this.remindersSignal();
-      this.remindersSignal.set([...reminders, response]);
+      const updated = [...this.remindersSignal(), response];
+      this.remindersSignal.set(updated);
       this.updatePanelState();
-
-      return response;
     } catch (error) {
       console.error('Failed to create reminder:', error);
       throw error;
@@ -206,18 +140,20 @@ export class ReminderService {
   /**
    * Update reminder
    */
-  async updateReminder(reminder: Reminder): Promise<void> {
+  async updateReminder(
+    reminderId: string,
+    updates: Partial<Reminder>
+  ): Promise<void> {
     try {
-      await firstValueFrom(
-        this.http.put(
-          `${this.apiBaseUrl}/api/reminders/${reminder.reminderId}`,
-          reminder
+      const response = await firstValueFrom(
+        this.http.put<Reminder>(
+          `${this.apiBaseUrl}/api/reminders/${reminderId}`,
+          updates
         )
       );
 
-      const reminders = this.remindersSignal();
-      const updated = reminders.map((r) =>
-        r.reminderId === reminder.reminderId ? reminder : r
+      const updated = this.remindersSignal().map((r) =>
+        r.reminderId === reminderId ? response : r
       );
 
       this.remindersSignal.set(updated);
@@ -229,163 +165,172 @@ export class ReminderService {
   }
 
   /**
-   * Delete reminder(s)
-   * Legacy: PageMethods.deleteReminders(arrReminderID)
+   * Delete reminder
    */
-  async deleteReminders(reminderIds: string[]): Promise<void> {
+  async deleteReminder(reminderId: string): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${this.apiBaseUrl}/api/reminders/delete`, {
-          ids: reminderIds,
-        })
+        this.http.delete(`${this.apiBaseUrl}/api/reminders/${reminderId}`)
       );
 
-      const reminders = this.remindersSignal();
-      const updated = reminders.filter(
-        (r) => !reminderIds.includes(r.reminderId)
+      const updated = this.remindersSignal().filter(
+        (r) => r.reminderId !== reminderId
       );
 
       this.remindersSignal.set(updated);
       this.updatePanelState();
     } catch (error) {
-      console.error('Failed to delete reminders:', error);
+      console.error('Failed to delete reminder:', error);
       throw error;
     }
   }
 
   /**
-   * Snooze reminder (remind me later)
-   * Legacy: Remind later functionality
+   * Check for triggered reminders
+   * Legacy: Timer tick handler
    */
-  async snoozeReminder(
+  private async checkReminders(): Promise<void> {
+    const now = new Date();
+    const reminders = this.remindersSignal();
+
+    for (const reminder of reminders) {
+      if (
+        reminder.isActive &&
+        !reminder.isTriggered &&
+        reminder.triggerTime <= now
+      ) {
+        await this.triggerReminder(reminder);
+      }
+    }
+  }
+
+  /**
+   * Trigger a reminder
+   * Legacy: Show reminder popup
+   */
+  private async triggerReminder(reminder: Reminder): Promise<void> {
+    try {
+      // Mark as triggered
+      await this.updateReminder(reminder.reminderId, {
+        isTriggered: true,
+        triggeredAt: new Date(),
+      });
+
+      // Play sound if enabled
+      if (this.configSignal().enableSound) {
+        this.playReminderSound();
+      }
+
+      // Emit trigger event (shell app should show popup)
+      const event: ReminderTriggerEvent = {
+        reminder,
+        canRemindLater: true,
+        remindLaterInterval: this.configSignal().defaultRemindLaterInterval,
+      };
+
+      console.log('Reminder triggered:', event);
+    } catch (error) {
+      console.error('Failed to trigger reminder:', error);
+    }
+  }
+
+  /**
+   * Remind me later
+   * Legacy: "Remind me later" button
+   */
+  async remindLater(
     reminderId: string,
-    minutes: number = 10
+    intervalMinutes?: number
   ): Promise<void> {
-    const reminder = this.findReminderById(reminderId);
-    if (!reminder) return;
+    const interval =
+      intervalMinutes || this.configSignal().defaultRemindLaterInterval;
+    const newTriggerTime = new Date(Date.now() + interval * 60 * 1000);
 
-    const newTriggerTime = new Date();
-    newTriggerTime.setMinutes(newTriggerTime.getMinutes() + minutes);
-
-    const updated = {
-      ...reminder,
+    await this.updateReminder(reminderId, {
       triggerTime: newTriggerTime,
       isTriggered: false,
-    };
-
-    await this.updateReminder(updated);
+    });
   }
 
   /**
    * Dismiss reminder
    */
   async dismissReminder(reminderId: string): Promise<void> {
-    const reminder = this.findReminderById(reminderId);
-    if (!reminder) return;
-
-    const updated = {
-      ...reminder,
+    await this.updateReminder(reminderId, {
       isActive: false,
       dismissedAt: new Date(),
-    };
-
-    await this.updateReminder(updated);
-  }
-
-  /**
-   * Dispatch nearest reminder
-   * Legacy: Show nearest upcoming reminder
-   */
-  dispatchNearestReminder(): Reminder | null {
-    const upcoming = this.upcomingReminders();
-    if (upcoming.length === 0) return null;
-
-    // Sort by trigger time
-    const sorted = [...upcoming].sort(
-      (a, b) => a.triggerTime.getTime() - b.triggerTime.getTime()
-    );
-
-    return sorted[0];
-  }
-
-  /**
-   * Get reminder by ID
-   */
-  findReminderById(reminderId: string): Reminder | undefined {
-    return this.remindersSignal().find((r) => r.reminderId === reminderId);
-  }
-
-  /**
-   * Select reminder for editing
-   */
-  selectReminder(reminder: Reminder): void {
-    const state = this.panelStateSignal();
-    this.panelStateSignal.set({
-      ...state,
-      selectedReminder: reminder,
-      isEditMode: true,
-      isCreatingNew: false,
     });
   }
 
   /**
-   * Start creating new reminder
+   * Check expired reminders
+   * Legacy: uplExpiredReminders
    */
-  startCreatingNew(): void {
-    const state = this.panelStateSignal();
-    this.panelStateSignal.set({
-      ...state,
-      selectedReminder: null,
-      isEditMode: false,
-      isCreatingNew: true,
-      showCalendar: true,
-    });
-  }
+  async checkExpiredReminders(
+    userName: string,
+    businessUnit: string
+  ): Promise<ExpiredReminders | null> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<ExpiredReminders>(
+          `${this.apiBaseUrl}/api/reminders/expired`,
+          {
+            params: { userName, businessUnit },
+          }
+        )
+      );
 
-  /**
-   * Cancel editing/creating
-   */
-  cancelEditing(): void {
-    const state = this.panelStateSignal();
-    this.panelStateSignal.set({
-      ...state,
-      selectedReminder: null,
-      isEditMode: false,
-      isCreatingNew: false,
-      showCalendar: false,
-    });
-  }
+      if (response.count > 0) {
+        this.expiredRemindersSignal.set(response.reminders);
+        return response;
+      }
 
-  /**
-   * Toggle calendar display
-   */
-  toggleCalendar(): void {
-    const state = this.panelStateSignal();
-    this.panelStateSignal.set({
-      ...state,
-      showCalendar: !state.showCalendar,
-    });
-  }
-
-  /**
-   * Update panel state
-   */
-  private updatePanelState(): void {
-    const state = this.panelStateSignal();
-    this.panelStateSignal.set({
-      ...state,
-      reminders: this.remindersSignal(),
-    });
+      return null;
+    } catch (error) {
+      console.error('Failed to check expired reminders:', error);
+      return null;
+    }
   }
 
   /**
    * Play reminder sound
    */
   private playReminderSound(): void {
-    const audio = new Audio('assets/audio/reminder.mp3');
+    const audio = new Audio('assets/sounds/reminder.mp3');
     audio.play().catch((error) => {
-      console.error('Failed to play reminder sound:', error);
+      console.warn('Failed to play reminder sound:', error);
     });
+  }
+
+  /**
+   * Toggle reminder panel
+   */
+  togglePanel(): void {
+    this.panelStateSignal.update((state) => ({
+      ...state,
+      isOpen: !state.isOpen,
+    }));
+  }
+
+  /**
+   * Select reminder for editing
+   */
+  selectReminder(reminder: Reminder): void {
+    this.panelStateSignal.update((state) => ({
+      ...state,
+      selectedReminder: reminder,
+      isEditMode: true,
+    }));
+  }
+
+  /**
+   * Update panel state
+   */
+  private updatePanelState(): void {
+    this.panelStateSignal.update((state) => ({
+      ...state,
+      reminders: this.remindersSignal(),
+    }));
   }
 
   /**
@@ -394,17 +339,9 @@ export class ReminderService {
   updateConfig(config: Partial<ReminderConfig>): void {
     this.configSignal.update((current) => ({ ...current, ...config }));
 
-    // Restart polling if interval changed
+    // Restart polling with new interval
     if (config.checkInterval) {
-      this.stopPolling();
       this.startPolling();
     }
-  }
-
-  /**
-   * Cleanup
-   */
-  ngOnDestroy(): void {
-    this.stopPolling();
   }
 }

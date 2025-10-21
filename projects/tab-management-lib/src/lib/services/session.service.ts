@@ -15,7 +15,7 @@ import {
 })
 export class SessionService {
   private readonly DEFAULT_CONFIG: SessionStorageConfig = {
-    storageKey: 'xont_tab_session',
+    storageKey: 'xont-tab-session',
     storage: 'sessionStorage',
     compress: false,
     encrypt: false,
@@ -81,7 +81,10 @@ export class SessionService {
       window[this.configSignal().storage].removeItem(
         this.configSignal().storageKey
       );
-      this.stateSignal.set({ ...this.stateSignal(), currentSession: null });
+      this.stateSignal.set({
+        ...this.stateSignal(),
+        currentSession: null,
+      });
     } catch (error) {
       console.error('Failed to clear tab session:', error);
     }
@@ -96,6 +99,7 @@ export class SessionService {
       0,
       maxSessionHistory
     );
+
     this.stateSignal.set({
       ...this.stateSignal(),
       previousSessions: updatedHistory,

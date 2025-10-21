@@ -1,8 +1,4 @@
-import {
-  ApplicationConfig,
-  importProvidersFrom,
-  provideZoneChangeDetection,
-} from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import {
   provideRouter,
   withComponentInputBinding,
@@ -14,11 +10,13 @@ import {
   withInterceptors,
 } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
+
 import { routes } from './app.routes';
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
 import { environment } from './environments/environment';
 
+// Import library API URL tokens
 import { TOP_NAV_API_URL } from 'top-nav-lib';
 import { MENU_BAR_API_URL } from 'menu-bar-lib';
 import { TAB_MGMT_API_URL } from 'tab-management-lib';
@@ -32,9 +30,19 @@ export const appConfig: ApplicationConfig = {
       withFetch()
     ),
     provideAnimations(),
-    // Provide library API URL tokens from app environment
-    { provide: TOP_NAV_API_URL, useValue: environment.baseUrl },
-    { provide: MENU_BAR_API_URL, useValue: environment.baseUrl },
-    { provide: TAB_MGMT_API_URL, useValue: environment.baseUrl },
+
+    // Provide library API URL tokens
+    {
+      provide: TOP_NAV_API_URL,
+      useValue: environment.baseUrl,
+    },
+    {
+      provide: MENU_BAR_API_URL,
+      useValue: environment.baseUrl,
+    },
+    {
+      provide: TAB_MGMT_API_URL,
+      useValue: environment.baseUrl,
+    },
   ],
 };

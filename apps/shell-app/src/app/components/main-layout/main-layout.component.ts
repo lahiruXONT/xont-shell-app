@@ -17,6 +17,7 @@ import {
   FavoritesService,
 } from 'menu-bar-lib';
 import {
+  Tab,
   TabManagerComponent,
   TabManagerService,
   TabType,
@@ -182,5 +183,54 @@ export class MainLayoutComponent implements OnInit {
   }
   navigateToDashboard(): void {
     this.router.navigate(['/app']);
+  }
+  /**
+   * Get current role object
+   */
+  getCurrentRole(): any {
+    const user = this.currentUser();
+    if (!user) return null;
+
+    return user.roles.find((r) => r.roleCode === user.currentRole);
+  }
+
+  /**
+   * Get current business unit object
+   */
+  getCurrentBusinessUnit(): any {
+    const user = this.currentUser();
+    if (!user) return null;
+
+    return user.businessUnits.find(
+      (bu) => bu.code === user.currentBusinessUnit
+    );
+  }
+
+  /**
+   * Get session ID
+   */
+  getSessionId(): string {
+    return localStorage.getItem('sessionId') || '';
+  }
+
+  /**
+   * Handle settings saved
+   */
+  onSettingsSaved(settings: any): void {
+    console.log('Settings saved:', settings);
+  }
+
+  /**
+   * Handle tab opened
+   */
+  onTabOpened(tab: Tab): void {
+    console.log('Tab opened:', tab);
+  }
+
+  /**
+   * Handle tab closed
+   */
+  onTabClosed(tab: Tab): void {
+    console.log('Tab closed:', tab);
   }
 }
