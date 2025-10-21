@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -8,7 +8,7 @@ import {
   SettingsValidation,
 } from '../models/settings.model';
 import { Inject, Optional } from '@angular/core';
-import { API_URL } from '../../public-api';
+import { TOP_NAV_API_URL as API_URL } from '../tokens/api-url.token';
 
 /**
  * Settings Service
@@ -36,17 +36,9 @@ export class SettingsService {
 
   constructor(
     private http: HttpClient,
-    @Inject(API_URL) @Optional() private apiUrl?: string
+    @Inject(API_URL) private apiBaseUrl: string
   ) {
     this.loadSettings();
-  }
-
-  private getApiBase(): string {
-    if (this.apiUrl) return this.apiUrl;
-    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
-      return (window as any).__XONT_API_URL__;
-    }
-    return '';
   }
 
   /**
@@ -56,7 +48,7 @@ export class SettingsService {
   async loadSettings(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<UserSettings>(`${this.getApiBase()}/api/user/settings`)
+        this.http.get<UserSettings>(`${this.apiBaseUrl}/api/user/settings`)
       );
 
       this.settingsSignal.set(response);
@@ -75,7 +67,7 @@ export class SettingsService {
     try {
       const response = await firstValueFrom(
         this.http.post<UserSettings>(
-          `${this.getApiBase()}/api/user/settings`,
+          `${this.apiBaseUrl}/api/user/settings`,
           settings
         )
       );
@@ -103,7 +95,7 @@ export class SettingsService {
 
     try {
       await firstValueFrom(
-        this.http.post(`${this.getApiBase()}/api/user/change-password`, request)
+        this.http.post(`${this.apiBaseUrl}/api/user/change-password`, request)
       );
     } catch (error) {
       console.error('Failed to change password:', error);
@@ -170,7 +162,7 @@ export class SettingsService {
 
       const response = await firstValueFrom(
         this.http.post<{ url: string }>(
-          `${this.getApiBase()}/api/user/profile-image`,
+          `${this.apiBaseUrl}/api/user/profile-image`,
           formData
         )
       );
@@ -244,7 +236,7 @@ export class SettingsService {
   async resetToDefaults(): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${this.getApiBase()}/api/user/settings/reset`, {})
+        this.http.post(`${this.apiBaseUrl}/api/user/settings/reset`, {})
       );
 
       await this.loadSettings();

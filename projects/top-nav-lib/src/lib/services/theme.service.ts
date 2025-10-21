@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -11,7 +11,7 @@ import {
   FontSize,
 } from '../models/theme.model';
 import { Inject, Optional } from '@angular/core';
-import { API_URL } from '../../public-api';
+import { TOP_NAV_API_URL as API_URL } from '../tokens/api-url.token';
 
 /**
  * Theme Service
@@ -129,17 +129,9 @@ export class ThemeService {
 
   constructor(
     private http: HttpClient,
-    @Inject(API_URL) @Optional() private apiUrl?: string
+    @Inject(API_URL) private apiBaseUrl: string
   ) {
     this.loadUserTheme();
-  }
-
-  private getApiBase(): string {
-    if (this.apiUrl) return this.apiUrl;
-    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
-      return (window as any).__XONT_API_URL__;
-    }
-    return '';
   }
 
   /**
@@ -251,7 +243,7 @@ export class ThemeService {
   private async saveThemeToServer(themeName: string): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${this.getApiBase()}/api/user/theme`, {
+        this.http.post(`${this.apiBaseUrl}/api/user/theme`, {
           theme: themeName,
         })
       );
@@ -266,7 +258,7 @@ export class ThemeService {
   private async loadCustomTheme(): Promise<CustomTheme | null> {
     try {
       const response = await firstValueFrom(
-        this.http.get<CustomTheme>(`${this.getApiBase()}/api/user/custom-theme`)
+        this.http.get<CustomTheme>(`${this.apiBaseUrl}/api/user/custom-theme`)
       );
       return response;
     } catch (error) {
@@ -281,7 +273,7 @@ export class ThemeService {
     try {
       const response = await firstValueFrom(
         this.http.post<CustomTheme>(
-          `${this.getApiBase()}/api/user/custom-theme`,
+          `${this.apiBaseUrl}/api/user/custom-theme`,
           customTheme
         )
       );

@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, interval, Subscription } from 'rxjs';
 import {
@@ -9,7 +9,7 @@ import {
   ExpiredReminders,
 } from '../models/reminder.model';
 import { Inject, Optional } from '@angular/core';
-import { API_URL } from '../../public-api';
+import { TOP_NAV_API_URL as API_URL } from '../tokens/api-url.token';
 
 /**
  * Reminder Service
@@ -65,17 +65,9 @@ export class ReminderService {
 
   constructor(
     private http: HttpClient,
-    @Inject(API_URL) @Optional() private apiUrl?: string
+    @Inject(API_URL) private apiBaseUrl: string
   ) {
     this.startPolling();
-  }
-
-  private getApiBase(): string {
-    if (this.apiUrl) return this.apiUrl;
-    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
-      return (window as any).__XONT_API_URL__;
-    }
-    return '';
   }
 
   /**
@@ -107,7 +99,7 @@ export class ReminderService {
   async loadReminders(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Reminder[]>(`${this.getApiBase()}/api/reminders`)
+        this.http.get<Reminder[]>(`${this.apiBaseUrl}/api/reminders`)
       );
 
       this.remindersSignal.set(response);
@@ -197,7 +189,7 @@ export class ReminderService {
   async createReminder(reminder: Partial<Reminder>): Promise<Reminder> {
     try {
       const response = await firstValueFrom(
-        this.http.post<Reminder>(`${this.getApiBase()}/api/reminders`, reminder)
+        this.http.post<Reminder>(`${this.apiBaseUrl}/api/reminders`, reminder)
       );
 
       const reminders = this.remindersSignal();
@@ -218,7 +210,7 @@ export class ReminderService {
     try {
       await firstValueFrom(
         this.http.put(
-          `${this.getApiBase()}/api/reminders/${reminder.reminderId}`,
+          `${this.apiBaseUrl}/api/reminders/${reminder.reminderId}`,
           reminder
         )
       );
@@ -243,7 +235,7 @@ export class ReminderService {
   async deleteReminders(reminderIds: string[]): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${this.getApiBase()}/api/reminders/delete`, {
+        this.http.post(`${this.apiBaseUrl}/api/reminders/delete`, {
           ids: reminderIds,
         })
       );
