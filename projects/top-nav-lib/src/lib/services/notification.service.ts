@@ -10,6 +10,8 @@ import {
   NotificationConfig,
   AdminAlert,
 } from '../models/notification.model';
+import { Inject, Optional } from '@angular/core';
+import { API_URL } from '../../public-api';
 
 /**
  * Notification Service with SignalR Integration
@@ -81,8 +83,21 @@ export class NotificationService {
   readonly notifications$ = this.notificationSubject.asObservable();
   readonly newNotification$ = this.newNotificationSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    @Inject(API_URL) @Optional() private apiUrl?: string
+  ) {
     this.initializeAudioElement();
+  }
+
+  // Return the API base URL, using the injected token if present, or falling
+  // back to a global set by the host app (window.__XONT_API_URL__), or empty.
+  private getApiBase(): string {
+    if (this.apiUrl) return this.apiUrl;
+    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
+      return (window as any).__XONT_API_URL__;
+    }
+    return '';
   }
 
   /**
@@ -212,7 +227,7 @@ export class NotificationService {
   async loadNotifications(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Notification[]>('/api/notifications')
+    this.http.get<Notification[]>(`${this.getApiBase()}/api/notifications`)
       );
 
       this.notificationsSignal.set(response);
@@ -231,7 +246,10 @@ export class NotificationService {
   async markAsRead(notificationId: string): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`/api/notifications/${notificationId}/mark-read`, {})
+          this.http.post(
+            `${this.getApiBase()}/api/notifications/${notificationId}/mark-read`,
+          {}
+        )
       );
 
       const notifications = this.notificationsSignal();
@@ -262,7 +280,7 @@ export class NotificationService {
   async markAllAsRead(): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post('/api/notifications/mark-all-read', {})
+       this.http.post(`${this.getApiBase()}/api/notifications/mark-all-read`, {})
       );
 
       const notifications = this.notificationsSignal();
@@ -289,7 +307,9 @@ export class NotificationService {
   async deleteNotifications(notificationIds: string[]): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post('/api/notifications/delete', { ids: notificationIds })
+          this.http.post(`${this.getApiBase()}/api/notifications/delete`, {
+          ids: notificationIds,
+        })
       );
 
       const notifications = this.notificationsSignal();
@@ -378,7 +398,7 @@ export class NotificationService {
   ): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<any>(`/api/tasks/${notification.taskCode}`)
+          this.http.get<any>(`${this.getApiBase()}/api/tasks/${notification.taskCode}`)
       );
 
       // Emit event to open task in tab

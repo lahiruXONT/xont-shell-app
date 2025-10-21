@@ -23,7 +23,7 @@ import {
 } from 'tab-management-lib';
 
 import { AuthenticationService } from '../../services/authentication.service';
-import { environment } from '../../environments/environment.dev';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-main-layout',
@@ -42,7 +42,8 @@ import { environment } from '../../environments/environment.dev';
 })
 export class MainLayoutComponent implements OnInit {
   // User data
-  readonly currentUser = computed(() => this.authService.currentUser);
+  // User data - FIXED signal access
+  readonly currentUser = computed(() => this.authService.currentUser());
 
   // User profile for top nav
   readonly userProfile = computed<UserProfile | null>(() => {
@@ -50,15 +51,16 @@ export class MainLayoutComponent implements OnInit {
     if (!user) return null;
 
     return {
-      userName: user()?.userName ?? '',
-      fullName: user()?.fullName ?? '',
-      email: user()?.email ?? '',
-      profileImage: user()?.profileImage ?? 'assets/images/default-user.png',
-      currentBusinessUnit: user()?.currentBusinessUnit ?? '',
-      currentRole: user()?.currentRole ?? '',
+      userName: user.userName ?? '',
+      fullName: user.fullName ?? '',
+      email: user.email ?? '',
+      profileImage: user.profileImage ?? 'assets/images/default-user.png',
+      currentBusinessUnit: user.currentBusinessUnit ?? '',
+      currentRole: user.currentRole ?? '',
       theme: String(this.themeService.currentTheme()),
     };
   });
+
   router = inject(Router);
 
   constructor(
@@ -79,6 +81,35 @@ export class MainLayoutComponent implements OnInit {
 
     // Load user theme
     await this.loadUserTheme();
+
+    // 🔥 CRITICAL FIX: Load menu for the current user
+    await this.loadUserMenu();
+  }
+
+  /**
+   * Load menu for current user
+   */
+  private async loadUserMenu(): Promise<void> {
+    const user = this.currentUser();
+    if (!user) return;
+
+    try {
+      await this.menuBarService.loadMenuForRole(
+        user.userName,
+        user.currentRole,
+        user.currentBusinessUnit
+      );
+
+      // Also load favorites
+      await this.favoritesService.loadFavorites(
+        user.userName,
+        user.currentBusinessUnit
+      );
+
+      console.log('Menu loaded successfully');
+    } catch (error) {
+      console.error('Failed to load menu:', error);
+    }
   }
 
   /**

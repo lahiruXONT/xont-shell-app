@@ -11,6 +11,8 @@ import {
   SystemTask,
 } from '../models/menu.model';
 import { UserRole } from '../models/user-role.model';
+import { Inject, Optional } from '@angular/core';
+import { API_URL } from '../../public-api';
 
 /**
  * Menu Bar Service
@@ -105,7 +107,18 @@ export class MenuBarService {
     return results;
   });
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(API_URL) @Optional() private apiUrl?: string
+  ) {}
+
+  private getApiBase(): string {
+    if (this.apiUrl) return this.apiUrl;
+    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
+      return (window as any).__XONT_API_URL__;
+    }
+    return '';
+  }
 
   /**
    * Load menu for specific role
@@ -119,7 +132,7 @@ export class MenuBarService {
     try {
       const response = await firstValueFrom(
         this.http.get<MenuHierarchy>(
-          `/api/menu/user/${userName}/role/${roleCode}`,
+          `${this.getApiBase()}/api/menu/user/${userName}/role/${roleCode}`,
           { params: { businessUnit } }
         )
       );
@@ -167,9 +180,12 @@ export class MenuBarService {
   ): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<SystemTask[]>('/api/menu/system-tasks', {
-          params: { userName, businessUnit },
-        })
+        this.http.get<SystemTask[]>(
+          `${this.getApiBase()}/api/menu/system-tasks`,
+          {
+            params: { userName, businessUnit },
+          }
+        )
       );
 
       this.systemTasksSignal.set(response);
@@ -317,9 +333,12 @@ export class MenuBarService {
   ): Promise<boolean> {
     try {
       const response = await firstValueFrom(
-        this.http.get<{ available: boolean }>('/api/menu/check-daily-menu', {
-          params: { userName, businessUnit },
-        })
+        this.http.get<{ available: boolean }>(
+          `${this.getApiBase()}/api/menu/check-daily-menu`,
+          {
+            params: { userName, businessUnit },
+          }
+        )
       );
 
       return response.available;
@@ -336,7 +355,9 @@ export class MenuBarService {
   async updateDailyMenu(menuCode: string): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post('/api/menu/update-daily-menu', { menuCode })
+        this.http.post(`${this.getApiBase()}/api/menu/update-daily-menu`, {
+          menuCode,
+        })
       );
     } catch (error) {
       console.error('Failed to update daily menu:', error);

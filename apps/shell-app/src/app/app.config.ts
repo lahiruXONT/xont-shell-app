@@ -17,6 +17,10 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { routes } from './app.routes';
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
+import { environment } from './environments/environment';
+import { API_URL as TOP_NAV_API_URL } from '../../../../projects/top-nav-lib/src/public-api';
+import { API_URL as MENU_BAR_API_URL } from '../../../../projects/menu-bar-lib/src/public-api';
+import { API_URL as TAB_API_URL } from '../../../../projects/tab-management-lib/src/public-api';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,5 +31,9 @@ export const appConfig: ApplicationConfig = {
       withFetch()
     ),
     provideAnimations(),
+    // Provide library API URL tokens from app environment
+    { provide: TOP_NAV_API_URL, useValue: environment.apiUrl },
+    { provide: MENU_BAR_API_URL, useValue: environment.apiUrl },
+    { provide: TAB_API_URL, useValue: environment.apiUrl },
   ],
 };

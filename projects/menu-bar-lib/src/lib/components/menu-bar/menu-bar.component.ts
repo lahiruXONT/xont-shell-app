@@ -62,6 +62,7 @@ export class MenuBarComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
+    // Auto-load menu if all params provided
     if (this.userName && this.roleCode && this.businessUnit) {
       await this.loadMenu();
     }

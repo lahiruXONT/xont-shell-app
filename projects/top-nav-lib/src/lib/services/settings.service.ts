@@ -7,6 +7,8 @@ import {
   ProfileImageUpload,
   SettingsValidation,
 } from '../models/settings.model';
+import { Inject, Optional } from '@angular/core';
+import { API_URL } from '../../public-api';
 
 /**
  * Settings Service
@@ -32,8 +34,19 @@ export class SettingsService {
     return false; // Implement comparison logic
   });
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    @Inject(API_URL) @Optional() private apiUrl?: string
+  ) {
     this.loadSettings();
+  }
+
+  private getApiBase(): string {
+    if (this.apiUrl) return this.apiUrl;
+    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
+      return (window as any).__XONT_API_URL__;
+    }
+    return '';
   }
 
   /**
@@ -43,7 +56,7 @@ export class SettingsService {
   async loadSettings(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<UserSettings>('/api/user/settings')
+        this.http.get<UserSettings>(`${this.getApiBase()}/api/user/settings`)
       );
 
       this.settingsSignal.set(response);
@@ -61,7 +74,10 @@ export class SettingsService {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<UserSettings>('/api/user/settings', settings)
+        this.http.post<UserSettings>(
+          `${this.getApiBase()}/api/user/settings`,
+          settings
+        )
       );
 
       this.settingsSignal.set(response);
@@ -87,7 +103,7 @@ export class SettingsService {
 
     try {
       await firstValueFrom(
-        this.http.post('/api/user/change-password', request)
+        this.http.post(`${this.getApiBase()}/api/user/change-password`, request)
       );
     } catch (error) {
       console.error('Failed to change password:', error);
@@ -153,7 +169,10 @@ export class SettingsService {
       formData.append('file', upload.file);
 
       const response = await firstValueFrom(
-        this.http.post<{ url: string }>('/api/user/profile-image', formData)
+        this.http.post<{ url: string }>(
+          `${this.getApiBase()}/api/user/profile-image`,
+          formData
+        )
       );
 
       // Update settings with new image URL
@@ -224,7 +243,9 @@ export class SettingsService {
    */
   async resetToDefaults(): Promise<void> {
     try {
-      await firstValueFrom(this.http.post('/api/user/settings/reset', {}));
+      await firstValueFrom(
+        this.http.post(`${this.getApiBase()}/api/user/settings/reset`, {})
+      );
 
       await this.loadSettings();
     } catch (error) {

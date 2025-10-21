@@ -10,6 +10,8 @@ import {
   FontFamily,
   FontSize,
 } from '../models/theme.model';
+import { Inject, Optional } from '@angular/core';
+import { API_URL } from '../../public-api';
 
 /**
  * Theme Service
@@ -125,8 +127,19 @@ export class ThemeService {
     availableSizes: this.FONT_SIZES,
   });
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    @Inject(API_URL) @Optional() private apiUrl?: string
+  ) {
     this.loadUserTheme();
+  }
+
+  private getApiBase(): string {
+    if (this.apiUrl) return this.apiUrl;
+    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
+      return (window as any).__XONT_API_URL__;
+    }
+    return '';
   }
 
   /**
@@ -238,7 +251,9 @@ export class ThemeService {
   private async saveThemeToServer(themeName: string): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post('/api/user/theme', { theme: themeName })
+        this.http.post(`${this.getApiBase()}/api/user/theme`, {
+          theme: themeName,
+        })
       );
     } catch (error) {
       console.error('Failed to save theme to server:', error);
@@ -251,7 +266,7 @@ export class ThemeService {
   private async loadCustomTheme(): Promise<CustomTheme | null> {
     try {
       const response = await firstValueFrom(
-        this.http.get<CustomTheme>('/api/user/custom-theme')
+        this.http.get<CustomTheme>(`${this.getApiBase()}/api/user/custom-theme`)
       );
       return response;
     } catch (error) {
@@ -265,7 +280,10 @@ export class ThemeService {
   async saveCustomTheme(customTheme: Partial<CustomTheme>): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.post<CustomTheme>('/api/user/custom-theme', customTheme)
+        this.http.post<CustomTheme>(
+          `${this.getApiBase()}/api/user/custom-theme`,
+          customTheme
+        )
       );
 
       this.applyCustomTheme(response);

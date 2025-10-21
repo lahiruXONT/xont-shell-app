@@ -8,6 +8,8 @@ import {
   ReminderTriggerEvent,
   ExpiredReminders,
 } from '../models/reminder.model';
+import { Inject, Optional } from '@angular/core';
+import { API_URL } from '../../public-api';
 
 /**
  * Reminder Service
@@ -61,8 +63,19 @@ export class ReminderService {
 
   readonly expiredCount = computed(() => this.expiredRemindersSignal().length);
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    @Inject(API_URL) @Optional() private apiUrl?: string
+  ) {
     this.startPolling();
+  }
+
+  private getApiBase(): string {
+    if (this.apiUrl) return this.apiUrl;
+    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
+      return (window as any).__XONT_API_URL__;
+    }
+    return '';
   }
 
   /**
@@ -94,7 +107,7 @@ export class ReminderService {
   async loadReminders(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Reminder[]>('/api/reminders')
+        this.http.get<Reminder[]>(`${this.getApiBase()}/api/reminders`)
       );
 
       this.remindersSignal.set(response);
@@ -184,7 +197,7 @@ export class ReminderService {
   async createReminder(reminder: Partial<Reminder>): Promise<Reminder> {
     try {
       const response = await firstValueFrom(
-        this.http.post<Reminder>('/api/reminders', reminder)
+        this.http.post<Reminder>(`${this.getApiBase()}/api/reminders`, reminder)
       );
 
       const reminders = this.remindersSignal();
@@ -204,7 +217,10 @@ export class ReminderService {
   async updateReminder(reminder: Reminder): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.put(`/api/reminders/${reminder.reminderId}`, reminder)
+        this.http.put(
+          `${this.getApiBase()}/api/reminders/${reminder.reminderId}`,
+          reminder
+        )
       );
 
       const reminders = this.remindersSignal();
@@ -227,7 +243,9 @@ export class ReminderService {
   async deleteReminders(reminderIds: string[]): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post('/api/reminders/delete', { ids: reminderIds })
+        this.http.post(`${this.getApiBase()}/api/reminders/delete`, {
+          ids: reminderIds,
+        })
       );
 
       const reminders = this.remindersSignal();

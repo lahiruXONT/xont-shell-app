@@ -28,7 +28,7 @@ export class ActiveTaskService {
     }
     if (this.options.logToServer) {
       // TODO: Implement API call
-      // this.apiService.post('/api/tasks/active', task)
+      // this.apiService.post(`${environment.apiUrl}/api/tasks/active`, task)
     }
   }
 
@@ -41,7 +41,7 @@ export class ActiveTaskService {
     }
     if (this.options.logToServer) {
       // TODO: Implement API call
-      // this.apiService.post('/api/tasks/active/close', task)
+      // this.apiService.post(`${environment.apiUrl}/api/tasks/active/close`, task)
     }
   }
 

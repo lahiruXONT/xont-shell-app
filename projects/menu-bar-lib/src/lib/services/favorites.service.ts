@@ -6,6 +6,8 @@ import {
   FavoritesConfig,
   FavoritesPanelState,
 } from '../models/favorite.model';
+import { Inject, Optional } from '@angular/core';
+import { API_URL } from '../../public-api';
 
 /**
  * Favorites Service
@@ -44,7 +46,18 @@ export class FavoritesService {
     () => this.favoriteCount() < this.configSignal().maxFavorites
   );
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject(API_URL) @Optional() private apiUrl?: string
+  ) {}
+
+  private getApiBase(): string {
+    if (this.apiUrl) return this.apiUrl;
+    if (typeof window !== 'undefined' && (window as any).__XONT_API_URL__) {
+      return (window as any).__XONT_API_URL__;
+    }
+    return '';
+  }
 
   /**
    * Load user favorites
@@ -53,7 +66,7 @@ export class FavoritesService {
   async loadFavorites(userName: string, businessUnit: string): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Favorite[]>('/api/favorites', {
+        this.http.get<Favorite[]>(`${this.getApiBase()}/api/favorites`, {
           params: { userName, businessUnit },
         })
       );
@@ -90,7 +103,7 @@ export class FavoritesService {
 
     try {
       const response = await firstValueFrom(
-        this.http.post<Favorite>('/api/favorites', favorite)
+        this.http.post<Favorite>(`${this.getApiBase()}/api/favorites`, favorite)
       );
 
       const updated = [...this.favoritesSignal(), response];
@@ -108,7 +121,9 @@ export class FavoritesService {
    */
   async removeFavorite(bookmarkId: string): Promise<void> {
     try {
-      await firstValueFrom(this.http.delete(`/api/favorites/${bookmarkId}`));
+      await firstValueFrom(
+        this.http.delete(`${this.getApiBase()}/api/favorites/${bookmarkId}`)
+      );
 
       const updated = this.favoritesSignal().filter(
         (f) => f.bookmarkId !== bookmarkId
@@ -130,7 +145,10 @@ export class FavoritesService {
   ): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.put<Favorite>(`/api/favorites/${bookmarkId}`, updates)
+        this.http.put<Favorite>(
+          `${this.getApiBase()}/api/favorites/${bookmarkId}`,
+          updates
+        )
       );
 
       const updated = this.favoritesSignal().map((f) =>
@@ -160,7 +178,9 @@ export class FavoritesService {
 
     try {
       await firstValueFrom(
-        this.http.post('/api/favorites/reorder', { favorites: reordered })
+        this.http.post(`${this.getApiBase()}/api/favorites/reorder`, {
+          favorites: reordered,
+        })
       );
     } catch (error) {
       console.error('Failed to reorder favorites:', error);
