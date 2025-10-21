@@ -18,9 +18,10 @@ import { routes } from './app.routes';
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { errorInterceptor } from './interceptors/error.interceptor';
 import { environment } from './environments/environment';
-import { TOP_NAV_API_URL } from '../../../../projects/top-nav-lib/src/public-api';
-import { MENU_BAR_API_URL } from '../../../../projects/menu-bar-lib/src/public-api';
-import { TAB_MGMT_API_URL } from '../../../../projects/tab-management-lib/src/public-api';
+
+import { TOP_NAV_API_URL } from 'top-nav-lib';
+import { MENU_BAR_API_URL } from 'menu-bar-lib';
+import { TAB_MGMT_API_URL } from 'tab-management-lib';
 
 export const appConfig: ApplicationConfig = {
   providers: [
