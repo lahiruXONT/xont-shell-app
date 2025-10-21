@@ -118,7 +118,7 @@ export class MainLayoutComponent implements OnInit {
   private async initializeNotifications(): Promise<void> {
     try {
       await this.notificationService.connectToHub(
-        `${environment.signalRUrl}/hubs/notification`,
+        `${environment.baseUrl}/hubs/notification`,
         () => this.authService.getToken() || ''
       );
 

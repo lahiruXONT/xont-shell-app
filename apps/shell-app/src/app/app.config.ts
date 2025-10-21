@@ -32,8 +32,8 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAnimations(),
     // Provide library API URL tokens from app environment
-    { provide: TOP_NAV_API_URL, useValue: environment.apiUrl },
-    { provide: MENU_BAR_API_URL, useValue: environment.apiUrl },
-    { provide: TAB_MGMT_API_URL, useValue: environment.apiUrl },
+    { provide: TOP_NAV_API_URL, useValue: environment.baseUrl },
+    { provide: MENU_BAR_API_URL, useValue: environment.baseUrl },
+    { provide: TAB_MGMT_API_URL, useValue: environment.baseUrl },
   ],
 };

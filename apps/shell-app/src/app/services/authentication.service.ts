@@ -98,7 +98,7 @@ export class AuthenticationService {
 
       const response = await firstValueFrom(
         this.http.post<LoginResponse>(
-          `${environment.apiUrl}/auth/login`,
+          `${environment.baseUrl}/api/auth/login`,
           request
         )
       );
@@ -142,7 +142,7 @@ export class AuthenticationService {
     try {
       // Call logout API
       await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/auth/logout`, {})
+        this.http.post(`${environment.baseUrl}/api/auth/logout`, {})
       );
     } catch (error) {
       console.error('Logout API error:', error);
@@ -164,9 +164,12 @@ export class AuthenticationService {
       }
 
       const response = await firstValueFrom(
-        this.http.post<LoginResponse>(`${environment.apiUrl}/auth/refresh`, {
-          refreshToken,
-        })
+        this.http.post<LoginResponse>(
+          `${environment.baseUrl}/api/auth/refresh`,
+          {
+            refreshToken,
+          }
+        )
       );
 
       if (response.success) {
@@ -200,7 +203,7 @@ export class AuthenticationService {
     try {
       const response = await firstValueFrom(
         this.http.post<{ user: UserData }>(
-          `${environment.apiUrl}/auth/switch-role`,
+          `${environment.baseUrl}/api/auth/switch-role`,
           {
             roleCode,
           }
@@ -222,7 +225,7 @@ export class AuthenticationService {
     try {
       const response = await firstValueFrom(
         this.http.post<{ user: UserData }>(
-          `${environment.apiUrl}/auth/switch-business-unit`,
+          `${environment.baseUrl}/api/auth/switch-business-unit`,
           {
             businessUnit,
           }
@@ -246,7 +249,7 @@ export class AuthenticationService {
   ): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(`${environment.apiUrl}/auth/change-password`, {
+        this.http.post(`${environment.baseUrl}/api/auth/change-password`, {
           currentPassword,
           newPassword,
         })

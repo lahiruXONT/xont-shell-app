@@ -18,15 +18,9 @@
     "target": "ES2022",
     "module": "ES2022",
     "paths": {
-      "menu-bar-lib": [
-        "./dist/menu-bar-lib"
-      ],
-      "tab-management-lib": [
-        "./dist/tab-management-lib"
-      ],
-      "top-nav-lib": [
-        "./dist/top-nav-lib"
-      ]
+      "menu-bar-lib": ["./dist/menu-bar-lib"],
+      "tab-management-lib": ["./dist/tab-management-lib"],
+      "top-nav-lib": ["./dist/top-nav-lib"]
     }
   },
   "angularCompilerOptions": {
