@@ -93,12 +93,10 @@ export class ReminderService {
    * Load user reminders
    * Legacy: Load reminders from database
    */
-  async loadReminders(userName: string, businessUnit: string): Promise<void> {
+  async loadReminders(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Reminder[]>(`${this.apiBaseUrl}/api/reminders`, {
-          params: { userName, businessUnit },
-        })
+        this.http.get<Reminder[]>(`${this.apiBaseUrl}/api/reminders`)
       );
 
       this.remindersSignal.set(response);
@@ -106,7 +104,7 @@ export class ReminderService {
 
       // Check for expired reminders on login
       if (this.configSignal().showExpiredOnLogin) {
-        await this.checkExpiredReminders(userName, businessUnit);
+        await this.checkExpiredReminders();
       }
     } catch (error) {
       console.error('Failed to load reminders:', error);
@@ -266,17 +264,11 @@ export class ReminderService {
    * Check expired reminders
    * Legacy: uplExpiredReminders
    */
-  async checkExpiredReminders(
-    userName: string,
-    businessUnit: string
-  ): Promise<ExpiredReminders | null> {
+  async checkExpiredReminders(): Promise<ExpiredReminders | null> {
     try {
       const response = await firstValueFrom(
         this.http.get<ExpiredReminders>(
-          `${this.apiBaseUrl}/api/reminders/expired`,
-          {
-            params: { userName, businessUnit },
-          }
+          `${this.apiBaseUrl}/api/reminders/expired`
         )
       );
 

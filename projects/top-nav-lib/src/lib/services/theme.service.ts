@@ -285,16 +285,10 @@ export class ThemeService {
   /**
    * Save custom theme to server
    */
-  async saveCustomTheme(
-    userName: string,
-    customTheme: CustomTheme
-  ): Promise<void> {
+  async saveCustomTheme(customTheme: CustomTheme): Promise<void> {
     try {
       await firstValueFrom(
-        this.http.post(
-          `${this.apiBaseUrl}/api/themes/custom/${userName}`,
-          customTheme
-        )
+        this.http.post(`${this.apiBaseUrl}/api/themes/custom`, customTheme)
       );
     } catch (error) {
       console.error('Failed to save custom theme:', error);
@@ -305,12 +299,10 @@ export class ThemeService {
   /**
    * Load custom theme from server
    */
-  async loadCustomTheme(userName: string): Promise<CustomTheme | null> {
+  async loadCustomTheme(): Promise<CustomTheme | null> {
     try {
       const response = await firstValueFrom(
-        this.http.get<CustomTheme>(
-          `${this.apiBaseUrl}/api/themes/custom/${userName}`
-        )
+        this.http.get<CustomTheme>(`${this.apiBaseUrl}/api/themes/custom`)
       );
 
       if (response) {

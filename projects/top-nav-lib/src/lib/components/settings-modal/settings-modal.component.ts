@@ -125,7 +125,7 @@ export class SettingsModalComponent implements OnInit, OnDestroy {
    */
   private async loadUserSettings(): Promise<void> {
     if (this.userName) {
-      await this.settingsService.loadSettings(this.userName);
+      await this.settingsService.loadSettings();
 
       const currentSettings = this.settings();
       if (currentSettings) {
@@ -293,10 +293,7 @@ export class SettingsModalComponent implements OnInit, OnDestroy {
         allowedTypes: ['jpg', 'jpeg', 'png'],
       };
 
-      const result = await this.settingsService.uploadProfileImage(
-        this.userName,
-        upload
-      );
+      const result = await this.settingsService.uploadProfileImage(upload);
 
       if (result.success) {
         alert('Profile image uploaded successfully');
@@ -331,10 +328,7 @@ export class SettingsModalComponent implements OnInit, OnDestroy {
         confirmNewPassword: this.passwordForm.value.confirmNewPassword,
       };
 
-      const result = await this.settingsService.changePassword(
-        this.userName,
-        request
-      );
+      const result = await this.settingsService.changePassword(request);
 
       if (result.success) {
         alert('Password changed successfully');
@@ -358,7 +352,6 @@ export class SettingsModalComponent implements OnInit, OnDestroy {
 
     try {
       const result = await this.settingsService.saveSettings(
-        this.userName,
         this.tempSettings()
       );
 
@@ -389,7 +382,7 @@ export class SettingsModalComponent implements OnInit, OnDestroy {
     this.isSaving.set(true);
 
     try {
-      const result = await this.settingsService.resetToDefault(this.userName);
+      const result = await this.settingsService.resetToDefault();
 
       if (result.success) {
         alert('Settings reset to default');

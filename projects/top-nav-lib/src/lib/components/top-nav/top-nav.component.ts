@@ -79,7 +79,7 @@ export class TopNavComponent implements OnInit, OnDestroy {
     userName: this.user?.userName || '',
     fullName: this.user?.fullName || '',
     email: this.user?.email || '',
-    profileImage: this.user?.profileImage || 'assets/img/avatars/avatar.png',
+    profileImage: this.user?.profileImage || 'images/avatars/avatar.png',
     currentBusinessUnit: this.user?.currentBusinessUnit || '',
     currentRole: this.user?.currentRole?.roleName || '',
     theme: this.user?.theme || 'green',
@@ -221,7 +221,7 @@ export class TopNavComponent implements OnInit, OnDestroy {
    */
   onAvatarError(event: Event): void {
     const img = event.target as HTMLImageElement;
-    img.src = 'assets/img/avatars/avatar.png';
+    img.src = 'images/avatars/avatar.png';
   }
   onRoleSelectorClick(): void {
     this.roleSelectorClicked.emit();

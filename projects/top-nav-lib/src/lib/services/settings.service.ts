@@ -51,12 +51,10 @@ export class SettingsService {
    * Load user settings
    * Legacy: Load user settings from database
    */
-  async loadSettings(userName: string): Promise<void> {
+  async loadSettings(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<UserSettings>(
-          `${this.apiBaseUrl}/api/settings/${userName}`
-        )
+        this.http.get<UserSettings>(`${this.apiBaseUrl}/api/settings`)
       );
 
       this.settingsSignal.set(response);
@@ -75,7 +73,6 @@ export class SettingsService {
    * Legacy: saveSetting button handler
    */
   async saveSettings(
-    userName: string,
     settings: Partial<UserSettings>
   ): Promise<SettingsSaveResponse> {
     this.modalStateSignal.update((state) => ({
@@ -96,7 +93,7 @@ export class SettingsService {
 
       const response = await firstValueFrom(
         this.http.put<SettingsSaveResponse>(
-          `${this.apiBaseUrl}/api/settings/${userName}`,
+          `${this.apiBaseUrl}/api/settings`,
           settings
         )
       );
@@ -142,7 +139,6 @@ export class SettingsService {
    * Legacy: Change password functionality
    */
   async changePassword(
-    userName: string,
     request: PasswordChangeRequest
   ): Promise<SettingsSaveResponse> {
     // Validate passwords
@@ -160,7 +156,6 @@ export class SettingsService {
         this.http.post<SettingsSaveResponse>(
           `${this.apiBaseUrl}/api/auth/change-password`,
           {
-            userName,
             currentPassword: request.currentPassword,
             newPassword: request.newPassword,
           }
@@ -182,7 +177,6 @@ export class SettingsService {
    * Legacy: imgProUpload control
    */
   async uploadProfileImage(
-    userName: string,
     upload: ProfileImageUpload
   ): Promise<SettingsSaveResponse> {
     // Validate file
@@ -198,7 +192,6 @@ export class SettingsService {
     try {
       const formData = new FormData();
       formData.append('file', upload.file);
-      formData.append('userName', userName);
 
       const response = await firstValueFrom(
         this.http.post<{ imageUrl: string }>(
@@ -231,17 +224,17 @@ export class SettingsService {
    * Reset settings to default
    * Legacy: setDefault button
    */
-  async resetToDefault(userName: string): Promise<SettingsSaveResponse> {
+  async resetToDefault(): Promise<SettingsSaveResponse> {
     try {
       const response = await firstValueFrom(
         this.http.post<SettingsSaveResponse>(
-          `${this.apiBaseUrl}/api/settings/${userName}/reset`,
+          `${this.apiBaseUrl}/api/settings/reset`,
           {}
         )
       );
 
       if (response.success) {
-        await this.loadSettings(userName);
+        await this.loadSettings();
       }
 
       return response;

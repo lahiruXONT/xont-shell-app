@@ -79,16 +79,9 @@ export class MenuBarComponent implements OnInit {
    */
   async loadMenu(): Promise<void> {
     try {
-      await this.menuBarService.loadMenuForRole(
-        this.userName,
-        this.roleCode,
-        this.businessUnit
-      );
+      await this.menuBarService.loadMenuForRole(this.roleCode);
 
-      await this.favoritesService.loadFavorites(
-        this.userName,
-        this.businessUnit
-      );
+      await this.favoritesService.loadFavorites();
     } catch (error) {
       console.error('Failed to load menu:', error);
     }

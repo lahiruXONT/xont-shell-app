@@ -114,18 +114,11 @@ export class MenuBarService {
    * Load menu for specific role
    * Legacy: GetUserMenu method in UserManager
    */
-  async loadMenuForRole(
-    userName: string,
-    roleCode: string,
-    businessUnit: string
-  ): Promise<void> {
+  async loadMenuForRole(roleCode: string): Promise<void> {
     try {
       const response = await firstValueFrom(
         this.http.get<MenuHierarchy>(
-          `${this.apiBaseUrl}/api/menu/user/${userName}/role/${roleCode}`,
-          {
-            params: { businessUnit },
-          }
+          `${this.apiBaseUrl}/api/menu/user/role/${roleCode}`
         )
       );
 
@@ -144,7 +137,7 @@ export class MenuBarService {
       }
 
       // Load system tasks
-      await this.loadSystemTasks(userName, businessUnit);
+      await this.loadSystemTasks();
     } catch (error) {
       console.error('Failed to load menu:', error);
       throw error;
@@ -155,30 +148,18 @@ export class MenuBarService {
    * Switch to different role
    * Legacy: Role switching functionality
    */
-  async switchRole(
-    userName: string,
-    roleCode: string,
-    businessUnit: string
-  ): Promise<void> {
-    await this.loadMenuForRole(userName, roleCode, businessUnit);
+  async switchRole(roleCode: string): Promise<void> {
+    await this.loadMenuForRole(roleCode);
   }
 
   /**
    * Load system tasks (AUTOMENU, AUTODAILY)
    * Legacy: LoadSystemTask method
    */
-  private async loadSystemTasks(
-    userName: string,
-    businessUnit: string
-  ): Promise<void> {
+  private async loadSystemTasks(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<SystemTask[]>(
-          `${this.apiBaseUrl}/api/menu/system-tasks`,
-          {
-            params: { userName, businessUnit },
-          }
-        )
+        this.http.get<SystemTask[]>(`${this.apiBaseUrl}/api/menu/system-tasks`)
       );
 
       this.systemTasksSignal.set(response);
@@ -323,17 +304,11 @@ export class MenuBarService {
    * Check if AUTODAILY tasks should be loaded
    * Legacy: Check for AUTODAILY menu
    */
-  async checkDailyMenu(
-    userName: string,
-    businessUnit: string
-  ): Promise<boolean> {
+  async checkDailyMenu(): Promise<boolean> {
     try {
       const response = await firstValueFrom(
         this.http.get<{ available: boolean }>(
-          `${this.apiBaseUrl}/api/menu/check-daily-menu`,
-          {
-            params: { userName, businessUnit },
-          }
+          `${this.apiBaseUrl}/api/menu/check-daily-menu`
         )
       );
 

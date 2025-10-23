@@ -78,16 +78,11 @@ export class MainLayoutComponent implements OnInit {
 
     try {
       await this.menuBarService.loadMenuForRole(
-        user.userName,
-        user.currentRole?.roleCode ?? '',
-        user.currentBusinessUnit
+        user.currentRole?.roleCode ?? ''
       );
 
       // Also load favorites
-      await this.favoritesService.loadFavorites(
-        user.userName,
-        user.currentBusinessUnit
-      );
+      await this.favoritesService.loadFavorites();
 
       console.log('Menu loaded successfully');
     } catch (error) {

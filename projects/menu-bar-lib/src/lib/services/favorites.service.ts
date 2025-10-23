@@ -54,12 +54,10 @@ export class FavoritesService {
   /**
    * Load user favorites
    */
-  async loadFavorites(userName: string, businessUnit: string): Promise<void> {
+  async loadFavorites(): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Favorite[]>(`${this.apiBaseUrl}/api/favorites`, {
-          params: { userName, businessUnit },
-        })
+        this.http.get<Favorite[]>(`${this.apiBaseUrl}/api/favorites`)
       );
 
       this.favoritesSignal.set(response);
