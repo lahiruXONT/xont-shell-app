@@ -84,14 +84,14 @@ export class NotificationService {
    * Connect to SignalR hub
    * Legacy: SignalR connection setup in Main.aspx
    */
-  async connectToHub(hubUrl: string, accessToken: string): Promise<void> {
+  async connectToHub(accessToken: string): Promise<void> {
     if (this.hubConnection) {
       await this.disconnectFromHub();
     }
 
     try {
       this.hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl, {
+        .withUrl(`${this.apiBaseUrl}/hubs/notification`, {
           accessTokenFactory: () => accessToken,
         })
         .withAutomaticReconnect()

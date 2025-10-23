@@ -1,6 +1,6 @@
 <!-- Top Navigation Bar -->
 <lib-top-nav
-  [user]="userProfile()"
+  [user]="currentUser()"
   (logoClicked)="navigateToDashboard()"
   (notificationClicked)="onNotificationClicked()"
   (settingsClicked)="onSettingsClicked()"
@@ -15,9 +15,9 @@
 
 <!-- Menu Sidebar -->
 <lib-menu-bar
-  [userName]="userProfile()?.userName || ''"
-  [businessUnit]="userProfile()?.currentBusinessUnit || ''"
-  [roleCode]="userProfile()?.currentRole || ''"
+  [userName]="currentUser()?.userName || ''"
+  [businessUnit]="currentUser()?.currentBusinessUnit || ''"
+  [roleCode]="currentUser()?.currentRole?.roleCode || ''"
   (taskSelected)="onTaskSelected($event)"
   (taskFavorited)="onTaskFavorited($event)"
 ></lib-menu-bar>

@@ -13,7 +13,6 @@ import { AuthenticationService } from '../../services/authentication.service';
 export class LoginComponent {
   username = signal<string>('');
   password = signal<string>('');
-  businessUnit = signal<string>('HEMA');
   isLoading = signal<boolean>(false);
   errorMessage = signal<string>('');
 
@@ -24,11 +23,7 @@ export class LoginComponent {
     this.errorMessage.set('');
 
     try {
-      await this.authService.login(
-        this.username(),
-        this.password(),
-        this.businessUnit()
-      );
+      await this.authService.login(this.username(), this.password());
     } catch (error: any) {
       this.errorMessage.set(error.message || 'Login failed');
     } finally {

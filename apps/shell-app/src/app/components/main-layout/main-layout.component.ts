@@ -9,7 +9,6 @@ import {
   SettingsModalComponent,
   NotificationService,
   ThemeService,
-  UserProfile,
 } from 'top-nav-lib';
 import {
   MenuBarComponent,
@@ -24,7 +23,6 @@ import {
 } from 'tab-management-lib';
 
 import { AuthenticationService } from '../../services/authentication.service';
-import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-main-layout',
@@ -45,22 +43,6 @@ export class MainLayoutComponent implements OnInit {
   // User data
   // User data - FIXED signal access
   readonly currentUser = computed(() => this.authService.currentUser());
-
-  // User profile for top nav
-  readonly userProfile = computed<UserProfile | null>(() => {
-    const user = this.currentUser();
-    if (!user) return null;
-
-    return {
-      userName: user.userName ?? '',
-      fullName: user.fullName ?? '',
-      email: user.email ?? '',
-      profileImage: user.profileImage ?? 'assets/images/default-user.png',
-      currentBusinessUnit: user.currentBusinessUnit ?? '',
-      currentRole: user.currentRole ?? '',
-      theme: String(this.themeService.currentTheme()),
-    };
-  });
 
   router = inject(Router);
 
@@ -97,7 +79,7 @@ export class MainLayoutComponent implements OnInit {
     try {
       await this.menuBarService.loadMenuForRole(
         user.userName,
-        user.currentRole,
+        user.currentRole?.roleCode ?? '',
         user.currentBusinessUnit
       );
 
@@ -119,8 +101,7 @@ export class MainLayoutComponent implements OnInit {
   private async initializeNotifications(): Promise<void> {
     try {
       await this.notificationService.connectToHub(
-        `${environment.baseUrl}/hubs/notification`,
-        () => this.authService.getToken() || ''
+        this.authService.getToken() || ''
       );
 
       await this.notificationService.loadNotifications();
@@ -191,7 +172,7 @@ export class MainLayoutComponent implements OnInit {
     const user = this.currentUser();
     if (!user) return null;
 
-    return user.roles.find((r) => r.roleCode === user.currentRole);
+    return user.roles.find((r) => r.roleCode === user.currentRole?.roleCode);
   }
 
   /**

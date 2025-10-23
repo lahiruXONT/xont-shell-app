@@ -2,7 +2,8 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { environment } from '../environments/environment';
+import { RuntimeConfigService } from './runtime-config.service';
+import { User } from 'top-nav-lib';
 
 export interface LoginRequest {
   userName: string;
@@ -14,36 +15,9 @@ export interface LoginResponse {
   success: boolean;
   token: string;
   refreshToken: string;
-  user: UserData;
+  user: User;
   expiresIn: number;
   message?: string;
-}
-
-export interface UserData {
-  userName: string;
-  fullName: string;
-  email: string;
-  profileImage?: string;
-  currentBusinessUnit: string;
-  currentRole: string;
-  roles: UserRole[];
-  businessUnits: BusinessUnit[];
-  passwordExpiry?: Date;
-  lastLoginDate?: Date;
-  isPasswordExpired: boolean;
-  mustChangePassword: boolean;
-}
-
-export interface UserRole {
-  roleCode: string;
-  description: string;
-  isPriorityRole: boolean;
-  isDefaultRole: boolean;
-}
-
-export interface BusinessUnit {
-  code: string;
-  description: string;
 }
 
 @Injectable({
@@ -58,7 +32,7 @@ export class AuthenticationService {
   private refreshTokenSignal = signal<string | null>(
     this.getStoredRefreshToken()
   );
-  private userDataSignal = signal<UserData | null>(this.getStoredUser());
+  private userDataSignal = signal<User | null>(this.getStoredUser());
   private isAuthenticatedSignal = signal<boolean>(!!this.getStoredToken());
 
   // Public readonly signals
@@ -68,8 +42,7 @@ export class AuthenticationService {
 
   // Session timeout
   private sessionTimeoutId: any = null;
-
-  constructor() {
+  constructor(private config: RuntimeConfigService) {
     this.initializeSession();
   }
 
@@ -87,12 +60,9 @@ export class AuthenticationService {
   /**
    * Login user
    */
-  async login(
-    userName: string,
-    password: string,
-    businessUnit: string
-  ): Promise<void> {
+  async login(userName: string, password: string): Promise<void> {
     try {
+      const businessUnit = this.config.defaultBusinessUnit;
       const request: LoginRequest = {
         userName,
         password,
@@ -101,7 +71,7 @@ export class AuthenticationService {
 
       const response = await firstValueFrom(
         this.http.post<LoginResponse>(
-          `${environment.baseUrl}/api/auth/login`,
+          `${this.config.baseUrl}/api/auth/login`,
           request
         )
       );
@@ -145,7 +115,7 @@ export class AuthenticationService {
     try {
       // Call logout API
       await firstValueFrom(
-        this.http.post(`${environment.baseUrl}/api/auth/logout`, {})
+        this.http.post(`${this.config.baseUrl}/api/auth/logout`, {})
       );
     } catch (error) {
       console.error('Logout API error:', error);
@@ -165,7 +135,7 @@ export class AuthenticationService {
 
       const response = await firstValueFrom(
         this.http.post<LoginResponse>(
-          `${environment.baseUrl}/api/auth/refresh`,
+          `${this.config.baseUrl}/api/auth/refresh`,
           { refreshToken }
         )
       );
@@ -199,7 +169,7 @@ export class AuthenticationService {
   private setupSessionTimeout(): void {
     this.clearSessionTimeout();
 
-    const timeoutMs = environment.sessionTimeout * 60 * 1000;
+    const timeoutMs = this.config.sessionTimeout * 60 * 1000;
     this.sessionTimeoutId = setTimeout(() => {
       alert('Your session has expired. Please login again.');
       this.logout();
@@ -247,11 +217,11 @@ export class AuthenticationService {
     return localStorage.getItem('refreshToken');
   }
 
-  private storeUser(user: UserData): void {
+  private storeUser(user: User): void {
     localStorage.setItem('userData', JSON.stringify(user));
   }
 
-  private getStoredUser(): UserData | null {
+  private getStoredUser(): User | null {
     const userData = localStorage.getItem('userData');
     return userData ? JSON.parse(userData) : null;
   }

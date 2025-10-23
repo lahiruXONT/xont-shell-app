@@ -1,3 +1,5 @@
+import { UserRole } from 'menu-bar-lib';
+
 /**
  * Represents a user in the system
  * Legacy equivalent: User class in Common.Data
@@ -14,7 +16,8 @@ export interface User {
   phoneNumber?: string;
 
   // User context
-  businessUnit: string; // Current BU
+  currentBusinessUnit: string; // Current BU
+  businessUnits: BusinessUnit[];
   distributorCode?: string; // Distributor code
   roles: UserRole[]; // All user roles
   currentRole: UserRole | null; // Active role
@@ -37,19 +40,9 @@ export interface User {
   lastLoginDate?: Date;
   passwordChangedDate?: Date;
   createdDate?: Date;
-}
-
-/**
- * User role information
- */
-export interface UserRole {
-  roleCode: string;
-  roleName: string;
-  description: string;
-  isActive: boolean;
-  isPriority: boolean; // Is this a PRTROLE
-  isDefault: boolean;
-  permissions: string[];
+  passwordExpiry?: Date;
+  isPasswordExpired: boolean;
+  mustChangePassword: boolean;
 }
 
 /**
@@ -77,4 +70,9 @@ export interface UserPreferences {
   autoSave: boolean;
   notificationsEnabled: boolean;
   soundEnabled: boolean;
+}
+
+export interface BusinessUnit {
+  code: string;
+  description: string;
 }

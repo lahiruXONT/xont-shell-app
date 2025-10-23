@@ -51,7 +51,7 @@ export class TopNavComponent implements OnInit, OnDestroy {
   private settingsService = inject(SettingsService);
 
   // Inputs
-  @Input() user!: User;
+  @Input() user: User | null = null;
   @Input() showLogo = true;
   @Input() showBusinessUnit = true;
   @Input() showNotifications = true;
@@ -80,7 +80,7 @@ export class TopNavComponent implements OnInit, OnDestroy {
     fullName: this.user?.fullName || '',
     email: this.user?.email || '',
     profileImage: this.user?.profileImage || 'assets/img/avatars/avatar.png',
-    currentBusinessUnit: this.user?.businessUnit || '',
+    currentBusinessUnit: this.user?.currentBusinessUnit || '',
     currentRole: this.user?.currentRole?.roleName || '',
     theme: this.user?.theme || 'green',
   }));

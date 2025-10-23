@@ -5,7 +5,9 @@
 export interface UserRole {
   // Core identification
   roleCode: string; // Role code (e.g., "ADMIN", "PRTROLE001")
-  description: string; // Role name/description
+
+  roleName: string;
+  description: string;
 
   // Status
   isActive: boolean;
