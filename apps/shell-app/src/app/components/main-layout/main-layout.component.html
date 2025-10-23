@@ -17,7 +17,7 @@
 <lib-menu-bar
   [userName]="currentUser()?.userName || ''"
   [businessUnit]="currentUser()?.currentBusinessUnit || ''"
-  [roleCode]="currentUser()?.currentRole?.roleCode || ''"
+  [roleCode]="currentUser()?.currentRole || ''"
   (taskSelected)="onTaskSelected($event)"
   (taskFavorited)="onTaskFavorited($event)"
 ></lib-menu-bar>

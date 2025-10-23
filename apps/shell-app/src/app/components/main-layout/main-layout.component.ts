@@ -77,9 +77,7 @@ export class MainLayoutComponent implements OnInit {
     if (!user) return;
 
     try {
-      await this.menuBarService.loadMenuForRole(
-        user.currentRole?.roleCode ?? ''
-      );
+      await this.menuBarService.loadMenuForRole(user.currentRole ?? '');
 
       // Also load favorites
       await this.favoritesService.loadFavorites();
@@ -167,7 +165,7 @@ export class MainLayoutComponent implements OnInit {
     const user = this.currentUser();
     if (!user) return null;
 
-    return user.roles.find((r) => r.roleCode === user.currentRole?.roleCode);
+    return user.roles.find((r) => r.roleCode === user.currentRole);
   }
 
   /**

@@ -145,13 +145,10 @@
             <i class="fa {{ task.icon }} task-icon"></i>
             <div class="task-content">
               <div class="task-title">
-                {{ task.caption }}
                 <span class="task-code" *ngIf="config().showTaskCodes">
                   {{ task.taskCode }}
                 </span>
-              </div>
-              <div class="task-description" *ngIf="task.description">
-                {{ task.description }}
+                {{ task.caption }}
               </div>
             </div>
             <button
@@ -187,10 +184,11 @@
             <div class="card-icon">
               <i class="fa {{ task.icon }}"></i>
             </div>
-            <div class="card-title">{{ task.caption }}</div>
             <div class="card-code" *ngIf="config().showTaskCodes">
               {{ task.taskCode }}
             </div>
+            <div class="card-title">{{ task.caption }}</div>
+
             <button
               class="card-favorite-btn"
               (click)="toggleFavorite(task, $event)"

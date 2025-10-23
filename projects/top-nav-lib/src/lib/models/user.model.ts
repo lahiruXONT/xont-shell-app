@@ -20,7 +20,7 @@ export interface User {
   businessUnits: BusinessUnit[];
   distributorCode?: string; // Distributor code
   roles: UserRole[]; // All user roles
-  currentRole: UserRole | null; // Active role
+  currentRole: string; // Active role
   defaultRole?: string; // Default role code
   priorityRole?: string; // PRTROLE if exists
 

@@ -81,7 +81,7 @@ export class TopNavComponent implements OnInit, OnDestroy {
     email: this.user?.email || '',
     profileImage: this.user?.profileImage || 'images/avatars/avatar.png',
     currentBusinessUnit: this.user?.currentBusinessUnit || '',
-    currentRole: this.user?.currentRole?.roleName || '',
+    currentRole: this.user?.currentRole || '',
     theme: this.user?.theme || 'green',
   }));
 
