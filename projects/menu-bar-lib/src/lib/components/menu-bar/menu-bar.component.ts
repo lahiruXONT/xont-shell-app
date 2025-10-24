@@ -20,7 +20,7 @@ import {
   MenuGroup,
   MenuViewMode,
   MenuSearchResult,
-} from '../../models/menu.model';
+} from 'shared-lib';
 
 /**
  * Menu Bar Component

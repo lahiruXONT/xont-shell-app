@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Tab } from '../../models/tab.model';
+import { Tab } from 'shared-lib';
 
 /**
  * Tab Header Component

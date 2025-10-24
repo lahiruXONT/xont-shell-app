@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { Tab, TabType, TabState } from '../../models/tab.model';
+import { Tab, TabType, TabState } from 'shared-lib';
 
 /**
  * Tab Content Component

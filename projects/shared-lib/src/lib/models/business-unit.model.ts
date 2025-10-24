@@ -1,3 +1,8 @@
+export interface BusinessUnitDescription {
+  code: string;
+  description: string;
+}
+
 /**
  * Business Unit model
  * Legacy: BusinessUnit class in Domain

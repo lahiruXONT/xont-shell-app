@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { MenuHierarchy } from '../models/menu.model';
+import { MenuHierarchy } from 'shared-lib';
 
 /**
  * Menu Cache Service

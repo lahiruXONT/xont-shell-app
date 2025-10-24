@@ -21,7 +21,7 @@ import {
   Notification,
   NotificationType,
   NotificationPanelState,
-} from '../../models/notification.model';
+} from 'shared-lib';
 
 /**
  * Notifications Panel Component (Right Sidebar)

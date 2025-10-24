@@ -9,7 +9,7 @@ import {
   FontOptions,
   FontFamily,
   FontSize,
-} from '../models/theme.model';
+} from 'shared-lib';
 import { Inject, Optional } from '@angular/core';
 import { TOP_NAV_API_URL as API_URL } from '../tokens/api-url.token';
 
@@ -30,7 +30,7 @@ export class ThemeService {
       primaryColor: '#1a237e',
       secondaryColor: '#3949ab',
       accentColor: '#5c6bc0',
-      isDefault: false,
+      isDefault: true,
     },
     {
       name: ThemeName.GREEN,
@@ -39,7 +39,7 @@ export class ThemeService {
       primaryColor: '#1b5e20',
       secondaryColor: '#388e3c',
       accentColor: '#4caf50',
-      isDefault: true,
+      isDefault: false,
     },
     {
       name: ThemeName.RED,

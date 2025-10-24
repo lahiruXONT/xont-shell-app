@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UserRole } from '../../models/user-role.model';
+import { UserRole } from 'shared-lib';
 
 /**
  * Role Selector Component

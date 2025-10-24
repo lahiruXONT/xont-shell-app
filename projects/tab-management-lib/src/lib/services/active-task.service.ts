@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActiveUserTask, TaskLogOptions } from '../models/active-task.model';
+import { ActiveUserTask, TaskLogOptions } from 'shared-lib';
 
 /**
  * Active Task Service

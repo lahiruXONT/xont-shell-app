@@ -9,7 +9,7 @@ import {
   NotificationPanelState,
   NotificationConfig,
   AdminAlert,
-} from '../models/notification.model';
+} from 'shared-lib';
 import { Inject, Optional } from '@angular/core';
 import { TOP_NAV_API_URL as API_URL } from '../tokens/api-url.token';
 

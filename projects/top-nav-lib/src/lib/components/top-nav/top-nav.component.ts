@@ -20,9 +20,7 @@ import { ReminderService } from '../../services/reminder.service';
 import { SettingsService } from '../../services/settings.service';
 
 // Models
-import { User, UserProfile } from '../../models/user.model';
-import { Notification } from '../../models/notification.model';
-import { Reminder } from '../../models/reminder.model';
+import { User, UserProfile } from 'shared-lib';
 
 /**
  * Top Navigation Bar Component

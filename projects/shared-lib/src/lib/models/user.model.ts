@@ -1,10 +1,12 @@
-import { UserRole } from 'menu-bar-lib';
+import { BusinessUnitDescription } from './business-unit.model';
+import { UserRole } from './user-role.model';
 
 /**
  * Represents a user in the system
  * Legacy equivalent: User class in Common.Data
  */
 export interface User {
+  permissions: string[];
   // Core identification
   userId: string;
   userName: string;
@@ -17,7 +19,7 @@ export interface User {
 
   // User context
   currentBusinessUnit: string; // Current BU
-  businessUnits: BusinessUnit[];
+  businessUnits: BusinessUnitDescription[];
   distributorCode?: string; // Distributor code
   roles: UserRole[]; // All user roles
   currentRole: string; // Active role
@@ -70,9 +72,4 @@ export interface UserPreferences {
   autoSave: boolean;
   notificationsEnabled: boolean;
   soundEnabled: boolean;
-}
-
-export interface BusinessUnit {
-  code: string;
-  description: string;
 }

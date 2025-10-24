@@ -1,11 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import {
-  Favorite,
-  FavoritesConfig,
-  FavoritesPanelState,
-} from '../models/favorite.model';
+import { Favorite, FavoritesConfig, FavoritesPanelState } from 'shared-lib';
 import { Inject, Optional } from '@angular/core';
 import { MENU_BAR_API_URL as API_URL } from '../tokens/api-url.token';
 

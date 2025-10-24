@@ -27,7 +27,7 @@ import { ActiveTaskService } from '../../services/active-task.service';
 import { SessionService } from '../../services/session.service';
 
 // Models
-import { Tab, TabType } from '../../models/tab.model';
+import { Tab, TabType } from 'shared-lib';
 
 /**
  * Tab Manager Component

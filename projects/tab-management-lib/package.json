@@ -4,7 +4,8 @@
   "description": "Tab Management Library for XONT Ventura CRM",
   "peerDependencies": {
     "@angular/common": "^19.0.0",
-    "@angular/core": "^19.0.0"
+    "@angular/core": "^19.0.0",
+    "shared-lib": "*"
   },
   "dependencies": {
     "tslib": "^2.3.0"

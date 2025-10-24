@@ -9,8 +9,8 @@ import {
   MenuConfig,
   MenuSearchResult,
   SystemTask,
-} from '../models/menu.model';
-import { UserRole } from '../models/user-role.model';
+  UserRole,
+} from 'shared-lib';
 import { Inject, Optional } from '@angular/core';
 import { MENU_BAR_API_URL as API_URL } from '../tokens/api-url.token';
 

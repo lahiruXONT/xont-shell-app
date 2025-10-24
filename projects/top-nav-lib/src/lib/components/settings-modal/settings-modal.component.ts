@@ -29,9 +29,8 @@ import {
   UserSettings,
   PasswordChangeRequest,
   ProfileImageUpload,
-} from '../../models/settings.model';
-import { Theme, FontFamily, FontSize } from '../../models/theme.model';
-
+  Theme,
+} from 'shared-lib';
 /**
  * Settings Modal Component
  * Legacy: settingsModal from Main.aspx

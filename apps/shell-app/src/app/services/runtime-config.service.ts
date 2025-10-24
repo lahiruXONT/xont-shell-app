@@ -1,44 +1,60 @@
 import { Injectable } from '@angular/core';
-
-export interface RuntimeConfig {
-  baseUrl: string;
-  defaultBusinessUnit: string;
-  production: boolean;
-  appVersion: string;
-  enableLogging: boolean;
-  sessionTimeout: number;
-  maxTabs: number;
-  cacheMenus: boolean;
-  cacheDuration: number;
-}
-
+import {
+  RuntimeConfig,
+  DEFAULT_RUNTIME_CONFIG,
+} from '../models/runtime-config.model';
 @Injectable({ providedIn: 'root' })
 export class RuntimeConfigService {
-  private config: RuntimeConfig = {
-    baseUrl: '',
-    defaultBusinessUnit: '',
-    production: false,
-    appVersion: '',
-    enableLogging: true,
-    sessionTimeout: 30, // minutes
-    maxTabs: 5,
-    cacheMenus: true,
-    cacheDuration: 30, // minutes
-  };
-
-  constructor() {
-    const globalConfig = (window as any).__RUNTIME_CONFIG__ || {};
-    this.config.baseUrl = globalConfig.baseUrl || '';
-    this.config.defaultBusinessUnit = globalConfig.defaultBusinessUnit || '';
-    this.config.production = globalConfig.production ?? false;
-    this.config.appVersion = globalConfig.appVersion || '';
-    this.config.enableLogging = globalConfig.enableLogging ?? true;
-    this.config.sessionTimeout = globalConfig.sessionTimeout ?? 30;
-    this.config.maxTabs = globalConfig.maxTabs ?? 5;
-    this.config.cacheMenus = globalConfig.cacheMenus ?? true;
-    this.config.cacheDuration = globalConfig.cacheDuration ?? 30;
+  private config: RuntimeConfig = DEFAULT_RUNTIME_CONFIG;
+  private initialized = false;
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+    try {
+      // Try to load from window object
+      const globalConfig = (window as any).RUNTIME_CONFIG;
+      if (globalConfig) {
+        this.validateConfig(globalConfig);
+        this.config = { ...DEFAULT_RUNTIME_CONFIG, ...globalConfig };
+      } else {
+        console.warn('Runtime config not found, using defaults');
+      }
+      this.initialized = true;
+      console.log('Runtime config initialized:', this.config);
+    } catch (error) {
+      console.error('Failed to initialize config:', error);
+      throw error;
+    }
   }
-
+  private validateConfig(config: any): void {
+    const required: (keyof RuntimeConfig)[] = [
+      'baseUrl',
+      'defaultBusinessUnit',
+    ];
+    const missing = required.filter((key) => !config[key]);
+    if (missing.length > 0) {
+      throw new Error(`Missing required configuration: ${missing.join(', ')}`);
+    }
+    // Validate types
+    if (typeof config.baseUrl !== 'string') {
+      throw new Error('baseUrl must be a string');
+    }
+    if (
+      typeof config.sessionTimeout !== 'number' ||
+      config.sessionTimeout <= 0
+    ) {
+      throw new Error('sessionTimeout must be a positive number');
+    }
+  }
+  get<K extends keyof RuntimeConfig>(key: K): RuntimeConfig[K] {
+    if (!this.initialized) {
+      console.warn('Config accessed before initialization');
+    }
+    return this.config[key];
+  }
+  getAll(): Readonly<RuntimeConfig> {
+    return { ...this.config };
+  }
+  // Convenience getters
   get baseUrl(): string {
     return this.config.baseUrl;
   }
@@ -48,27 +64,10 @@ export class RuntimeConfigService {
   get production(): boolean {
     return this.config.production;
   }
-
-  get appVersion(): string {
-    return this.config.appVersion;
-  }
-
-  get enableLogging(): boolean {
-    return this.config.enableLogging;
-  }
-
   get sessionTimeout(): number {
     return this.config.sessionTimeout;
   }
-
   get maxTabs(): number {
     return this.config.maxTabs;
-  }
-  get cacheMenus(): boolean {
-    return this.config.cacheMenus;
-  }
-
-  get cacheDuration(): number {
-    return this.config.cacheDuration;
   }
 }

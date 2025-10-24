@@ -1,9 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import {
-  TabSession,
-  SessionState,
-  SessionStorageConfig,
-} from '../models/session.model';
+import { TabSession, SessionState, SessionStorageConfig } from 'shared-lib';
 
 /**
  * Session Service

@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Tab, TabType, TabState, TabConfig } from '../models/tab.model';
+import { Tab, TabType, TabState, TabConfig } from 'shared-lib';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

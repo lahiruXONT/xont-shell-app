@@ -15,13 +15,8 @@ import {
   MenuBarService,
   FavoritesService,
 } from 'menu-bar-lib';
-import {
-  Tab,
-  TabManagerComponent,
-  TabManagerService,
-  TabType,
-} from 'tab-management-lib';
-
+import { TabManagerComponent, TabManagerService } from 'tab-management-lib';
+import { Tab, TabType } from 'shared-lib';
 import { AuthenticationService } from '../../services/authentication.service';
 
 @Component({
