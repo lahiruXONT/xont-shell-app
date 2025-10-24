@@ -37,7 +37,6 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   token: string;
-  refreshToken: string;
   expiresIn: number;
   expiresAt: Date;
   user: User;
@@ -92,7 +91,6 @@ export class AuthenticationService {
       }
       // Store tokens
       this.tokenService.setToken(response.token, response.expiresIn);
-      this.tokenService.setRefreshToken(response.refreshToken);
       // Update state
       this.userDataSignal.set(response.user);
       this.isAuthenticatedSignal.set(true);
@@ -132,17 +130,18 @@ export class AuthenticationService {
    */
   async refreshAuthToken(): Promise<boolean> {
     try {
-      const refreshToken = this.tokenService.getRefreshToken();
-      if (!refreshToken) return false;
       const response = await firstValueFrom(
-        this.http.post<LoginResponse>(
-          `${this.config.baseUrl}/api/auth/refresh`,
-          { refreshToken }
-        )
+        this.http.get<LoginResponse>(`${this.config.baseUrl}/api/auth/refresh`)
       );
       if (response.success) {
         this.tokenService.setToken(response.token, response.expiresIn);
-        this.tokenService.setRefreshToken(response.refreshToken);
+        // Store tokens
+        this.tokenService.setToken(response.token, response.expiresIn);
+        // Update state
+        this.userDataSignal.set(response.user);
+        this.isAuthenticatedSignal.set(true);
+        // Store user data
+        this.storeUser(response.user);
         this.setupSessionTimeout();
         return true;
       }

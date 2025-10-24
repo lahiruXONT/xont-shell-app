@@ -9,7 +9,6 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   token: string;
-  refreshToken: string;
   user: User;
   expiresIn: number;
   message?: string;

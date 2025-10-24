@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class AuthTokenService {
   private readonly TOKEN_KEY = 'auth_token';
-  private readonly REFRESH_TOKEN_KEY = 'refresh_token';
   private readonly TOKEN_EXPIRY_KEY = 'token_expiry';
   // Store token in sessionStorage (more secure than localStorage)
   setToken(token: string, expiresIn: number): void {
@@ -21,12 +20,6 @@ export class AuthTokenService {
     }
     return token;
   }
-  setRefreshToken(refreshToken: string): void {
-    sessionStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-  }
-  getRefreshToken(): string | null {
-    return sessionStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
   isTokenExpiringSoon(thresholdMinutes: number = 5): boolean {
     const expiry = sessionStorage.getItem(this.TOKEN_EXPIRY_KEY);
     if (!expiry) return true;
@@ -40,7 +33,6 @@ export class AuthTokenService {
   }
   clearTokens(): void {
     sessionStorage.removeItem(this.TOKEN_KEY);
-    sessionStorage.removeItem(this.REFRESH_TOKEN_KEY);
     sessionStorage.removeItem(this.TOKEN_EXPIRY_KEY);
   }
 }
