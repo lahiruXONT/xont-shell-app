@@ -10,7 +10,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthenticationService);
   const tokenService = inject(AuthTokenService);
   const router = inject(Router);
-  // Skip auth header for login/refresh endpoints
   if (req.url.includes('/auth/login')) {
     return next(req);
   }

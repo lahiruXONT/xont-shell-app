@@ -134,7 +134,6 @@ export class AuthenticationService {
         this.http.get<LoginResponse>(`${this.config.baseUrl}/api/auth/refresh`)
       );
       if (response.success) {
-        this.tokenService.setToken(response.token, response.expiresIn);
         // Store tokens
         this.tokenService.setToken(response.token, response.expiresIn);
         // Update state
