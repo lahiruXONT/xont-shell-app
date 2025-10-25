@@ -15,3 +15,7 @@ export * from './lib/models/tab.model';
 export * from './lib/models/favorite.model';
 export * from './lib/models/reminder.model';
 export * from './lib/models/session.model';
+
+export * from './lib/utils/date.utils';
+export * from './lib/utils/string.utils';
+export * from './lib/utils/validation.utils';
