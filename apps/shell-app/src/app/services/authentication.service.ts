@@ -4,44 +4,7 @@ import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { RuntimeConfigService } from './runtime-config.service';
 import { AuthTokenService } from './auth-token.service';
-export interface User {
-  userId: string;
-  userName: string;
-  fullName: string;
-  email: string;
-  currentRole: string;
-  currentBusinessUnit: string;
-  roles: UserRole[];
-  businessUnits: BusinessUnit[];
-  permissions: string[];
-  mustChangePassword: boolean;
-  lastLoginDate?: Date;
-  theme?: string;
-  language?: string;
-}
-export interface UserRole {
-  roleCode: string;
-  description: string;
-  icon?: string;
-  isPriorityRole?: boolean;
-}
-export interface BusinessUnit {
-  code: string;
-  name: string;
-  description?: string;
-}
-export interface LoginRequest {
-  userName: string;
-  password: string;
-}
-export interface LoginResponse {
-  success: boolean;
-  token: string;
-  expiresIn: number;
-  expiresAt: Date;
-  user: User;
-  message?: string;
-}
+import { LoginRequest, LoginResponse, User } from 'shared-lib';
 @Injectable({ providedIn: 'root' })
 export class AuthenticationService {
   private http = inject(HttpClient);
@@ -76,9 +39,11 @@ export class AuthenticationService {
    */
   async login(userName: string, password: string): Promise<void> {
     try {
+      let businessUnit = this.config.defaultBusinessUnit;
       const request: LoginRequest = {
         userName,
         password,
+        businessUnit,
       };
       const response = await firstValueFrom(
         this.http.post<LoginResponse>(

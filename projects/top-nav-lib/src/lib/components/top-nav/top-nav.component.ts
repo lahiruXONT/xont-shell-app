@@ -12,7 +12,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 
 // Services
 import { NotificationService } from '../../services/notification.service';
