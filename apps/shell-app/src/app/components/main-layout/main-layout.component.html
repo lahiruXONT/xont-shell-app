@@ -5,6 +5,7 @@
   (notificationClicked)="onNotificationClicked()"
   (settingsClicked)="onSettingsClicked()"
   (logoutClicked)="onLogout()"
+  (rolesChanged)="onRolesChanged($event)"
 ></lib-top-nav>
 
 <!-- Notifications Panel (slides from right) -->
@@ -17,7 +18,7 @@
 <lib-menu-bar
   [userName]="currentUser()?.userName || ''"
   [businessUnit]="currentUser()?.currentBusinessUnit || ''"
-  [roleCode]="currentUser()?.currentRole || ''"
+  [roleCodes]="selectedRoleCodes()"
   (taskSelected)="onTaskSelected($event)"
   (taskFavorited)="onTaskFavorited($event)"
 ></lib-menu-bar>

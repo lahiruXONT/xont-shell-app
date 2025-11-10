@@ -38,7 +38,7 @@ export class MenuBarComponent implements OnInit {
   // Inputs
   @Input() userName!: string;
   @Input() businessUnit!: string;
-  @Input() roleCode!: string;
+  @Input() roleCodes!: string[];
 
   // Outputs
   @Output() taskSelected = new EventEmitter<MenuTask>();
@@ -53,7 +53,7 @@ export class MenuBarComponent implements OnInit {
   readonly searchResults = computed(() => this.menuBarService.searchResults());
   readonly config = computed(() => this.menuBarService.config());
   readonly isCollapsed = computed(() => this.menuBarService.isCollapsed());
-  readonly currentRole = computed(() => this.menuBarService.currentRole());
+  readonly currentRoles = computed(() => this.menuBarService.currentRoles());
 
   // Local state
   searchText = signal<string>('');
@@ -69,7 +69,7 @@ export class MenuBarComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     // Auto-load menu if all params provided
-    if (this.userName && this.roleCode && this.businessUnit) {
+    if (this.userName && this.roleCodes && this.businessUnit) {
       await this.loadMenu();
     }
   }
@@ -79,7 +79,7 @@ export class MenuBarComponent implements OnInit {
    */
   async loadMenu(): Promise<void> {
     try {
-      await this.menuBarService.loadMenuForRole(this.roleCode);
+      await this.menuBarService.loadMenuForRole(this.roleCodes);
 
       await this.favoritesService.loadFavorites();
     } catch (error) {

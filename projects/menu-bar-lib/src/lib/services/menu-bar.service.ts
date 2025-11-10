@@ -36,6 +36,7 @@ export class MenuBarService {
 
   // Menu state using signals
   private menuHierarchySignal = signal<MenuHierarchy | null>(null);
+  private currentRolesSignal = signal<UserRole[]>([]);
   private currentRoleSignal = signal<UserRole | null>(null);
   private priorityRoleSignal = signal<UserRole | null>(null);
   private configSignal = signal<MenuConfig>(this.DEFAULT_CONFIG);
@@ -45,7 +46,7 @@ export class MenuBarService {
 
   // Public readonly signals
   readonly menuHierarchy = this.menuHierarchySignal.asReadonly();
-  readonly currentRole = this.currentRoleSignal.asReadonly();
+  readonly currentRoles = this.currentRolesSignal.asReadonly();
   readonly priorityRole = this.priorityRoleSignal.asReadonly();
   readonly config = this.configSignal.asReadonly();
   readonly searchQuery = this.searchQuerySignal.asReadonly();
@@ -114,12 +115,12 @@ export class MenuBarService {
    * Load menu for specific role
    * Legacy: GetUserMenu method in UserManager
    */
-  async loadMenuForRole(roleCode: string): Promise<void> {
+  async loadMenuForRole(roleCodes: string[]): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<MenuHierarchy>(
-          `${this.apiBaseUrl}/api/menu/user/role/${roleCode}`
-        )
+        this.http.post<MenuHierarchy>(`${this.apiBaseUrl}/api/menu/user/role`, {
+          roleCodes: roleCodes,
+        })
       );
 
       this.menuHierarchySignal.set(response);
@@ -148,8 +149,8 @@ export class MenuBarService {
    * Switch to different role
    * Legacy: Role switching functionality
    */
-  async switchRole(roleCode: string): Promise<void> {
-    await this.loadMenuForRole(roleCode);
+  async selectRoles(roleCodes: string[]): Promise<void> {
+    await this.loadMenuForRole(roleCodes);
   }
 
   /**

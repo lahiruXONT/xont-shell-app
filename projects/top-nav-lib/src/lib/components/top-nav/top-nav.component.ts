@@ -1,52 +1,35 @@
 import {
   Component,
-  OnInit,
-  OnDestroy,
   Input,
   Output,
   EventEmitter,
-  signal,
   computed,
-  inject,
+  signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-
-// Services
-import { NotificationService } from '../../services/notification.service';
-import { ReminderService } from '../../services/reminder.service';
-import { SettingsService } from '../../services/settings.service';
-
-// Models
-import { User, UserProfile } from 'shared-lib';
+import { RouterModule } from '@angular/router';
+import { User, UserProfile, UserRole } from 'shared-lib';
+import { NotificationsPanelComponent } from '../notifications-panel/notifications-panel.component';
+import { RoleSelectorComponent } from 'menu-bar-lib';
 
 /**
  * Top Navigation Bar Component
- * Legacy: Header section from Main.aspx
- *
- * Features:
- * - User profile display with avatar
- * - Business unit display
- * - Notifications bell with unread count
- * - User role selector
- * - Settings access
- * - About/Version info
- * - Logout
+ * Displays logo, business unit, notifications, user menu, and role selector
+ * Legacy: Part of Main.aspx.cs
  */
 @Component({
   selector: 'lib-top-nav',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    NotificationsPanelComponent,
+    RoleSelectorComponent,
+  ],
   templateUrl: './top-nav.component.html',
-  styleUrls: ['./top-nav.component.scss'],
+  styleUrl: './top-nav.component.scss',
 })
-export class TopNavComponent implements OnInit, OnDestroy {
-  // Services
-  private notificationService = inject(NotificationService);
-  private reminderService = inject(ReminderService);
-  private settingsService = inject(SettingsService);
-
+export class TopNavComponent {
   // Inputs
   @Input() user: User | null = null;
   @Input() showLogo = true;
@@ -55,61 +38,63 @@ export class TopNavComponent implements OnInit, OnDestroy {
   @Input() showUserMenu = true;
 
   // Outputs
-  @Output() logoutClicked = new EventEmitter<void>();
+  @Output() logout = new EventEmitter<void>();
   @Output() settingsClicked = new EventEmitter<void>();
+  @Output() notificationsClicked = new EventEmitter<void>();
   @Output() versionInfoClicked = new EventEmitter<void>();
   @Output() aboutClicked = new EventEmitter<void>();
-  @Output() roleChanged = new EventEmitter<string>();
-  @Output() roleSelectorClicked = new EventEmitter<void>();
+  @Output() roleSelectorToggled = new EventEmitter<boolean>();
+  @Output() rolesChanged = new EventEmitter<UserRole[]>();
 
-  // Component state
-  private destroy$ = new Subject<void>();
+  // State
   showUserDropdown = signal<boolean>(false);
   showRoleSelector = signal<boolean>(false);
+  showNotificationsPanel = signal<boolean>(false);
 
   // Computed properties
-  unreadNotificationCount = computed(() =>
-    this.notificationService.unreadCount()
-  );
-
   userProfile = computed<UserProfile>(() => ({
     userName: this.user?.userName || '',
     fullName: this.user?.fullName || '',
     email: this.user?.email || '',
     profileImage: this.user?.profileImage || 'images/avatars/avatar.png',
     currentBusinessUnit: this.user?.currentBusinessUnit || '',
-    currentRole: this.user?.currentRole || '',
+    currentRole: this.user?.currentRole?.roleName || '',
     theme: this.user?.theme || 'green',
   }));
 
-  hasUnreadNotifications = computed(() => this.unreadNotificationCount() > 0);
+  hasUnreadNotifications = computed(
+    () => (this.user?.unreadNotificationCount ?? 0) > 0
+  );
 
-  ngOnInit(): void {
-    // Initialize notification service
-    if (this.showNotifications) {
-      this.initializeNotifications();
-    }
+  getNotificationCountDisplay = computed(() => {
+    const count = this.user?.unreadNotificationCount || 0;
+    return count > 99 ? '99+' : count.toString();
+  });
+
+  // Event handlers
+  onLogout(): void {
+    this.logout.emit();
   }
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+  openSettings(): void {
+    this.settingsClicked.emit();
   }
 
-  /**
-   * Initialize notifications (SignalR connection)
-   */
-  private async initializeNotifications(): Promise<void> {
-    try {
-      // Load existing notifications
-      await this.notificationService.loadNotifications();
-
-      // Connect to SignalR hub (if configured)
-      // Hub URL should be provided by the consuming app
-      // await this.notificationService.connectToHub(hubUrl, accessToken);
-    } catch (error) {
-      console.error('Failed to initialize notifications:', error);
+  openNotifications(): void {
+    this.showNotificationsPanel.update((value) => !value);
+    if (this.showNotificationsPanel()) {
+      this.showUserDropdown.set(false);
+      this.showRoleSelector.set(false);
     }
+    this.notificationsClicked.emit();
+  }
+
+  openVersionInfo(): void {
+    this.versionInfoClicked.emit();
+  }
+
+  openAbout(): void {
+    this.aboutClicked.emit();
   }
 
   /**
@@ -118,17 +103,18 @@ export class TopNavComponent implements OnInit, OnDestroy {
   toggleUserDropdown(): void {
     this.showUserDropdown.update((value) => !value);
     if (this.showUserDropdown()) {
-      this.showRoleSelector.set(false);
+      this.showRoleSelector.set(false); // Close role selector
     }
   }
 
   /**
-   * Toggle role selector
+   * Toggle role selector panel
    */
   toggleRoleSelector(): void {
     this.showRoleSelector.update((value) => !value);
+    this.roleSelectorToggled.emit(this.showRoleSelector());
     if (this.showRoleSelector()) {
-      this.showUserDropdown.set(false);
+      this.showUserDropdown.set(false); // Close user dropdown
     }
   }
 
@@ -138,67 +124,16 @@ export class TopNavComponent implements OnInit, OnDestroy {
   closeDropdowns(): void {
     this.showUserDropdown.set(false);
     this.showRoleSelector.set(false);
+    this.showNotificationsPanel.set(false);
+    this.roleSelectorToggled.emit(false);
   }
 
   /**
-   * Open notifications panel
-   * Legacy: openNav() function
+   * Handle avatar image loading error
    */
-  openNotifications(): void {
-    this.notificationService.openPanel();
-    this.closeDropdowns();
-  }
-
-  /**
-   * Open settings modal
-   */
-  openSettings(): void {
-    this.settingsService.openModal('theme');
-    this.settingsClicked.emit();
-    this.closeDropdowns();
-  }
-
-  /**
-   * Open version info
-   */
-  openVersionInfo(): void {
-    this.versionInfoClicked.emit();
-    this.closeDropdowns();
-  }
-
-  /**
-   * Open about modal
-   */
-  openAbout(): void {
-    this.aboutClicked.emit();
-    this.closeDropdowns();
-  }
-
-  /**
-   * Handle logout click
-   * Legacy: logout LinkButton
-   */
-  onLogout(): void {
-    // Check if there are open tabs
-    // This should be handled by the shell app
-    this.logoutClicked.emit();
-    this.closeDropdowns();
-  }
-
-  /**
-   * Handle role change
-   */
-  onRoleChange(roleCode: string): void {
-    this.roleChanged.emit(roleCode);
-    this.closeDropdowns();
-  }
-
-  /**
-   * Get notification count display
-   */
-  getNotificationCountDisplay(): string {
-    const count = this.unreadNotificationCount();
-    return count > 99 ? '99+' : count.toString();
+  onAvatarError(event: Event): void {
+    const imgElement = event.target as HTMLImageElement;
+    imgElement.src = 'images/avatars/avatar.png'; // Fallback image
   }
 
   /**
@@ -206,21 +141,18 @@ export class TopNavComponent implements OnInit, OnDestroy {
    */
   getUserInitials(): string {
     const fullName = this.user?.fullName || '';
-    const names = fullName.split(' ');
-    if (names.length >= 2) {
-      return `${names[0].charAt(0)}${names[1].charAt(0)}`.toUpperCase();
-    }
-    return fullName.charAt(0).toUpperCase();
+    const initials = fullName
+      .split(' ')
+      .map((n) => n[0])
+      .join('');
+    return initials.toUpperCase();
   }
 
-  /**
-   * Handle avatar image error
-   */
-  onAvatarError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = 'images/avatars/avatar.png';
-  }
   onRoleSelectorClick(): void {
-    this.roleSelectorClicked.emit();
+    this.toggleRoleSelector();
+  }
+
+  onRolesChanged(roles: UserRole[]): void {
+    this.rolesChanged.emit(roles);
   }
 }

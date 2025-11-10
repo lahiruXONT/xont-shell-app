@@ -1,60 +1,37 @@
-<div class="role-selector">
-  <div class="selector-trigger" (click)="toggleDropdown()">
-    <i class="fa fa-user-tag"></i>
-    <span class="current-role">{{
-      currentRole?.description || "Select Role"
-    }}</span>
-    <i class="fa fa-chevron-down"></i>
-  </div>
+<div class="role-selector-container" [class.open]="isDropdownOpen()">
+  <button (click)="toggleDropdown()" class="dropdown-toggle">
+    <i class="fa fa-users"></i>
+    <span>Roles</span>
+    <i class="fa fa-caret-down"></i>
+  </button>
 
-  <div
-    class="role-dropdown"
-    *ngIf="showDropdown()"
-    (click)="$event.stopPropagation()"
-  >
+  @if (isDropdownOpen()) {
+  <div class="dropdown-menu">
     <div class="dropdown-header">
-      <span>{{ allowMultiple ? "Select Roles" : "Switch Role" }}</span>
-      <button class="close-btn" (click)="closeDropdown()">
+      <span>Switch Role</span>
+      <button class="close-btn" (click)="toggleDropdown()">
         <i class="fa fa-times"></i>
       </button>
     </div>
 
-    <div class="roles-list">
+    <div class="role-list">
+      @for (role of roles; track trackByRoleCode($index, role)) {
       <div
-        *ngFor="let role of roles; trackBy: trackByRoleCode"
         class="role-item"
-        [class.selected]="role.roleCode === currentRole?.roleCode"
-        [class.priority]="role.isPriorityRole"
         (click)="selectRole(role)"
+        [class.selected]="role.roleCode === currentRole?.roleCode"
       >
-        <input
-          *ngIf="allowMultiple"
-          type="checkbox"
-          [value]="role.isSelected"
-          (click)="$event.stopPropagation()"
-        />
-        <div class="role-info">
-          <div class="role-name">{{ role.description }}</div>
-          <div class="role-badges">
-            <span class="badge priority-badge" *ngIf="role.isPriorityRole">
-              <i class="fa fa-star"></i> Priority
-            </span>
-            <span class="badge default-badge" *ngIf="role.isDefaultRole"
-              >Default</span
-            >
-          </div>
-        </div>
-        <i
-          class="fa fa-check check-icon"
-          *ngIf="!allowMultiple && role.roleCode === currentRole?.roleCode"
-        ></i>
+        <i class="fa fa-check-circle"></i>
+        <span>{{ role.description }}</span>
       </div>
+      }
+    </div>
+
+    <div class="dropdown-footer">
+      <button class="btn btn-primary" (click)="selectRoles(roles)">
+        Apply Roles
+      </button>
     </div>
   </div>
+  }
 </div>
-
-<div
-  class="dropdown-overlay"
-  *ngIf="showDropdown()"
-  (click)="closeDropdown()"
-></div>

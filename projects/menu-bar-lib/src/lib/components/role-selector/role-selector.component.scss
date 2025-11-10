@@ -1,147 +1,90 @@
-.role-selector {
+.role-selector-container {
   position: relative;
-  display: inline-block;
-}
 
-.selector-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: #3498db;
-    background: #f8f9fa;
-  }
-
-  i:first-child {
-    color: #3498db;
-  }
-
-  .current-role {
-    flex: 1;
-    font-size: 0.9rem;
-    color: #333;
-  }
-
-  i:last-child {
-    color: #666;
-    font-size: 0.8rem;
-  }
-}
-
-.role-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  margin-top: 4px;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  min-width: 300px;
-
-  .dropdown-header {
+  .dropdown-toggle {
+    background: none;
+    border: none;
+    color: #fff;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid #e0e0e0;
-    font-weight: 600;
-    font-size: 0.95rem;
+    gap: 8px;
+    cursor: pointer;
 
-    .close-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: #666;
-      padding: 4px;
-
-      &:hover {
-        color: #333;
-      }
+    .fa-caret-down {
+      transition: transform 0.2s ease-in-out;
     }
   }
 
-  .roles-list {
-    max-height: 300px;
-    overflow-y: auto;
+  &.open .fa-caret-down {
+    transform: rotate(180deg);
+  }
 
-    .role-item {
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-width: 250px;
+    z-index: 1000;
+
+    .dropdown-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 12px;
       padding: 12px 16px;
-      cursor: pointer;
-      transition: all 0.2s;
+      border-bottom: 1px solid #eee;
 
-      &:hover {
-        background: #f8f9fa;
+      span {
+        font-weight: bold;
+        font-size: 16px;
       }
 
-      &.selected {
-        background: #e3f2fd;
-      }
-
-      &.priority {
-        border-left: 3px solid #f39c12;
-      }
-
-      input[type="checkbox"] {
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 18px;
         cursor: pointer;
       }
+    }
 
-      .role-info {
-        flex: 1;
+    .role-list {
+      max-height: 300px;
+      overflow-y: auto;
 
-        .role-name {
-          font-size: 0.9rem;
-          color: #333;
-          margin-bottom: 4px;
+      .role-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: #f5f5f5;
         }
 
-        .role-badges {
-          display: flex;
-          gap: 6px;
+        &.selected {
+          background-color: #e0e0e0;
 
-          .badge {
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            border-radius: 10px;
-
-            &.priority-badge {
-              background: #fff3e0;
-              color: #f39c12;
-            }
-
-            &.default-badge {
-              background: #e8f5e9;
-              color: #4caf50;
-            }
+          .fa-check-circle {
+            color: #4caf50;
           }
         }
-      }
 
-      .check-icon {
-        color: #4caf50;
-        font-size: 1.1rem;
+        .fa-check-circle {
+          margin-right: 12px;
+          color: #ccc;
+        }
       }
     }
-  }
-}
 
-.dropdown-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 999;
+    .dropdown-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
 }

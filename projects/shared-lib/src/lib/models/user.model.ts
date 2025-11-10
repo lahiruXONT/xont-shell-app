@@ -22,9 +22,10 @@ export interface User {
   businessUnits: BusinessUnitDescription[];
   distributorCode?: string; // Distributor code
   roles: UserRole[]; // All user roles
-  currentRole: string; // Active role
+  currentRole: UserRole; // Active role
   defaultRole?: string; // Default role code
   priorityRole?: string; // PRTROLE if exists
+  unreadNotificationCount?: number;
 
   // User settings
   theme: string; // green, blue, red, gray, purple

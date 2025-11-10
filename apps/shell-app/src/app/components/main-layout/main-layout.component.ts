@@ -1,64 +1,53 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterOutlet } from '@angular/router';
-
-// Import all 3 libraries
+import { Router, RouterModule } from '@angular/router';
+import { AuthenticationService } from '../../services/authentication.service';
 import {
-  TopNavComponent,
+  ThemeService,
   NotificationsPanelComponent,
   SettingsModalComponent,
-  NotificationService,
-  ThemeService,
 } from 'top-nav-lib';
-import {
-  MenuBarComponent,
-  MenuBarService,
-  FavoritesService,
-} from 'menu-bar-lib';
-import { TabManagerComponent, TabManagerService } from 'tab-management-lib';
-import { Tab, TabType } from 'shared-lib';
-import { AuthenticationService } from '../../services/authentication.service';
+import { TabManagerService, TabManagerComponent } from 'tab-management-lib';
+import { MenuBarComponent, MenuBarService } from 'menu-bar-lib';
+import { TopNavComponent } from 'top-nav-lib';
+import { User, MenuTask, MenuConfig, Tab, UserRole } from 'shared-lib';
 
 @Component({
   selector: 'app-main-layout',
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet,
+    RouterModule,
     TopNavComponent,
-    NotificationsPanelComponent,
-    SettingsModalComponent,
     MenuBarComponent,
     TabManagerComponent,
+    NotificationsPanelComponent,
+    SettingsModalComponent,
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',
 })
 export class MainLayoutComponent implements OnInit {
-  // User data
   // User data - FIXED signal access
   readonly currentUser = computed(() => this.authService.currentUser());
 
-  router = inject(Router);
+  // Tab management
+  readonly activeTab = computed(() => this.tabManagerService.activeTab());
+
+  // Role codes for menu
+  selectedRoleCodes = signal<string[]>([]);
 
   constructor(
     private authService: AuthenticationService,
-    private notificationService: NotificationService,
-    private themeService: ThemeService,
     private menuBarService: MenuBarService,
-    private favoritesService: FavoritesService,
-    public tabManagerService: TabManagerService
+    private tabManagerService: TabManagerService,
+    private themeService: ThemeService,
+    private router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
     const user = this.currentUser();
     if (!user) return;
-
-    // Initialize SignalR for notifications
-    await this.initializeNotifications();
-
-    // Load user theme
-    await this.loadUserTheme();
 
     // 🔥 CRITICAL FIX: Load menu for the current user
     await this.loadUserMenu();
@@ -72,11 +61,11 @@ export class MainLayoutComponent implements OnInit {
     if (!user) return;
 
     try {
-      await this.menuBarService.loadMenuForRole(user.currentRole ?? '');
-
-      // Also load favorites
-      await this.favoritesService.loadFavorites();
-
+      // Set initial role codes
+      this.selectedRoleCodes.set([user.currentRole.roleCode ?? '']);
+      await this.menuBarService.loadMenuForRole([
+        user.currentRole.roleCode ?? '',
+      ]);
       console.log('Menu loaded successfully');
     } catch (error) {
       console.error('Failed to load menu:', error);
@@ -84,89 +73,71 @@ export class MainLayoutComponent implements OnInit {
   }
 
   /**
-   * Initialize SignalR notifications
+   * Handle roles changed from role selector
    */
-  private async initializeNotifications(): Promise<void> {
+  async onRolesChanged(roles: any): Promise<void> {
+    const roleCodes = roles.map((role: UserRole) => role.roleCode);
+    this.selectedRoleCodes.set(roleCodes);
+
     try {
-      await this.notificationService.connectToHub(
-        this.authService.getToken() || ''
-      );
-
-      await this.notificationService.loadNotifications();
+      await this.menuBarService.loadMenuForRole(roleCodes);
+      console.log('Menu reloaded for selected roles');
     } catch (error) {
-      console.error('Failed to initialize notifications:', error);
+      console.error('Failed to reload menu:', error);
     }
-  }
-
-  /**
-   * Load user theme
-   */
-  private async loadUserTheme(): Promise<void> {
-    // Theme service will load from localStorage/API
-    const theme = this.themeService.currentTheme();
-    console.log('Current theme:', theme);
   }
 
   /**
    * Handle task selected from menu
    */
-  onTaskSelected(task: any): void {
-    this.tabManagerService.openTab(task.taskCode, task.caption, task.url, {
-      icon: task.icon,
-      type: TabType.IFRAME,
-      metadata: {
-        menuCode: task.menuCode,
-        description: task.description,
-        applicationCode: task.applicationCode,
-      },
+  onTaskSelected(task: MenuTask): void {
+    this.tabManagerService.openTab(task.taskCode, task.description, task.url, {
+      metadata: { menuCode: task.menuCode },
     });
   }
 
   /**
-   * Handle task favorited
+   * Handle tab changed
    */
-  onTaskFavorited(event: any): void {
-    console.log('Task favorited:', event);
+  onTabChanged(tab: Tab): void {
+    this.router.navigate(['/task', tab.taskCode]);
   }
 
   /**
-   * Handle notification clicked
+   * Handle tab closed
    */
-  onNotificationClicked(): void {
-    this.notificationService.togglePanel();
+  onTabClosed(tab: Tab): void {
+    console.log('Tab closed:', tab);
   }
 
   /**
-   * Handle settings clicked
-   */
-  onSettingsClicked(): void {
-    // Open settings modal
-    console.log('Settings clicked');
-  }
-
-  /**
-   * Handle logout
+   * Handle user logout
    */
   onLogout(): void {
     this.authService.logout();
+    this.router.navigate(['/login']);
   }
+
   navigateToDashboard(): void {
-    this.router.navigate(['/app']);
-  }
-  /**
-   * Get current role object
-   */
-  getCurrentRole(): any {
-    const user = this.currentUser();
-    if (!user) return null;
-
-    return user.roles.find((r) => r.roleCode === user.currentRole);
+    this.router.navigate(['/']);
   }
 
+  onNotificationClicked(): void {
+    // TODO: Implement notification panel logic
+  }
+
+  onSettingsClicked(): void {
+    // TODO: Implement settings modal logic
+  }
+
+  onTaskFavorited(event: any): void {
+    // TODO: Implement task favorited logic
+  }
+
   /**
-   * Get current business unit object
+   * Get current business unit from user
    */
-  getCurrentBusinessUnit(): any {
+  currentBusinessUnit() {
     const user = this.currentUser();
     if (!user) return null;
 
@@ -176,30 +147,12 @@ export class MainLayoutComponent implements OnInit {
   }
 
   /**
-   * Get session ID
+   * Get current role from user
    */
-  getSessionId(): string {
-    return localStorage.getItem('sessionId') || '';
-  }
+  currentRole() {
+    const user = this.currentUser();
+    if (!user) return null;
 
-  /**
-   * Handle settings saved
-   */
-  onSettingsSaved(settings: any): void {
-    console.log('Settings saved:', settings);
-  }
-
-  /**
-   * Handle tab opened
-   */
-  onTabOpened(tab: Tab): void {
-    console.log('Tab opened:', tab);
-  }
-
-  /**
-   * Handle tab closed
-   */
-  onTabClosed(tab: Tab): void {
-    console.log('Tab closed:', tab);
+    return user.roles.find((r) => r.roleCode === user.currentRole.roleCode);
   }
 }

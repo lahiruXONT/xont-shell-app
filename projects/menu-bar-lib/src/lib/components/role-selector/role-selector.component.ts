@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserRole } from 'shared-lib';
@@ -18,33 +18,48 @@ import { UserRole } from 'shared-lib';
 export class RoleSelectorComponent {
   @Input() roles: UserRole[] = [];
   @Input() currentRole: UserRole | null = null;
-  @Input() allowMultiple = false;
+  @Input() businessUnits: { code: string; description: string }[] = [];
+  @Input() currentBusinessUnit: string | null = null;
 
   @Output() roleSelected = new EventEmitter<UserRole>();
   @Output() rolesChanged = new EventEmitter<UserRole[]>();
+  @Output() businessUnitSelected = new EventEmitter<string>();
 
-  showDropdown = signal<boolean>(false);
+  isDropdownOpen = signal<boolean>(false);
+
+  constructor(private elementRef: ElementRef) {}
 
   toggleDropdown(): void {
-    this.showDropdown.update((show) => !show);
-  }
-
-  closeDropdown(): void {
-    this.showDropdown.set(false);
+    this.isDropdownOpen.update((value) => !value);
   }
 
   selectRole(role: UserRole): void {
-    if (!this.allowMultiple) {
-      this.roleSelected.emit(role);
-      this.closeDropdown();
-    } else {
-      role.isSelected = !role.isSelected;
-      const selectedRoles = this.roles.filter((r) => r.isSelected);
-      this.rolesChanged.emit(selectedRoles);
+    this.roleSelected.emit(role);
+    this.isDropdownOpen.set(false);
+  }
+
+  selectRoles(roles: UserRole[]): void {
+    this.rolesChanged.emit(roles);
+    this.isDropdownOpen.set(false);
+  }
+
+  selectBusinessUnit(buCode: string): void {
+    this.businessUnitSelected.emit(buCode);
+    this.isDropdownOpen.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.isDropdownOpen.set(false);
     }
   }
 
   trackByRoleCode(index: number, role: UserRole): string {
     return role.roleCode;
+  }
+
+  trackByBuCode(index: number, bu: { code: string; description: string }): string {
+    return bu.code;
   }
 }

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {
   RuntimeConfig,
   DEFAULT_RUNTIME_CONFIG,
-} from '../models/runtime-config.model';
+} from 'shared-lib';
 @Injectable({ providedIn: 'root' })
 export class RuntimeConfigService {
   private config: RuntimeConfig = DEFAULT_RUNTIME_CONFIG;

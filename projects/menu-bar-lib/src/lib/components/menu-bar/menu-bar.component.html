@@ -7,9 +7,9 @@
         <i class="fa fa-user-circle role-icon"></i>
         <div class="role-details">
           <div class="role-name">
-            {{ currentRole()?.description || "Menu" }}
+            {{ currentRoles()[0]?.description || "Menu" }}
           </div>
-          <div class="role-code" *ngIf="currentRole()?.isPriorityRole">
+          <div class="role-code" *ngIf="currentRoles()[0]?.isPriorityRole">
             <i class="fa fa-star"></i>
             Priority Role
           </div>
