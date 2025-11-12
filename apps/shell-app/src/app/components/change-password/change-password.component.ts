@@ -3,94 +3,92 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthenticationService } from '../../services/authentication.service';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-change-password',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+  ],
   template: `
-    <div class="change-password-container">
-      <div class="change-password-card">
-        <h2>Change Password</h2>
+    <div class="d-flex justify-content-center align-items-center vh-100">
+      <mat-card class="col-10 col-sm-8 col-md-6 col-lg-4 p-4 shadow-lg">
+        <h2 class="text-center mb-4">Change Password</h2>
 
         @if (errorMessage()) {
-        <div class="error-message">{{ errorMessage() }}</div>
+        <div class="alert alert-danger text-center mb-3" role="alert">
+          {{ errorMessage() }}
+        </div>
         } @if (successMessage()) {
-        <div class="success-message">{{ successMessage() }}</div>
+        <div class="alert alert-success text-center mb-3" role="alert">
+          {{ successMessage() }}
+        </div>
         }
 
         <form (submit)="onSubmit($event)">
-          <div class="form-group">
-            <label>Current Password</label>
+          <mat-form-field appearance="outline" class="w-100 mb-3">
+            <mat-label>Current Password</mat-label>
             <input
+              matInput
               type="password"
               [value]="currentPassword()"
               (input)="currentPassword.set($any($event.target).value)"
               required
             />
-          </div>
+          </mat-form-field>
 
-          <div class="form-group">
-            <label>New Password</label>
+          <mat-form-field appearance="outline" class="w-100 mb-3">
+            <mat-label>New Password</mat-label>
             <input
+              matInput
               type="password"
               [value]="newPassword()"
               (input)="newPassword.set($any($event.target).value)"
               required
             />
-          </div>
+          </mat-form-field>
 
-          <div class="form-group">
-            <label>Confirm New Password</label>
+          <mat-form-field appearance="outline" class="w-100 mb-4">
+            <mat-label>Confirm New Password</mat-label>
             <input
+              matInput
               type="password"
               [value]="confirmPassword()"
               (input)="confirmPassword.set($any($event.target).value)"
               required
             />
-          </div>
+          </mat-form-field>
 
-          <button type="submit" [disabled]="isLoading()">
+          <button
+            mat-raised-button
+            color="primary"
+            type="submit"
+            class="w-100"
+            [disabled]="isLoading()"
+          >
+            @if (isLoading()) {
+            <mat-spinner [diameter]="20" class="me-2"></mat-spinner>
+            }
             {{ isLoading() ? 'Changing...' : 'Change Password' }}
           </button>
         </form>
-      </div>
+      </mat-card>
     </div>
   `,
   styles: [
     `
-      .change-password-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 400px;
-        padding: 20px;
-      }
-
-      .change-password-card {
-        background: white;
-        border-radius: 8px;
-        padding: 30px;
-        max-width: 400px;
-        width: 100%;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-
-      .error-message {
-        background: #ffebee;
-        color: #c62828;
-        padding: 12px;
-        border-radius: 4px;
-        margin-bottom: 20px;
-      }
-
-      .success-message {
-        background: #e8f5e9;
-        color: #2e7d32;
-        padding: 12px;
-        border-radius: 4px;
-        margin-bottom: 20px;
-      }
+      /* No custom styles needed for change-password component as Angular Material and Bootstrap handle styling. */
     `,
   ],
 })

@@ -1,275 +1,299 @@
-<!-- Settings Modal -->
-<!-- Legacy: settingsModal -->
-@if (modalState().isOpen) {
-<div class="modalDialog2 fade in settings-modal">
-  <div class="s-content">
-    <!-- Modal Header -->
-    <div class="s-header">
-      <h4 class="s-title">Settings</h4>
-      <button class="close-btn" (click)="closeModal()" type="button">
-        <i class="fa fa-close"></i>
+<div
+  *ngIf="modalState().isOpen"
+  class="d-flex justify-content-center align-items-center vh-100 vw-100 position-fixed top-0 start-0 bg-dark bg-opacity-50"
+  style="z-index: 1050"
+>
+  <mat-card class="settings-modal-card col-11 col-sm-10 col-md-8 col-lg-6 p-0">
+    <mat-toolbar
+      color="primary"
+      class="d-flex justify-content-between align-items-center"
+    >
+      <mat-card-title class="m-0">Settings</mat-card-title>
+      <button mat-icon-button (click)="closeModal()">
+        <mat-icon>close</mat-icon>
       </button>
-    </div>
+    </mat-toolbar>
 
-    <!-- Tab Navigation -->
-    <div class="tab-navigation">
-      <button
-        class="tab-btn"
-        [class.active]="modalState().activeTab === 'theme'"
-        (click)="switchTab('theme')"
-        type="button"
-      >
-        <i class="fa fa-palette"></i>
-        Theme
-      </button>
-      <button
-        class="tab-btn"
-        [class.active]="modalState().activeTab === 'account'"
-        (click)="switchTab('account')"
-        type="button"
-      >
-        <i class="fa fa-user"></i>
-        Account
-      </button>
-      <button
-        class="tab-btn"
-        [class.active]="modalState().activeTab === 'profile'"
-        (click)="switchTab('profile')"
-        type="button"
-      >
-        <i class="fa fa-image"></i>
-        Profile Picture
-      </button>
-    </div>
-
-    <!-- Modal Body -->
-    <div class="s-body">
-      <!-- Theme Tab -->
-      @if (modalState().activeTab === 'theme') {
-      <div class="tab-content theme-tab">
-        <!-- Theme Selection -->
-        <div class="setting-section">
-          <h5 class="section-title">Themes</h5>
-          <div class="theme-options">
-            @for (theme of availableThemes; track theme.name) {
-            <div
-              class="theme-option"
-              [class.selected]="isThemeSelected(theme)"
-              (click)="onThemeSelect(theme)"
-            >
-              <div class="theme-icon">
-                <i
-                  [class]="'fa ' + getThemeIcon(theme.name)"
-                  [style.color]="getThemeColor(theme)"
-                ></i>
-              </div>
-              <div class="theme-name">{{ theme.displayName }}</div>
-              @if (isThemeSelected(theme)) {
-              <div class="selected-indicator">
-                <i class="fa fa-check"></i>
-              </div>
-              }
-            </div>
-            }
-          </div>
-        </div>
-
-        <!-- Font Settings -->
-        <div class="setting-section">
-          <h5 class="section-title">Fonts</h5>
-          <div class="font-settings">
-            <!-- Font Family -->
-            <div class="form-group">
-              <label>Font Family</label>
-              <select
-                class="form-control"
-                [value]="tempSettings().fontFamily"
-                (change)="onFontFamilyChange($any($event.target).value)"
+    <mat-tab-group
+      [selectedIndex]="
+        modalState().activeTab === 'theme'
+          ? 0
+          : modalState().activeTab === 'account'
+          ? 1
+          : 2
+      "
+      (selectedIndexChange)="
+        switchTab($event === 0 ? 'theme' : $event === 1 ? 'account' : 'profile')
+      "
+    >
+      <mat-tab label="Theme">
+        <div class="p-4">
+          <!-- Theme Selection -->
+          <mat-card class="mb-4">
+            <mat-card-header>
+              <mat-card-title>Themes</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-radio-group
+                aria-label="Select a theme"
+                [value]="selectedTheme()?.name"
+                (change)="onThemeSelect($event.value)"
+                class="d-flex flex-wrap gap-3"
               >
-                @for (font of fontOptions.availableFonts; track font.name) {
-                <option [value]="font.name">{{ font.displayName }}</option>
+                @for (theme of availableThemes; track theme.name) {
+                <mat-radio-button
+                  [value]="theme"
+                  [checked]="isThemeSelected(theme)"
+                >
+                  <div class="d-flex align-items-center">
+                    <mat-icon [style.color]="getThemeColor(theme)"
+                      >circle</mat-icon
+                    >
+                    <span class="ms-2">{{ theme.displayName }}</span>
+                  </div>
+                </mat-radio-button>
                 }
-              </select>
-            </div>
+              </mat-radio-group>
+            </mat-card-content>
+          </mat-card>
 
-            <!-- Font Size -->
-            <div class="form-group">
-              <label>Font Size</label>
-              <select
-                class="form-control"
-                [value]="tempSettings().fontSize"
-                (change)="onFontSizeChange($any($event.target).value)"
-              >
-                @for (size of fontOptions.availableSizes; track size.value) {
-                <option [value]="size.value">{{ size.label }}</option>
+          <!-- Font Settings -->
+          <mat-card class="mb-4">
+            <mat-card-header>
+              <mat-card-title>Fonts</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="row">
+                <div class="col-md-4">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Font Family</mat-label>
+                    <mat-select
+                      [value]="tempSettings().fontFamily"
+                      (selectionChange)="onFontFamilyChange($event.value)"
+                    >
+                      @for (font of fontOptions.availableFonts; track font.name)
+                      {
+                      <mat-option [value]="font.name">{{
+                        font.displayName
+                      }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-4">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Font Size</mat-label>
+                    <mat-select
+                      [value]="tempSettings().fontSize"
+                      (selectionChange)="onFontSizeChange($event.value)"
+                    >
+                      @for (size of fontOptions.availableSizes; track
+                      size.value) {
+                      <mat-option [value]="size.value">{{
+                        size.label
+                      }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-4">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Font Color</mat-label>
+                    <input
+                      matInput
+                      type="color"
+                      [value]="tempSettings().fontColor || '#000000'"
+                      (change)="onFontColorChange($any($event.target).value)"
+                    />
+                  </mat-form-field>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Language Settings -->
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Language</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Language</mat-label>
+                <mat-select
+                  [value]="tempSettings().language"
+                  (selectionChange)="onLanguageChange($event.value)"
+                >
+                  @for (lang of languages; track lang.code) {
+                  <mat-option [value]="lang.code">{{ lang.name }}</mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <mat-tab label="Account">
+        <div class="p-4">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Change Password</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <form [formGroup]="passwordForm">
+                <mat-form-field appearance="outline" class="w-100 mb-3">
+                  <mat-label>Current Password</mat-label>
+                  <input
+                    matInput
+                    type="password"
+                    formControlName="currentPassword"
+                    placeholder="Enter current password"
+                  />
+                  @if (passwordForm.get('currentPassword')?.invalid &&
+                  passwordForm.get('currentPassword')?.touched) {
+                  <mat-error>Current password is required</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-100 mb-3">
+                  <mat-label>New Password</mat-label>
+                  <input
+                    matInput
+                    type="password"
+                    formControlName="newPassword"
+                    placeholder="Enter new password"
+                  />
+                  @if (passwordForm.get('newPassword')?.hasError('required') &&
+                  passwordForm.get('newPassword')?.touched) {
+                  <mat-error>New password is required</mat-error>
+                  } @else if
+                  (passwordForm.get('newPassword')?.hasError('minlength') &&
+                  passwordForm.get('newPassword')?.touched) {
+                  <mat-error>Password must be at least 8 characters</mat-error>
+                  }
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-100 mb-4">
+                  <mat-label>Confirm New Password</mat-label>
+                  <input
+                    matInput
+                    type="password"
+                    formControlName="confirmNewPassword"
+                    placeholder="Re-enter new password"
+                  />
+                  @if
+                  (passwordForm.get('confirmNewPassword')?.hasError('required')
+                  && passwordForm.get('confirmNewPassword')?.touched) {
+                  <mat-error>Confirm new password is required</mat-error>
+                  } @else if (passwordForm.hasError('passwordMismatch') &&
+                  passwordForm.get('confirmNewPassword')?.touched) {
+                  <mat-error>Passwords do not match</mat-error>
+                  }
+                </mat-form-field>
+
+                @if (passwordError()) {
+                <div class="alert alert-danger mb-3">
+                  {{ passwordError() }}
+                </div>
                 }
-              </select>
-            </div>
 
-            <!-- Font Color -->
-            <div class="form-group">
-              <label>Font Color</label>
-              <input
-                type="color"
-                class="form-control color-picker"
-                [value]="tempSettings().fontColor || '#000000'"
-                (change)="onFontColorChange($any($event.target).value)"
-              />
-            </div>
-          </div>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="button"
+                  class="w-100"
+                  (click)="changePassword()"
+                  [disabled]="passwordForm.invalid || isSaving()"
+                >
+                  @if (isSaving()) {
+                  <mat-spinner [diameter]="20" class="me-2"></mat-spinner>
+                  } Change Password
+                </button>
+              </form>
+            </mat-card-content>
+          </mat-card>
         </div>
+      </mat-tab>
 
-        <!-- Language Settings -->
-        <div class="setting-section">
-          <h5 class="section-title">Language</h5>
-          <select
-            class="form-control"
-            [value]="tempSettings().language"
-            (change)="onLanguageChange($any($event.target).value)"
-          >
-            @for (lang of languages; track lang.code) {
-            <option [value]="lang.code">{{ lang.name }}</option>
-            }
-          </select>
-        </div>
-      </div>
-      }
+      <mat-tab label="Profile Picture">
+        <div class="p-4">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Profile Picture</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <!-- File Upload -->
+              <div class="d-flex flex-column align-items-center mb-3">
+                <input
+                  type="file"
+                  id="profileImageInput"
+                  accept=".jpg,.jpeg,.png"
+                  (change)="onFileSelect($event)"
+                  style="display: none"
+                />
+                <label
+                  for="profileImageInput"
+                  mat-raised-button
+                  color="accent"
+                  class="mb-2"
+                >
+                  <mat-icon class="me-2">upload_file</mat-icon>
+                  Choose Image
+                </label>
+                <small class="text-muted">
+                  JPG, JPEG, or PNG. Max 300KB.
+                </small>
+              </div>
 
-      <!-- Account Tab -->
-      @if (modalState().activeTab === 'account') {
-      <div class="tab-content account-tab">
-        <div class="setting-section">
-          <h5 class="section-title">Change Password</h5>
-          <form [formGroup]="passwordForm" class="password-form">
-            <!-- Current Password -->
-            <div class="form-group">
-              <label>Current Password</label>
-              <input
-                type="password"
-                class="form-control"
-                formControlName="currentPassword"
-                placeholder="Enter current password"
-              />
-            </div>
-
-            <!-- New Password -->
-            <div class="form-group">
-              <label>New Password</label>
-              <input
-                type="password"
-                class="form-control"
-                formControlName="newPassword"
-                placeholder="Enter new password"
-              />
-              @if (passwordForm.get('newPassword')?.hasError('minlength')) {
-              <small class="error-text">
-                Password must be at least 8 characters
-              </small>
+              <!-- Image Preview -->
+              @if (profileImagePreview()) {
+              <div class="text-center mb-3">
+                <img
+                  [src]="profileImagePreview()!"
+                  alt="Preview"
+                  class="img-fluid rounded-circle mb-3"
+                  style="max-width: 150px; max-height: 150px; object-fit: cover"
+                />
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="button"
+                  (click)="uploadProfileImage()"
+                  [disabled]="isSaving()"
+                >
+                  @if (isSaving()) {
+                  <mat-spinner [diameter]="20" class="me-2"></mat-spinner>
+                  } Upload Image
+                </button>
+              </div>
+              } @if (uploadError()) {
+              <div class="alert alert-danger mb-3">
+                {{ uploadError() }}
+              </div>
               }
-            </div>
-
-            <!-- Confirm Password -->
-            <div class="form-group">
-              <label>Confirm New Password</label>
-              <input
-                type="password"
-                class="form-control"
-                formControlName="confirmNewPassword"
-                placeholder="Re-enter new password"
-              />
-              @if (passwordForm.hasError('passwordMismatch')) {
-              <small class="error-text">Passwords do not match</small>
-              }
-            </div>
-
-            @if (passwordError()) {
-            <div class="alert alert-danger">
-              {{ passwordError() }}
-            </div>
-            }
-
-            <button
-              type="button"
-              class="btn btn-primary"
-              (click)="changePassword()"
-              [disabled]="passwordForm.invalid || isSaving()"
-            >
-              Change Password
-            </button>
-          </form>
+            </mat-card-content>
+          </mat-card>
         </div>
-      </div>
-      }
+      </mat-tab>
+    </mat-tab-group>
 
-      <!-- Profile Picture Tab -->
-      @if (modalState().activeTab === 'profile') {
-      <div class="tab-content profile-tab">
-        <div class="setting-section">
-          <h5 class="section-title">Profile Picture</h5>
-
-          <!-- File Upload -->
-          <div class="upload-area">
-            <input
-              type="file"
-              id="profileImageInput"
-              accept=".jpg,.jpeg,.png"
-              (change)="onFileSelect($event)"
-              style="display: none"
-            />
-            <label for="profileImageInput" class="upload-label">
-              <i class="fa fa-upload"></i>
-              Choose Image
-            </label>
-            <small class="upload-hint"> JPG, JPEG, or PNG. Max 300KB. </small>
-          </div>
-
-          <!-- Image Preview -->
-          @if (profileImagePreview()) {
-          <div class="image-preview">
-            <img [src]="profileImagePreview()!" alt="Preview" />
-            <button
-              type="button"
-              class="btn btn-primary"
-              (click)="uploadProfileImage()"
-              [disabled]="isSaving()"
-            >
-              Upload Image
-            </button>
-          </div>
-          } @if (uploadError()) {
-          <div class="alert alert-danger">
-            {{ uploadError() }}
-          </div>
-          }
-        </div>
-      </div>
-      }
-    </div>
+    <mat-divider></mat-divider>
 
     <!-- Modal Footer -->
-    <div class="s-footer">
-      <button
-        type="button"
-        class="btn btn-default"
-        (click)="resetToDefault()"
-        [disabled]="isSaving()"
-      >
+    <mat-card-actions class="d-flex justify-content-end p-3 gap-2">
+      <button mat-button (click)="resetToDefault()" [disabled]="isSaving()">
         Reset to Default
       </button>
       <button
-        type="button"
-        class="btn btn-primary"
+        mat-raised-button
+        color="primary"
         (click)="saveSettings()"
         [disabled]="isSaving() || !modalState().hasUnsavedChanges"
       >
         @if (isSaving()) {
-        <i class="fa fa-spinner fa-spin"></i>
-        Saving... } @else { Save Settings }
+        <mat-spinner [diameter]="20" class="me-2"></mat-spinner>
+        } Save Settings
       </button>
-    </div>
-  </div>
+    </mat-card-actions>
+  </mat-card>
 </div>
-
-<!-- Backdrop -->
-<div class="modal-backdrop" (click)="closeModal()"></div>
-}

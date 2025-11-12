@@ -11,6 +11,7 @@ import { TabManagerService, TabManagerComponent } from 'tab-management-lib';
 import { MenuBarComponent, MenuBarService } from 'menu-bar-lib';
 import { TopNavComponent } from 'top-nav-lib';
 import { User, MenuTask, MenuConfig, Tab, UserRole } from 'shared-lib';
+import { MatSidenavModule } from '@angular/material/sidenav';
 
 @Component({
   selector: 'app-main-layout',
@@ -23,6 +24,7 @@ import { User, MenuTask, MenuConfig, Tab, UserRole } from 'shared-lib';
     TabManagerComponent,
     NotificationsPanelComponent,
     SettingsModalComponent,
+    MatSidenavModule,
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss',

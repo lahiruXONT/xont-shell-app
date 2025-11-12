@@ -1,16 +1,15 @@
-<!-- Menu Sidebar -->
-<div class="menu-sidebar" [class.collapsed]="isCollapsed()">
+<div class="d-flex flex-column h-100" [class.collapsed]="isCollapsed()">
   <!-- Sidebar Header -->
-  <div class="sidebar-header">
-    <div class="header-content" *ngIf="!isCollapsed()">
-      <div class="role-info">
-        <i class="fa fa-user-circle role-icon"></i>
+  <mat-toolbar class="sidebar-header d-flex justify-content-between align-items-center">
+    <div class="header-content d-flex align-items-center" *ngIf="!isCollapsed()">
+      <div class="role-info d-flex align-items-center">
+        <mat-icon class="me-2">account_circle</mat-icon>
         <div class="role-details">
-          <div class="role-name">
+          <div class="fw-bold">
             {{ currentRoles()[0]?.description || "Menu" }}
           </div>
-          <div class="role-code" *ngIf="currentRoles()[0]?.isPriorityRole">
-            <i class="fa fa-star"></i>
+          <div class="small text-muted" *ngIf="currentRoles()[0]?.isPriorityRole">
+            <mat-icon class="me-1" style="font-size: 1rem; height: 1rem; width: 1rem;">star</mat-icon>
             Priority Role
           </div>
         </div>
@@ -18,208 +17,196 @@
     </div>
 
     <button
-      class="toggle-btn"
+      mat-icon-button
       (click)="toggleSidebar()"
       [title]="isCollapsed() ? 'Expand' : 'Collapse'"
     >
-      <i
-        class="fa"
-        [class.fa-bars]="isCollapsed()"
-        [class.fa-times]="!isCollapsed()"
-      ></i>
+      <mat-icon>{{ isCollapsed() ? 'menu' : 'close' }}</mat-icon>
     </button>
-  </div>
+  </mat-toolbar>
 
   <!-- Search Bar -->
-  <div class="search-section" *ngIf="!isCollapsed() && config().enableSearch">
-    <div class="search-toggle">
-      <button class="icon-btn" (click)="toggleSearch()" title="Search Menu">
-        <i class="fa fa-search"></i>
+  <div class="p-2" *ngIf="!isCollapsed() && config().enableSearch">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <button mat-icon-button (click)="toggleSearch()" title="Search Menu">
+        <mat-icon>search</mat-icon>
       </button>
+      <span class="flex-grow-1 text-end small text-muted" *ngIf="showSearch()">Search</span>
     </div>
 
-    <div class="search-box" *ngIf="showSearch()">
-      <input
-        type="text"
-        [value]="searchText()"
-        (input)="onSearch()"
-        name="searchText"
-        placeholder="Search tasks..."
-        class="search-input"
-      />
-      <button
-        class="clear-search-btn"
-        *ngIf="searchText()"
-        (click)="clearSearch()"
-      >
-        <i class="fa fa-times"></i>
-      </button>
+    <div *ngIf="showSearch()">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Search tasks...</mat-label>
+        <input
+          matInput
+          type="text"
+          [value]="searchText()"
+          (input)="onSearch()"
+          name="searchText"
+        />
+        <button
+          *ngIf="searchText()"
+          matSuffix
+          mat-icon-button
+          (click)="clearSearch()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
     </div>
 
     <!-- Search Results -->
-    <div class="search-results" *ngIf="searchResults().length > 0">
-      <div class="results-header">
-        <span>{{ searchResults().length }} results</span>
-        <button class="close-results-btn" (click)="clearSearch()">
-          <i class="fa fa-times"></i>
+    <div class="search-results mt-2" *ngIf="searchResults().length > 0">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small text-muted">{{ searchResults().length }} results</span>
+        <button mat-icon-button (click)="clearSearch()">
+          <mat-icon>close</mat-icon>
         </button>
       </div>
-      <div class="results-list">
-        <div
+      <mat-nav-list>
+        <mat-list-item
           *ngFor="let result of searchResults(); trackBy: trackBySearchResult"
-          class="result-item"
-          (click)="onTaskClick(menuBarService.findTaskByCode(result.taskCode)!)"
+          (click)="onTaskClick(menuBarService.findTaskByCode(result.taskCode)!);"
+          class="d-flex align-items-center"
         >
-          <i class="fa fa-file result-icon"></i>
-          <div class="result-content">
-            <div class="result-title">{{ result.caption }}</div>
-            <div class="result-path">{{ result.path }}</div>
-          </div>
-        </div>
-      </div>
+          <mat-icon matListItemIcon>description</mat-icon>
+          <div matListItemTitle>{{ result.caption }}</div>
+          <div matListItemLine class="small text-muted">{{ result.path }}</div>
+        </mat-list-item>
+      </mat-nav-list>
     </div>
   </div>
 
   <!-- Toolbar -->
-  <div class="toolbar" *ngIf="!isCollapsed()">
-    <button class="tool-btn" (click)="expandAll()" title="Expand All">
-      <i class="fa fa-plus-square"></i>
+  <div class="d-flex justify-content-around p-2" *ngIf="!isCollapsed()">
+    <button mat-icon-button (click)="expandAll()" title="Expand All">
+      <mat-icon>add_box</mat-icon>
     </button>
-    <button class="tool-btn" (click)="collapseAll()" title="Collapse All">
-      <i class="fa fa-minus-square"></i>
+    <button mat-icon-button (click)="collapseAll()" title="Collapse All">
+      <mat-icon>indeterminate_check_box</mat-icon>
     </button>
     <button
-      class="tool-btn"
-      [class.active]="config().showTaskCodes"
+      mat-icon-button
+      [color]="config().showTaskCodes ? 'primary' : undefined"
       (click)="toggleTaskCodes()"
       title="Toggle Task Codes"
     >
-      <i class="fa fa-code"></i>
+      <mat-icon>code</mat-icon>
     </button>
     <button
-      class="tool-btn"
-      [class.active]="config().viewMode === MenuViewMode.LIST"
+      mat-icon-button
+      [color]="config().viewMode === MenuViewMode.LIST ? 'primary' : undefined"
       (click)="switchViewMode(MenuViewMode.LIST)"
       title="List View"
     >
-      <i class="fa fa-list"></i>
+      <mat-icon>list</mat-icon>
     </button>
     <button
-      class="tool-btn"
-      [class.active]="config().viewMode === MenuViewMode.GRAPHICAL"
+      mat-icon-button
+      [color]="config().viewMode === MenuViewMode.GRAPHICAL ? 'primary' : undefined"
       (click)="switchViewMode(MenuViewMode.GRAPHICAL)"
       title="Graphical View"
     >
-      <i class="fa fa-th"></i>
+      <mat-icon>grid_on</mat-icon>
     </button>
   </div>
+  <mat-divider></mat-divider>
 
   <!-- Menu Groups -->
-  <div class="menu-content" *ngIf="!isCollapsed()">
-    <div
-      *ngFor="let group of menuGroups(); trackBy: trackByMenuCode"
-      class="menu-group"
-      [class.expanded]="group.isExpanded"
-    >
-      <!-- Group Header -->
-      <div class="group-header" (click)="toggleGroup(group.menuCode)">
-        <i class="fa {{ group.icon }} group-icon"></i>
-        <span class="group-title">{{ group.description }}</span>
-        <i
-          class="fa expand-icon"
-          [class.fa-chevron-down]="!group.isExpanded"
-          [class.fa-chevron-up]="group.isExpanded"
-        ></i>
-      </div>
+  <div class="menu-content flex-grow-1 overflow-auto" *ngIf="!isCollapsed()">
+    <mat-accordion>
+      <mat-expansion-panel
+        *ngFor="let group of menuGroups(); trackBy: trackByMenuCode"
+        [expanded]="group.isExpanded"
+        (opened)="toggleGroup(group.menuCode)"
+        (closed)="toggleGroup(group.menuCode)"
+      >
+        <mat-expansion-panel-header>
+          <mat-panel-title class="d-flex align-items-center">
+            <mat-icon class="me-2">{{ group.icon || 'folder' }}</mat-icon>
+            <span>{{ group.description }}</span>
+          </mat-panel-title>
+        </mat-expansion-panel-header>
 
-      <!-- Group Tasks -->
-      <div class="group-tasks" *ngIf="group.isExpanded">
-        <!-- List View -->
-        <div *ngIf="config().viewMode === MenuViewMode.LIST" class="tasks-list">
-          <div
+        <!-- Group Tasks -->
+        <mat-nav-list *ngIf="config().viewMode === MenuViewMode.LIST">
+          <mat-list-item
             *ngFor="let task of group.tasks; trackBy: trackByTaskCode"
-            class="task-item"
-            [class.favorite]="isFavorite(task.taskCode)"
             (click)="onTaskClick(task)"
+            class="d-flex align-items-center"
           >
-            <i class="fa {{ task.icon }} task-icon"></i>
-            <div class="task-content">
-              <div class="task-title">
-                <span class="task-code" *ngIf="config().showTaskCodes">
-                  {{ task.taskCode }}
-                </span>
-                {{ task.caption }}
-              </div>
+            <mat-icon matListItemIcon>{{ task.icon || 'description' }}</mat-icon>
+            <div matListItemTitle>
+              <span *ngIf="config().showTaskCodes" class="small text-muted me-1">
+                [{{ task.taskCode }}]
+              </span>
+              {{ task.caption }}
             </div>
             <button
-              class="favorite-btn"
+              mat-icon-button
               (click)="toggleFavorite(task, $event)"
-              [class.active]="isFavorite(task.taskCode)"
+              [color]="isFavorite(task.taskCode) ? 'accent' : undefined"
+              matListItemMeta
               [title]="
                 isFavorite(task.taskCode)
                   ? 'Remove from favorites'
                   : 'Add to favorites'
               "
             >
-              <i
-                class="fa"
-                [class.fa-star]="isFavorite(task.taskCode)"
-                [class.fa-star-o]="!isFavorite(task.taskCode)"
-              ></i>
+              <mat-icon>{{ isFavorite(task.taskCode) ? 'star' : 'star_border' }}</mat-icon>
             </button>
-          </div>
-        </div>
+          </mat-list-item>
+        </mat-nav-list>
 
         <!-- Graphical View -->
         <div
           *ngIf="config().viewMode === MenuViewMode.GRAPHICAL"
-          class="tasks-grid"
+          class="row row-cols-2 g-2 p-2"
         >
           <div
             *ngFor="let task of group.tasks; trackBy: trackByTaskCode"
-            class="task-card"
-            [class.favorite]="isFavorite(task.taskCode)"
-            (click)="onTaskClick(task)"
+            class="col"
           >
-            <div class="card-icon">
-              <i class="fa {{ task.icon }}"></i>
-            </div>
-            <div class="card-code" *ngIf="config().showTaskCodes">
-              {{ task.taskCode }}
-            </div>
-            <div class="card-title">{{ task.caption }}</div>
-
-            <button
-              class="card-favorite-btn"
-              (click)="toggleFavorite(task, $event)"
-              [class.active]="isFavorite(task.taskCode)"
+            <mat-card
+              class="task-card text-center h-100 d-flex flex-column justify-content-center align-items-center"
+              [class.favorite]="isFavorite(task.taskCode)"
+              (click)="onTaskClick(task)"
             >
-              <i
-                class="fa"
-                [class.fa-star]="isFavorite(task.taskCode)"
-                [class.fa-star-o]="!isFavorite(task.taskCode)"
-              ></i>
-            </button>
+              <mat-icon class="mb-2" style="font-size: 2rem; height: 2rem; width: 2rem;">{{ task.icon || 'description' }}</mat-icon>
+              <div *ngIf="config().showTaskCodes" class="small text-muted">
+                [{{ task.taskCode }}]
+              </div>
+              <div class="fw-bold">{{ task.caption }}</div>
+
+              <button
+                mat-icon-button
+                (click)="toggleFavorite(task, $event)"
+                [color]="isFavorite(task.taskCode) ? 'accent' : undefined"
+                class="position-absolute top-0 end-0 m-1"
+              >
+                <mat-icon>{{ isFavorite(task.taskCode) ? 'star' : 'star_border' }}</mat-icon>
+              </button>
+            </mat-card>
           </div>
         </div>
-      </div>
-    </div>
+      </mat-expansion-panel>
+    </mat-accordion>
 
     <!-- Empty State -->
-    <div class="empty-state" *ngIf="menuGroups().length === 0">
-      <i class="fa fa-folder-open"></i>
-      <p>No menu items available</p>
+    <div class="text-center p-4" *ngIf="menuGroups().length === 0">
+      <mat-icon style="font-size: 3rem; height: 3rem; width: 3rem;" color="accent">folder_open</mat-icon>
+      <p class="text-muted mt-2">No menu items available</p>
     </div>
   </div>
 
   <!-- Collapsed State Icons -->
-  <div class="collapsed-menu" *ngIf="isCollapsed()">
+  <div class="collapsed-menu p-2" *ngIf="isCollapsed()">
     <div
       *ngFor="let group of menuGroups(); trackBy: trackByMenuCode"
-      class="collapsed-item"
+      class="text-center py-2"
       [title]="group.description"
     >
-      <i class="fa {{ group.icon }}"></i>
+      <mat-icon>{{ group.icon || 'folder' }}</mat-icon>
     </div>
   </div>
 </div>

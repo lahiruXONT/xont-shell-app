@@ -1,155 +1,129 @@
-<!-- Notifications Sidebar Panel -->
-<!-- Legacy: notificationsideNav -->
-<div
-  class="sidenav notification-panel"
-  [class.open]="panelState().isOpen"
-  id="notificationSideNav"
+<mat-sidenav
+  #notificationSidenav
+  [opened]="panelState().isOpen"
+  (closedStart)="closePanel()"
+  mode="over"
+  position="end"
+  class="notification-panel"
 >
-  <div class="sidebar-inner">
+  <div class="d-flex flex-column h-100">
     <!-- Panel Header -->
-    <div class="notification-header">
-      <h4 class="sidebar-title">
-        <i class="fa fa-bell"></i>
-        Notifications @if (unreadCount() > 0) {
-        <span class="unread-badge">{{ unreadCount() }}</span>
+    <mat-toolbar class="notification-header d-flex justify-content-between align-items-center">
+      <h4 class="sidebar-title m-0 d-flex align-items-center">
+        <mat-icon class="me-2">notifications</mat-icon>
+        Notifications
+        @if (unreadCount() > 0) {
+        <span mat-badge [matBadge]="unreadCount()" matBadgeColor="warn" matBadgeOverlap="false"></span>
         }
       </h4>
-      <button class="close-btn" (click)="closePanel()" type="button">
-        <i class="fa fa-close"></i>
+      <button mat-icon-button (click)="closePanel()">
+        <mat-icon>close</mat-icon>
       </button>
-    </div>
+    </mat-toolbar>
 
     <!-- Action Buttons -->
-    <div class="notification-actions">
+    <div class="notification-actions p-3 d-flex gap-2">
       @if (hasNotifications()) {
       <button
-        class="btn btn-sm btn-primary"
+        mat-stroked-button
+        color="primary"
         (click)="markAllAsRead()"
         [disabled]="unreadCount() === 0"
-        type="button"
+        class="flex-grow-1"
       >
-        <i class="fa fa-check-double"></i>
+        <mat-icon class="me-1">done_all</mat-icon>
         Mark All Read
       </button>
 
       @if (hasSelectedNotifications()) {
       <button
-        class="btn btn-sm btn-danger"
+        mat-stroked-button
+        color="warn"
         (click)="deleteSelected()"
-        type="button"
+        class="flex-grow-1"
       >
-        <i class="fa fa-trash"></i>
+        <mat-icon class="me-1">delete</mat-icon>
         Delete ({{ selectedNotifications().size }})
       </button>
       } }
     </div>
 
     <!-- Notifications List -->
-    <div class="notifications-container">
+    <div class="notifications-container flex-grow-1 overflow-auto">
       @if (!isMessageViewOpen()) {
       <!-- List View -->
       @if (hasNotifications()) {
-      <ul class="notification-list" id="sideNav">
+      <mat-selection-list #notificationList (selectionChange)="toggleNotificationSelection($event.options[0].value)">
         @for (notification of notifications(); track notification.id) {
-        <li [class]="getNotificationClass(notification)">
-          <!-- Selection Checkbox -->
-          <div class="notification-checkbox">
-            <input
-              type="checkbox"
-              [id]="'notif-check-' + notification.id"
-              [checked]="isSelected(notification.id)"
-              (change)="toggleNotificationSelection(notification.id)"
-            />
-            <label [for]="'notif-check-' + notification.id"></label>
-          </div>
-
-          <!-- Notification Content -->
-          <div
-            class="notification-content"
-            (click)="onNotificationClick(notification)"
-          >
-            <div class="notification-icon">
-              <i [class]="'fa ' + getNotificationIcon(notification)"></i>
+        <mat-list-option
+          [value]="notification.id"
+          [selected]="isSelected(notification.id)"
+          [class.unread]="!notification.isRead"
+          [class.task-notification]="notification.type === NotificationType.TASK"
+          [class.message-notification]="notification.type !== NotificationType.TASK"
+        >
+          <mat-checkbox matListItemIcon [checked]="isSelected(notification.id)" (change)="toggleNotificationSelection(notification.id)"></mat-checkbox>
+          <div matListItemTitle (click)="onNotificationClick(notification)">
+            <div class="d-flex align-items-center">
+              <mat-icon class="me-2">{{ getNotificationIcon(notification) }}</mat-icon>
+              <span class="fw-bold">{{ notification.title }}</span>
+              @if (!notification.isRead) {
+              <mat-icon color="accent" class="ms-auto">fiber_manual_record</mat-icon>
+              }
             </div>
-
-            <div class="notification-details">
-              <div class="notification-title">
-                {{ notification.title }}
-              </div>
-              <div class="notification-message">
-                {{ notification.message }}
-              </div>
-              <div class="notification-meta">
-                <span class="notification-time">
-                  {{ formatTimestamp(notification.timestamp) }}
-                </span>
-                @if (notification.type === NotificationType.TASK &&
-                notification.taskCode) {
-                <span class="notification-task-code">
-                  <i class="fa fa-code"></i>
-                  {{ notification.taskCode }}
-                </span>
-                }
-              </div>
+            <div class="small text-muted mt-1">
+              {{ notification.message }}
             </div>
-
-            @if (!notification.isRead) {
-            <div class="unread-indicator"></div>
-            }
+            <div class="small text-muted mt-1 d-flex justify-content-between">
+              <span>{{ formatTimestamp(notification.timestamp) }}</span>
+              @if (notification.type === NotificationType.TASK && notification.taskCode) {
+              <span>
+                <mat-icon style="font-size: 1rem; height: 1rem; width: 1rem;">code</mat-icon>
+                {{ notification.taskCode }}
+              </span>
+              }
+            </div>
           </div>
-        </li>
+        </mat-list-option>
         }
-      </ul>
+      </mat-selection-list>
       } @else {
       <!-- Empty State -->
-      <div class="empty-state">
-        <i class="fa fa-bell-slash"></i>
-        <p>No notifications</p>
+      <div class="empty-state text-center p-4">
+        <mat-icon style="font-size: 4rem; height: 4rem; width: 4rem;" color="accent">notifications_off</mat-icon>
+        <p class="text-muted mt-2">No notifications</p>
       </div>
       } } @else {
       <!-- Message View -->
-      <div class="message-view">
-        <div class="message-header">
-          <button class="back-btn" (click)="closeMessageView()" type="button">
-            <i class="fa fa-arrow-left"></i>
-            Back
+      <div class="message-view p-3">
+        <div class="message-header d-flex align-items-center mb-3">
+          <button mat-icon-button (click)="closeMessageView()">
+            <mat-icon>arrow_back</mat-icon>
           </button>
+          <h5 class="m-0 ms-2">Notification Details</h5>
         </div>
 
-        <div class="message-content">
-          @if (panelState().selectedNotification; as notification) {
-          <div class="message-title">
-            <i [class]="'fa ' + getNotificationIcon(notification)"></i>
-            {{ notification.title }}
-          </div>
-
-          <div class="message-timestamp">
-            {{ formatTimestamp(notification.timestamp) }}
-          </div>
-
-          <div class="message-body">
-            {{ notification.message }}
-          </div>
-
+        @if (panelState().selectedNotification; as notification) {
+        <mat-card>
+          <mat-card-header class="d-flex align-items-center">
+            <mat-icon mat-card-avatar>{{ getNotificationIcon(notification) }}</mat-icon>
+            <mat-card-title>{{ notification.title }}</mat-card-title>
+            <mat-card-subtitle>{{ formatTimestamp(notification.timestamp) }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content class="mt-3">
+            <p>{{ notification.message }}</p>
+          </mat-card-content>
           @if (notification.actionUrl) {
-          <div class="message-actions">
-            <a
-              [href]="notification.actionUrl"
-              class="btn btn-primary"
-              target="_blank"
-            >
+          <mat-card-actions>
+            <a mat-button [href]="notification.actionUrl" target="_blank">
               {{ notification.actionText || "View Details" }}
             </a>
-          </div>
-          } }
-        </div>
+          </mat-card-actions>
+          }
+        </mat-card>
+        }
       </div>
       }
     </div>
   </div>
-</div>
-
-<!-- Backdrop (click to close) -->
-@if (panelState().isOpen) {
-<div class="notification-backdrop" (click)="closePanel()"></div>
-}
+</mat-sidenav>

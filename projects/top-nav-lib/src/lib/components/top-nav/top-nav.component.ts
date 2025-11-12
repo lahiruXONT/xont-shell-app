@@ -11,6 +11,12 @@ import { RouterModule } from '@angular/router';
 import { User, UserProfile, UserRole } from 'shared-lib';
 import { NotificationsPanelComponent } from '../notifications-panel/notifications-panel.component';
 import { RoleSelectorComponent } from 'menu-bar-lib';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatDividerModule } from '@angular/material/divider';
 
 /**
  * Top Navigation Bar Component
@@ -25,6 +31,12 @@ import { RoleSelectorComponent } from 'menu-bar-lib';
     RouterModule,
     NotificationsPanelComponent,
     RoleSelectorComponent,
+    MatToolbarModule,
+    MatIconModule,
+    MatButtonModule,
+    MatMenuModule,
+    MatBadgeModule,
+    MatDividerModule,
   ],
   templateUrl: './top-nav.component.html',
   styleUrl: './top-nav.component.scss',
@@ -45,6 +57,7 @@ export class TopNavComponent {
   @Output() aboutClicked = new EventEmitter<void>();
   @Output() roleSelectorToggled = new EventEmitter<boolean>();
   @Output() rolesChanged = new EventEmitter<UserRole[]>();
+  @Output() logoClicked = new EventEmitter<void>();
 
   // State
   showUserDropdown = signal<boolean>(false);

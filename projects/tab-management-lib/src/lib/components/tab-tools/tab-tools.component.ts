@@ -1,6 +1,9 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Tab } from 'shared-lib';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
 
 /**
  * Tab Tools Component
@@ -10,7 +13,7 @@ import { Tab } from 'shared-lib';
 @Component({
   selector: 'lib-tab-tools',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatMenuModule, MatIconModule, MatDividerModule],
   templateUrl: './tab-tools.component.html',
   styleUrl: './tab-tools.component.scss',
 })

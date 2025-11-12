@@ -1,25 +1,16 @@
-<div class="tab-tools-panel">
-  <div class="tools-header">
-    <h4>Tab Tools</h4>
-    <button class="close-btn" (click)="onClose()">
-      <i class="fa fa-times"></i>
-    </button>
-  </div>
+<button mat-menu-item (click)="onRefresh()">
+  <mat-icon>refresh</mat-icon>
+  <span>Refresh Tab</span>
+</button>
 
-  <div class="tools-content">
-    <button class="tool-btn" (click)="onRefresh()">
-      <i class="fa fa-refresh"></i>
-      <span>Refresh Tab</span>
-    </button>
+<button mat-menu-item (click)="onCloseOthers()">
+  <mat-icon>cancel</mat-icon>
+  <span>Close Others</span>
+</button>
 
-    <button class="tool-btn" (click)="onCloseOthers()">
-      <i class="fa fa-times-circle"></i>
-      <span>Close Others</span>
-    </button>
+<mat-divider></mat-divider>
 
-    <button class="tool-btn danger" (click)="onCloseAll()">
-      <i class="fa fa-times-circle-o"></i>
-      <span>Close All</span>
-    </button>
-  </div>
-</div>
+<button mat-menu-item (click)="onCloseAll()" class="text-danger">
+  <mat-icon>close_all</mat-icon>
+  <span>Close All</span>
+</button>

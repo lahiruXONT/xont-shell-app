@@ -1,4 +1,3 @@
-<!-- Top Navigation Bar -->
 <lib-top-nav
   [user]="currentUser()"
   (logoClicked)="navigateToDashboard()"
@@ -8,23 +7,25 @@
   (rolesChanged)="onRolesChanged($event)"
 ></lib-top-nav>
 
-<!-- Notifications Panel (slides from right) -->
 <lib-notifications-panel></lib-notifications-panel>
-
-<!-- Settings Modal -->
 <lib-settings-modal></lib-settings-modal>
 
-<!-- Menu Sidebar -->
-<lib-menu-bar
-  [userName]="currentUser()?.userName || ''"
-  [businessUnit]="currentUser()?.currentBusinessUnit || ''"
-  [roleCodes]="selectedRoleCodes()"
-  (taskSelected)="onTaskSelected($event)"
-  (taskFavorited)="onTaskFavorited($event)"
-></lib-menu-bar>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #sidenav mode="side" opened class="menu-sidenav">
+    <lib-menu-bar
+      [userName]="currentUser()?.userName || ''"
+      [businessUnit]="currentUser()?.currentBusinessUnit || ''"
+      [roleCodes]="selectedRoleCodes()"
+      (taskSelected)="onTaskSelected($event)"
+      (taskFavorited)="onTaskFavorited($event)"
+    ></lib-menu-bar>
+  </mat-sidenav>
 
-<div class="main-content">
-  <lib-tab-manager [maxTabs]="5"></lib-tab-manager>
+  <mat-sidenav-content class="sidenav-content">
+    <div class="container-fluid p-3">
+      <lib-tab-manager [maxTabs]="5"></lib-tab-manager>
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>
 
-  <router-outlet></router-outlet>
-</div>

@@ -1,74 +1,69 @@
-<!-- Tab Header -->
 <div
-  class="tab-header"
+  class="tab-header d-flex align-items-center px-3 py-2"
   [class.active]="isActive"
   [class.pinned]="tab.isPinned"
   [class.dirty]="tab.isDirty"
   [class.loading]="tab.state === 'LOADING'"
   [class.error]="tab.state === 'ERROR'"
   (click)="onClick($event)"
+  [matMenuTriggerFor]="tabContextMenu"
   (contextmenu)="onContextMenu($event)"
   [title]="tab.tooltip || tab.title"
 >
   <!-- Tab Icon -->
-  <div class="tab-icon">
-    <i class="fa" [class]="getStateIcon()" [style.color]="getStateColor()"></i>
+  <div class="tab-icon me-2">
+    @if (tab.state === 'LOADING') {
+    <mat-spinner [diameter]="16" [color]="'primary'"></mat-spinner>
+    } @else if (tab.state === 'ERROR') {
+    <mat-icon color="warn">error</mat-icon>
+    } @else {
+    <mat-icon>{{ tab.icon || 'description' }}</mat-icon>
+    }
   </div>
 
   <!-- Tab Title -->
-  <div class="tab-title">
+  <div class="tab-title text-truncate">
     <span class="title-text">{{ tab.title }}</span>
     @if (tab.isDirty) {
-    <span class="dirty-indicator">*</span>
+    <span class="dirty-indicator ms-1">*</span>
     }
   </div>
 
   <!-- Pin Indicator -->
   @if (tab.isPinned) {
-  <div class="pin-indicator">
-    <i class="fa fa-thumbtack"></i>
+  <div class="pin-indicator ms-2">
+    <mat-icon style="font-size: 1rem; height: 1rem; width: 1rem;">push_pin</mat-icon>
   </div>
   }
 
   <!-- Close Button -->
   <button
-    class="tab-close-btn"
+    mat-icon-button
+    class="ms-auto"
     (click)="onClose($event)"
     [title]="tab.isPinned ? 'Tab is pinned' : 'Close tab'"
   >
-    <i class="fa fa-times"></i>
+    <mat-icon>close</mat-icon>
   </button>
 </div>
 
 <!-- Context Menu -->
-@if (showContextMenu()) {
-<div
-  class="tab-context-menu"
-  [style.left.px]="contextMenuPosition().x"
-  [style.top.px]="contextMenuPosition().y"
->
-  <div class="context-menu-item" (click)="onContextAction('refresh', $event)">
-    <i class="fa fa-refresh"></i>
+<mat-menu #tabContextMenu="matMenu">
+  <button mat-menu-item (click)="onContextAction('refresh', $event)">
+    <mat-icon>refresh</mat-icon>
     <span>Refresh</span>
-  </div>
-  <div class="context-menu-item" (click)="onContextAction('pin', $event)">
-    <i class="fa fa-thumbtack"></i>
+  </button>
+  <button mat-menu-item (click)="onContextAction('pin', $event)">
+    <mat-icon>{{ tab.isPinned ? 'push_pin_off' : 'push_pin' }}</mat-icon>
     <span>{{ tab.isPinned ? "Unpin" : "Pin" }} Tab</span>
-  </div>
-  <div class="context-menu-divider"></div>
-  <div
-    class="context-menu-item"
-    (click)="onContextAction('closeOthers', $event)"
-  >
-    <i class="fa fa-times-circle"></i>
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="onContextAction('closeOthers', $event)">
+    <mat-icon>cancel</mat-icon>
     <span>Close Others</span>
-  </div>
-  <div
-    class="context-menu-item danger"
-    (click)="onContextAction('close', $event)"
-  >
-    <i class="fa fa-times"></i>
+  </button>
+  <button mat-menu-item (click)="onContextAction('close', $event)">
+    <mat-icon>close</mat-icon>
     <span>Close Tab</span>
-  </div>
-</div>
-}
+  </button>
+</mat-menu>

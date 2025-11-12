@@ -18,7 +18,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 // Services
 import { SettingsService } from '../../services/settings.service';
@@ -31,6 +31,21 @@ import {
   ProfileImageUpload,
   Theme,
 } from 'shared-lib';
+import { MatIcon } from '@angular/material/icon';
+import {
+  MatCardTitle,
+  MatCard,
+  MatCardHeader,
+  MatCardContent,
+  MatCardActions,
+} from '@angular/material/card';
+import { MatToolbar } from '@angular/material/toolbar';
+import { MatTabGroup, MatTab } from '@angular/material/tabs';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/core';
+import { MatRadioGroup, MatRadioButton } from '@angular/material/radio';
+import { MatDivider } from '@angular/material/divider';
 /**
  * Settings Modal Component
  * Legacy: settingsModal from Main.aspx
@@ -46,7 +61,29 @@ import {
 @Component({
   selector: 'lib-settings-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatProgressSpinner,
+    MatIcon,
+    MatCardTitle,
+    MatToolbar,
+    MatCard,
+    MatCardContent,
+    MatRadioGroup,
+    MatTabGroup,
+    MatTab,
+    MatCardHeader,
+    MatRadioButton,
+    MatFormField,
+    MatLabel,
+    MatSelect,
+    MatOption,
+    MatError,
+    MatDivider,
+    MatCardActions,
+  ],
   templateUrl: './settings-modal.component.html',
   styleUrls: ['./settings-modal.component.scss'],
 })

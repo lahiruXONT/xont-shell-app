@@ -21,6 +21,17 @@ import {
   MenuViewMode,
   MenuSearchResult,
 } from 'shared-lib';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatCardModule } from '@angular/material/card';
 
 /**
  * Menu Bar Component
@@ -30,7 +41,21 @@ import {
 @Component({
   selector: 'lib-menu-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatMenuModule,
+    MatToolbarModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatListModule,
+    MatDividerModule,
+    MatExpansionModule,
+    MatCardModule,
+  ],
   templateUrl: './menu-bar.component.html',
   styleUrl: './menu-bar.component.scss',
 })

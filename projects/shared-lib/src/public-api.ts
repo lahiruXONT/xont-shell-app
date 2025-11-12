@@ -1,8 +1,6 @@
 /*
  * Public API Surface of shared-lib
  */
-
-export * from './lib/models/active-task.model';
 export * from './lib/models/user.model';
 export * from './lib/models/business-unit.model';
 export * from './lib/models/notification.model';
@@ -16,6 +14,7 @@ export * from './lib/models/favorite.model';
 export * from './lib/models/reminder.model';
 export * from './lib/models/session.model';
 export * from './lib/models/runtime-config.model';
+export * from './lib/models/active-task.model';
 
 export * from './lib/utils/date.utils';
 export * from './lib/utils/string.utils';

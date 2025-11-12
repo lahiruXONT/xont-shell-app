@@ -1,7 +1,21 @@
-import { Component, Input, Output, EventEmitter, signal, ElementRef, HostListener } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  signal,
+  ElementRef,
+  HostListener,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserRole } from 'shared-lib';
+import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule, MatMenu } from '@angular/material/menu';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule, MatSelectionListChange } from '@angular/material/list';
 
 /**
  * Role Selector Component
@@ -11,7 +25,15 @@ import { UserRole } from 'shared-lib';
 @Component({
   selector: 'lib-role-selector',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatButtonModule,
+    MatMenuModule,
+    MatCheckboxModule,
+    MatIconModule,
+    MatListModule,
+  ],
   templateUrl: './role-selector.component.html',
   styleUrl: './role-selector.component.scss',
 })
@@ -24,6 +46,8 @@ export class RoleSelectorComponent {
   @Output() roleSelected = new EventEmitter<UserRole>();
   @Output() rolesChanged = new EventEmitter<UserRole[]>();
   @Output() businessUnitSelected = new EventEmitter<string>();
+
+  @ViewChild('roleMenu') roleMenu!: MatMenu;
 
   isDropdownOpen = signal<boolean>(false);
 
@@ -38,9 +62,14 @@ export class RoleSelectorComponent {
     this.isDropdownOpen.set(false);
   }
 
-  selectRoles(roles: UserRole[]): void {
-    this.rolesChanged.emit(roles);
+  onRolesSelectionChange(selectedRoles: UserRole[]): void {
+    this.rolesChanged.emit(selectedRoles);
     this.isDropdownOpen.set(false);
+  }
+
+  handleRoleSelectionChange(event: MatSelectionListChange): void {
+    const selectedRoles = event.source.selectedOptions.selected.map(option => option.value);
+    this.onRolesSelectionChange(selectedRoles);
   }
 
   selectBusinessUnit(buCode: string): void {
@@ -59,7 +88,14 @@ export class RoleSelectorComponent {
     return role.roleCode;
   }
 
-  trackByBuCode(index: number, bu: { code: string; description: string }): string {
+  trackByBuCode(
+    index: number,
+    bu: { code: string; description: string }
+  ): string {
     return bu.code;
+  }
+
+  closeRoleMenu(): void {
+    (this.roleMenu as any).close();
   }
 }

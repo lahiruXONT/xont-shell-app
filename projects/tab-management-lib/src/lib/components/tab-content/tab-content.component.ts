@@ -12,6 +12,9 @@ import {
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Tab, TabType, TabState } from 'shared-lib';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 
 /**
  * Tab Content Component
@@ -21,7 +24,7 @@ import { Tab, TabType, TabState } from 'shared-lib';
 @Component({
   selector: 'lib-tab-content',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatProgressSpinnerModule, MatCardModule, MatIconModule],
   templateUrl: './tab-content.component.html',
   styleUrl: './tab-content.component.scss',
 })

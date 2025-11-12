@@ -1,6 +1,11 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Tab } from 'shared-lib';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatButtonModule } from '@angular/material/button';
 
 /**
  * Tab Header Component
@@ -10,7 +15,14 @@ import { Tab } from 'shared-lib';
 @Component({
   selector: 'lib-tab-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    MatProgressSpinnerModule,
+    MatIconModule,
+    MatMenuModule,
+    MatDividerModule,
+    MatButtonModule,
+  ],
   templateUrl: './tab-header.component.html',
   styleUrl: './tab-header.component.scss',
 })

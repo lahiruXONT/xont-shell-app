@@ -1,46 +1,29 @@
-<!-- Tab Content Container -->
-<div class="tab-content-container">
-  <!-- Loading State -->
+<div class="tab-content d-flex flex-column h-100">
   @if (isLoading()) {
-  <div class="loading-overlay">
-    <div class="spinner">
-      <i class="fa fa-spinner fa-spin"></i>
-    </div>
-    <div class="loading-text">Loading...</div>
+  <div class="d-flex justify-content-center align-items-center h-100">
+    <mat-progress-spinner mode="indeterminate" color="primary"></mat-progress-spinner>
   </div>
-  }
-
-  <!-- Error State -->
-  @if (loadError()) {
-  <div class="error-state">
-    <i class="fa fa-exclamation-triangle"></i>
-    <h3>Failed to Load Content</h3>
-    <p>{{ loadError() }}</p>
-    <button class="retry-btn" (click)="refresh()">
-      <i class="fa fa-refresh"></i>
-      Retry
-    </button>
+  } @else if (loadError()) {
+  <div class="d-flex justify-content-center align-items-center h-100 p-3">
+    <mat-card class="text-center alert alert-danger">
+      <mat-icon color="warn" style="font-size: 3rem; height: 3rem; width: 3rem;">error_outline</mat-icon>
+      <h3 class="mt-3">Error Loading Content</h3>
+      <p>{{ loadError() }}</p>
+    </mat-card>
   </div>
-  }
-
-  <!-- Iframe Content -->
-  @if (tab.type === TabType.IFRAME && !loadError()) {
+  } @else if (tab.type === TabType.IFRAME) {
   <iframe
     #iframe
     [src]="safeUrl()!"
-    class="tab-iframe"
+    frameborder="0"
+    class="flex-grow-1"
     (load)="onIframeLoad()"
     (error)="onIframeError($event)"
-    [title]="tab.title"
-    frameborder="0"
   ></iframe>
-  }
-
-  <!-- Angular Component Content -->
-  @if (tab.type === TabType.ANGULAR) {
-  <div class="angular-content">
-    <!-- Dynamic component will be loaded here -->
-    <p>Angular Component: {{ tab.url }}</p>
+  } @else if (tab.type === TabType.ANGULAR) {
+  <!-- Dynamic Angular Component will be loaded here -->
+  <div class="d-flex justify-content-center align-items-center h-100">
+    <p class="text-muted">Angular Component: {{ tab.url }}</p>
   </div>
   }
 </div>

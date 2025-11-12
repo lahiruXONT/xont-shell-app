@@ -1,57 +1,35 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-session-expired',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatCardModule, MatIconModule, MatButtonModule],
   template: `
-    <div class="session-expired-container">
-      <div class="session-expired-card">
-        <i class="fa fa-clock-o" style="font-size: 4rem; color: #ff9800;"></i>
-        <h2>Session Expired</h2>
-        <p>Your session has expired due to inactivity.</p>
-        <p>Please log in again to continue.</p>
-        <button (click)="goToLogin()">
-          <i class="fa fa-sign-in"></i> Go to Login
+    <div class="d-flex justify-content-center align-items-center vh-100">
+      <mat-card
+        class="col-10 col-sm-8 col-md-6 col-lg-4 p-4 text-center shadow-lg"
+      >
+        <mat-icon
+          style="font-size: 4rem; color: #ff9800; width: 4rem; height: 4rem;"
+          >access_time</mat-icon
+        >
+        <h2 class="mt-3 mb-2">Session Expired</h2>
+        <p class="mb-2">Your session has expired due to inactivity.</p>
+        <p class="mb-4">Please log in again to continue.</p>
+        <button mat-raised-button color="primary" (click)="goToLogin()">
+          <mat-icon class="me-2">login</mat-icon> Go to Login
         </button>
-      </div>
+      </mat-card>
     </div>
   `,
   styles: [
     `
-      .session-expired-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-
-      .session-expired-card {
-        background: white;
-        border-radius: 12px;
-        padding: 40px;
-        text-align: center;
-        max-width: 400px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-      }
-
-      button {
-        margin-top: 20px;
-        padding: 12px 24px;
-        background: #667eea;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 1rem;
-      }
-
-      button:hover {
-        background: #5568d3;
-      }
+      /* No custom styles needed for session-expired component as Angular Material and Bootstrap handle styling. */
     `,
   ],
 })

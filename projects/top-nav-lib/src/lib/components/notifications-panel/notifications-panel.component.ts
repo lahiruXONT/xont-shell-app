@@ -23,6 +23,16 @@ import {
   NotificationPanelState,
 } from 'shared-lib';
 
+// Angular Material Modules
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatButtonModule } from '@angular/material/button';
+import { MatListModule } from '@angular/material/list';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCardModule } from '@angular/material/card';
+
 /**
  * Notifications Panel Component (Right Sidebar)
  * Legacy: notificationsideNav from Main.aspx
@@ -38,7 +48,18 @@ import {
 @Component({
   selector: 'lib-notifications-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatSidenavModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatBadgeModule,
+    MatButtonModule,
+    MatListModule,
+    MatCheckboxModule,
+    MatCardModule,
+  ],
   templateUrl: './notifications-panel.component.html',
   styleUrls: ['./notifications-panel.component.scss'],
 })

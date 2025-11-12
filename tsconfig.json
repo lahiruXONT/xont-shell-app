@@ -17,11 +17,16 @@
     "importHelpers": true,
     "target": "ES2022",
     "module": "ES2022",
+    "baseUrl": "",
     "paths": {
-      "shared-lib": ["./dist/shared-lib"],
-      "menu-bar-lib": ["./dist/menu-bar-lib"],
-      "tab-management-lib": ["./dist/tab-management-lib"],
-      "top-nav-lib": ["./dist/top-nav-lib"]
+      "shared-lib": ["dist/shared-lib/"],
+      "shared-lib/*": ["dist/shared-lib/*"],
+      "menu-bar-lib": ["dist/menu-bar-lib/"],
+      "menu-bar-lib/*": ["dist/menu-bar-lib/*"],
+      "tab-management-lib": ["dist/tab-management-lib/"],
+      "tab-management-lib/*": ["dist/tab-management-lib/*"],
+      "top-nav-lib": ["dist/top-nav-lib/"],
+      "top-nav-lib/*": ["dist/top-nav-lib/*"]
     }
   },
   "angularCompilerOptions": {

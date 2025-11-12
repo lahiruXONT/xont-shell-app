@@ -1,14 +1,15 @@
-<div class="login-container">
-  <div class="login-card">
-    <div class="logo">
-      <img src="assets/images/logo.png" alt="Logo" />
-      <h1>XONT Ventura CRM</h1>
+<div class="d-flex justify-content-center align-items-center vh-100">
+  <mat-card class="col-10 col-sm-8 col-md-6 col-lg-4 p-4 shadow-lg">
+    <div class="text-center mb-4">
+      <img src="assets/images/logo.png" alt="Logo" class="img-fluid" style="max-height: 80px;" />
+      <h1 class="h4 mt-2">XONT Ventura CRM</h1>
     </div>
 
     <form (submit)="onLogin()">
-      <div class="form-group">
-        <label>Username</label>
+      <mat-form-field appearance="outline" class="w-100 mb-3">
+        <mat-label>Username</mat-label>
         <input
+          matInput
           type="text"
           [value]="username()"
           (input)="username.set($any($event.target).value)"
@@ -16,11 +17,12 @@
           placeholder="Enter username"
           required
         />
-      </div>
+      </mat-form-field>
 
-      <div class="form-group">
-        <label>Password</label>
+      <mat-form-field appearance="outline" class="w-100 mb-4">
+        <mat-label>Password</mat-label>
         <input
+          matInput
           type="password"
           [value]="password()"
           (input)="password.set($any($event.target).value)"
@@ -28,17 +30,25 @@
           placeholder="Enter password"
           required
         />
-      </div>
+      </mat-form-field>
 
       @if (errorMessage()) {
-      <div class="error-message">
-        {{ errorMessage() }}
-      </div>
+      <mat-error class="mb-3 text-center">{{ errorMessage() }}</mat-error>
       }
 
-      <button type="submit" class="login-btn" [disabled]="isLoading()">
+      <button
+        mat-raised-button
+        color="primary"
+        type="submit"
+        class="w-100"
+        [disabled]="isLoading()"
+      >
+        @if (isLoading()) {
+        <mat-spinner [diameter]="20" class="me-2"></mat-spinner>
+        }
         {{ isLoading() ? "Logging in..." : "Login" }}
       </button>
     </form>
-  </div>
+  </mat-card>
 </div>
+
